@@ -11,17 +11,17 @@ ordinance access for CivicSuite.
 
 ## Current state
 
-This repo has completed Milestone 6 citation contract foundation. It has an
+This repo has completed Milestone 7 citation-grounded Q&A foundation. It has an
 installable Python package, a FastAPI app shell, `/` and `/health`, an exact
 `civiccore==0.2.0` dependency pin, canonical SQLAlchemy metadata, and Alembic
 migrations for the `civiccode` schema. It also has staff/public source registry
 APIs, title/chapter/section/version lifecycle APIs, public-safe search, stable
-section permalinks, and deterministic citation/refusal objects before any Q&A or
-code-answer behavior exists.
+section permalinks, deterministic citation/refusal objects, and a deterministic
+citation-grounded Q&A harness that does not use live LLM calls.
 
-Do not promote CivicCode as a code-answer product yet. Q&A, staff workbench,
-CivicClerk handoff, and public lookup workflows remain planned until their
-milestones land.
+Do not promote CivicCode as a legal-advice product. Staff workbench,
+CivicClerk handoff, live LLM, and public lookup workflows remain planned until
+their milestones land.
 
 ## Upstream truth
 
@@ -63,7 +63,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 6 is complete. Continue one milestone at a time from Milestone 7.
+Milestone 7 is complete. Continue one milestone at a time from Milestone 8.
 
 ## Prohibitions
 

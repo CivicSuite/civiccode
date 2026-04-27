@@ -9,20 +9,22 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **citation contract foundation** layered on
+As of 2026-04-27, CivicCode has a **citation-grounded Q&A foundation** layered on
+the citation contract foundation,
 the search and permalink foundation, section/version foundation, source registry
 foundation, runtime foundation, and canonical schema foundation: an installable
 Python package, a FastAPI app shell, `/` and `/health` endpoints, an exact
 `civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata, Alembic
 migrations under the `civiccode` schema, source registry APIs, section/version
 APIs, public-safe text search, stable section permalinks, and deterministic
-citation/refusal objects.
+citation/refusal objects, and deterministic citation-grounded answers for
+questions that resolve to one adopted section.
 
-This is deliberately not the code-answer product yet. There is no database
-source persistence, import parser, Q&A workflow, public lookup UI, or
-LLM/code-answer behavior in this repo yet.
+This is deliberately not a legal-advice product and not a live-LLM product yet.
+There is no database source persistence, import parser, public lookup UI, staff
+workbench, live LLM call, or legal determination behavior in this repo yet.
 
-The current deliverable is Milestone 6:
+The current deliverable is Milestone 7:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -43,8 +45,11 @@ The current deliverable is Milestone 6:
 - build deterministic citation objects for adopted section text,
 - return structured refusals for missing, stale, or contradictory source
   situations,
-- tell users plainly that code answers are not available yet,
-- keep docs and CI gates green before Q&A harness work begins.
+- answer citation-grounded questions only when one adopted section and active
+  source can be cited,
+- refuse legal-determination, uncited, ambiguous, missing, stale, or
+  contradictory situations with a reason and fix path,
+- keep docs and CI gates green before staff workbench work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -103,12 +108,13 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `citation contract foundation`,
+Expected truth today: the service reports `citation-grounded Q&A foundation`,
 exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
 section/version and search endpoints under `/api/v1/civiccode/sections` and
 `/api/v1/civiccode/search`, exposes deterministic citation objects under
-`/api/v1/civiccode/citations/build`, and `code_answer_behavior` remains
-`not_available`.
+`/api/v1/civiccode/citations/build`, exposes citation-grounded answers under
+`/api/v1/civiccode/questions/answer`, and marks successful answers with
+`code_answer_behavior=citation_grounded`.
 
 Migration smoke:
 
@@ -149,7 +155,7 @@ curl "http://127.0.0.1:8000/api/v1/civiccode/sections/sec_chickens/permalink"
 ```
 
 Expected search truth today: search returns public-safe structured results and
-stable section permalinks. It does not generate citations or code answers.
+stable section permalinks. It does not generate answers by itself.
 
 Citation contract smoke:
 
@@ -159,7 +165,22 @@ curl "http://127.0.0.1:8000/api/v1/civiccode/citations/build?section_number=6.12
 
 Expected citation truth today: citation responses are deterministic objects with
 section id, version id, source id, effective date, and canonical URL. Refusals
-include a reason and fix path. This is still not a Q&A or legal-advice surface.
+include a reason and fix path.
+
+Citation-grounded Q&A smoke:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/questions/answer \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What does section 6.12.040 say about backyard chickens?","section_number":"6.12.040"}'
+```
+
+Expected Q&A truth today: successful answers quote adopted section text, include
+one citation object, set `classification=information_not_determination`, set
+`llm_provider=not_used`, and state that the answer is not a legal
+determination. Code-answer behavior is limited to `citation_grounded` responses.
+Legal-advice, uncited, stale, missing, ambiguous, or
+contradictory requests return structured refusals.
 
 ## License
 

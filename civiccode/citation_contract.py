@@ -49,6 +49,7 @@ def build_citation_payload(
         "status": "ok",
         "citation": {
             "citation_text": citation_text,
+            "body_text": version["body"],
             "section_id": section["section_id"],
             "section_number": section["section_number"],
             "version_id": version["version_id"],
