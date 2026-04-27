@@ -9,16 +9,21 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, this repository is a **scaffold only**. No runtime
-application code has shipped. There is no FastAPI app, no database schema, no
-frontend, and no LLM workflow in this repo yet.
+As of 2026-04-27, CivicCode has a **runtime foundation**: an installable Python
+package, a FastAPI app shell, `/` and `/health` endpoints, an exact
+`civiccore==0.2.0` dependency pin, and CI gates for tests, docs, and CivicCore
+placeholder imports.
 
-The current deliverable is Milestone 0 planning:
+This is deliberately not the code-answer product yet. There is no database
+schema, source registry, search, citation engine, Q&A workflow, public lookup
+UI, or LLM/code-answer behavior in this repo yet.
 
-- reconcile this repo against the upstream CivicSuite unified spec,
-- queue ADRs before runtime choices harden,
-- define the test-first milestone plan,
-- install docs and CI gates.
+The current deliverable is Milestone 1:
+
+- install and import the package,
+- expose health/root endpoints for IT smoke checks,
+- tell users plainly that code answers are not available yet,
+- keep docs and CI gates green before schema work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -61,8 +66,24 @@ Read these upstream documents first:
 
 ## Development status
 
-There is nothing to run yet. The first implementation milestone must start
-with tests, docs, and ADRs before runtime code.
+Install the CivicCore release wheel first, then install CivicCode in editable
+mode:
+
+```bash
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.2.0/civiccore-0.2.0-py3-none-any.whl
+python -m pip install -e ".[dev]"
+python -m uvicorn civiccode.main:app --reload
+```
+
+Smoke checks:
+
+```bash
+curl http://127.0.0.1:8000/
+curl http://127.0.0.1:8000/health
+```
+
+Expected truth today: the service reports `runtime foundation`, and
+`code_answer_behavior` is `not_available`.
 
 ## License
 

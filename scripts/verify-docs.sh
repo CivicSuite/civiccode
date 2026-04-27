@@ -20,6 +20,10 @@ required=(
   "docs/IMPLEMENTATION_PLAN.md"
   "docs/github-discussions-seed.md"
   "docs/index.html"
+  "MILESTONE_1_DONE.md"
+  "pyproject.toml"
+  "civiccode/__init__.py"
+  "civiccode/main.py"
 )
 
 echo "==> Required-artifact check"
@@ -30,13 +34,18 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> Scaffold truth check"
+echo "==> Runtime-foundation truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"
   "Shipping v0.1.0"
-  "runtime application is available"
-  "FastAPI app ships"
+  "scaffold only"
+  "not installable yet"
+  "code answers are available"
+  "municipal code answers are available"
+  "source registry is available"
+  "database schema is available"
+  "public lookup UI is available"
 )
 
 for file in "${current_files[@]}"; do

@@ -11,9 +11,13 @@ ordinance access for CivicSuite.
 
 ## Current state
 
-This repo is scaffold only. No runtime application exists yet.
+This repo has completed Milestone 1 runtime foundation. It has an installable
+Python package, a FastAPI app shell, `/` and `/health`, and an exact
+`civiccore==0.2.0` dependency pin.
 
-Do not add runtime code until Milestone 0 is complete and reviewed.
+Do not promote CivicCode as a code-answer product yet. Source registry, schema,
+search, citations, Q&A, staff workbench, CivicClerk handoff, and public lookup
+workflows remain planned until their milestones land.
 
 ## Upstream truth
 
@@ -55,7 +59,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Runtime milestones start only after Milestone 0 is reviewed.
+Milestone 1 is complete. Continue one milestone at a time from Milestone 2.
 
 ## Prohibitions
 
