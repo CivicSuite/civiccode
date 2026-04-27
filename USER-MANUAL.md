@@ -1,8 +1,9 @@
 # CivicCode User Manual
 
-CivicCode currently ships a plain-language summaries foundation built on the
-staff workbench foundation, citation-grounded Q&A foundation, citation contract
-foundation, search and permalink foundation, section/version foundation, source
+CivicCode currently ships a CivicClerk handoff foundation built on the
+plain-language summaries foundation, staff workbench foundation,
+citation-grounded Q&A foundation, citation contract foundation, search and
+permalink foundation, section/version foundation, source
 registry foundation, runtime foundation, and canonical schema foundation. This manual
 explains what a first-time installer can do today and what is still planned.
 
@@ -53,18 +54,22 @@ Current truth:
 - public summaries are visible only after staff approval,
 - approved public summaries are labeled `non_authoritative_explanation` and
   displayed with authoritative section text,
+- staff can receive CivicClerk ordinance/adoption handoff events,
+- affected section lookups include pending codification warnings,
+- pending ordinance language is not adopted law and does not replace codified
+  text,
 - no frontend exists yet,
 - no live LLM calls or legal determinations are generated yet.
 
 For a non-technical user, there is not yet a public product workflow. The
 honest experience today is an IT smoke test that proves the module can start
 and that source, section/version, citation, citation-grounded Q&A, staff
-workbench, and plain-language summary records can be exercised before import,
-CivicClerk handoff, and public lookup work begin.
+workbench, plain-language summary, and CivicClerk handoff records can be
+exercised before import and public lookup work begin.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 9 plain-language summaries foundation plus
+This repo currently contains the Milestone 10 CivicClerk handoff foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -269,6 +274,33 @@ Public summaries are non-authoritative explanations. They must link back to the
 adopted section version and keep the authoritative code text visible beside the
 summary.
 
+Receive a CivicClerk ordinance/adoption handoff:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/civicclerk/ordinance-events \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  -d '{
+    "external_event_id": "cc_event_2026_041",
+    "civicclerk_meeting_id": "meeting_2026_04_27",
+    "civicclerk_agenda_item_id": "agenda_14",
+    "ordinance_number": "2026-041",
+    "title": "Ordinance amending backyard chicken permits",
+    "status": "adopted",
+    "affected_sections": ["6.12.040"],
+    "source_document_url": "https://example.gov/minutes/2026-041.pdf",
+    "source_document_hash": "sha256:abc123",
+    "ordinance_text": "An ordinance amending Section 6.12.040."
+  }'
+```
+
+CivicClerk handoff events preserve meeting and agenda item provenance. They
+surface pending codification warnings on affected lookups and likely conflict
+signals when ordinance text references existing sections. They do not perform
+automatic ordinance codification and pending ordinance language is not adopted
+law.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -286,4 +318,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 10: CivicClerk handoff intake.
+The next runtime design step is Milestone 11: public code lookup surface.

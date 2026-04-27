@@ -86,19 +86,21 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["name"] == "CivicCode"
-    assert payload["status"] == "plain-language summaries foundation"
+    assert payload["status"] == "CivicClerk handoff foundation"
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
-    assert payload["next_step"] == "Milestone 10: CivicClerk handoff intake"
+    assert payload["next_step"] == "Milestone 11: public code lookup surface"
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
     assert "Q&A" in payload["message"]
     assert "Staff" in payload["message"]
     assert "plain-language summaries" in payload["message"]
+    assert "CivicClerk" in payload["message"]
+    assert "handoff" in payload["message"]
     assert "live LLM" in payload["message"]
-    assert "public lookup" in payload["message"]
+    assert "public lookup" in payload["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -152,7 +154,9 @@ def test_current_facing_docs_describe_runtime_foundation_honestly() -> None:
 
     for path, text in docs.items():
         lowered = text.lower()
-        assert "runtime foundation" in lowered, f"{path} must mention runtime foundation."
+        assert "runtime foundation" in lowered.replace(
+            "\n", " "
+        ), f"{path} must mention runtime foundation."
         assert "scaffold only" not in lowered, f"{path} must not retain scaffold-only wording."
         assert "not installable yet" not in lowered, f"{path} must not retain pre-runtime wording."
         assert "code-answer behavior" in lowered or "code answers" in lowered

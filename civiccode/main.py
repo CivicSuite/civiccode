@@ -10,6 +10,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civiccode import __version__
 from civiccode.citation_contract import build_citation_payload, refusal
+from civiccode.ordinance_handoff import (
+    OrdinanceHandoffError,
+    OrdinanceHandoffStore,
+    event_to_dict,
+    handoff_audit_event_to_dict,
+)
 from civiccode.plain_language import (
     PlainLanguageSummaryError,
     PlainLanguageSummaryStore,
@@ -55,6 +61,7 @@ SOURCE_STORE = SourceRegistryStore()
 SECTION_STORE = SectionLifecycleStore()
 STAFF_NOTE_STORE = StaffWorkbenchStore()
 SUMMARY_STORE = PlainLanguageSummaryStore()
+HANDOFF_STORE = OrdinanceHandoffStore()
 
 
 class SourceCreate(BaseModel):
@@ -181,6 +188,26 @@ class PlainLanguageSummaryCreate(BaseModel):
     status: str = "draft"
 
 
+class CivicClerkOrdinanceEventCreate(BaseModel):
+    """Request body for CivicClerk ordinance/adoption handoff intake."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: str | None = None
+    external_event_id: str = Field(min_length=1)
+    civicclerk_meeting_id: str = Field(min_length=1)
+    civicclerk_agenda_item_id: str = Field(min_length=1)
+    ordinance_number: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    status: str = "pending"
+    affected_sections: list[str] = Field(default_factory=list)
+    source_document_url: str = Field(min_length=1)
+    source_document_hash: str = Field(min_length=1)
+    ordinance_text: str = ""
+    adopted_at: datetime | None = None
+    failure_reason: str | None = None
+
+
 def _raise_source_error(exc: SourceRegistryError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
@@ -194,6 +221,10 @@ def _raise_staff_error(exc: StaffWorkbenchError) -> None:
 
 
 def _raise_summary_error(exc: PlainLanguageSummaryError) -> None:
+    raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
+
+
+def _raise_handoff_error(exc: OrdinanceHandoffError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
 
@@ -226,7 +257,7 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "plain-language summaries foundation",
+        "status": "CivicClerk handoff foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
@@ -234,13 +265,14 @@ async def root() -> dict[str, str]:
             "Citation-grounded Q&A harness is online for adopted sections. Staff "
             "interpretation-note APIs and staff Q&A context are online. Staff-approved "
             "plain-language summaries are online and labeled non-authoritative. "
-            "CivicClerk handoff, public lookup UI, live LLM calls, and "
+            "CivicClerk ordinance handoff intake and affected-section warnings are "
+            "online. Public lookup UI, live LLM calls, and "
             "legal determinations are not implemented yet."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 10: CivicClerk handoff intake",
+        "next_step": "Milestone 11: public code lookup surface",
     }
 
 
@@ -431,9 +463,11 @@ async def create_section_version(
 async def lookup_section(section_number: str, as_of: date | None = None) -> dict[str, Any]:
     """Lookup adopted section text by current flag or effective date."""
     try:
-        return SECTION_STORE.lookup_section(section_number, as_of=as_of)
+        payload = SECTION_STORE.lookup_section(section_number, as_of=as_of)
     except SectionLifecycleError as exc:
         _raise_section_error(exc)
+    payload["handoff_warnings"] = HANDOFF_STORE.warnings_for_section(section_number)
+    return payload
 
 
 @app.get("/api/v1/civiccode/sections/{section_id}/history")
@@ -533,8 +567,29 @@ async def list_staff_audit_events(
     events = [
         *[audit_event_to_dict(event) for event in STAFF_NOTE_STORE.audit_events()],
         *[summary_audit_event_to_dict(event) for event in SUMMARY_STORE.audit_events()],
+        *[handoff_audit_event_to_dict(event) for event in HANDOFF_STORE.audit_events()],
     ]
+    events.sort(key=lambda event: event["created_at"])
     return {"events": events}
+
+
+@app.post("/api/v1/civiccode/staff/civicclerk/ordinance-events", status_code=201)
+async def create_civicclerk_ordinance_event(
+    request: CivicClerkOrdinanceEventCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Receive CivicClerk ordinance/adoption events without codifying them."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        for section_number in request.affected_sections:
+            SECTION_STORE.lookup_section(section_number)
+        event = HANDOFF_STORE.create_event(request.model_dump(), actor=actor)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    except OrdinanceHandoffError as exc:
+        _raise_handoff_error(exc)
+    return event_to_dict(event)
 
 
 @app.post("/api/v1/civiccode/staff/sections/{section_id}/summaries", status_code=201)
