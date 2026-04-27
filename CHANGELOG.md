@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Nothing yet.
+
+## [0.1.0] - 2026-04-27
+
+### Added
+
 - Initial scaffold for the future `CivicSuite/civiccode` module.
 - Professional documentation baseline, landing page, contribution/support/security docs, issue templates, PR template, and docs verification gate.
 - Milestone 0 operating contract in `AGENTS.md`.

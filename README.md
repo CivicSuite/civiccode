@@ -36,7 +36,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current deliverable is Milestone 13:
+The current release is CivicCode v0.1.0:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -91,7 +91,7 @@ The current deliverable is Milestone 13:
 - render an accessible, print-friendly records-ready export page,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
-- keep docs and CI gates green before v0.1.0 release work begins.
+- keep docs and CI gates green for the v0.1.0 release.
 
 ## Why CivicCode before CivicZone
 
@@ -150,7 +150,7 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `CivicClerk handoff foundation`,
+Expected truth today: the service reports `accessibility export foundation`,
 exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
 section/version and search endpoints under `/api/v1/civiccode/sections` and
 `/api/v1/civiccode/search`, exposes deterministic citation objects under
@@ -158,8 +158,9 @@ section/version and search endpoints under `/api/v1/civiccode/sections` and
 `/api/v1/civiccode/questions/answer`, exposes staff-only workbench endpoints
 under `/api/v1/civiccode/staff`, exposes approved public summaries under
 `/api/v1/civiccode/sections/{section_id}/summaries`, receives CivicClerk
-handoff events at `/api/v1/civiccode/staff/civicclerk/ordinance-events`, and
-marks successful answers with `code_answer_behavior=citation_grounded`.
+handoff events at `/api/v1/civiccode/staff/civicclerk/ordinance-events`, exposes
+records-ready exports at `/api/v1/civiccode/sections/{section}/export`, and marks
+successful answers with `code_answer_behavior=citation_grounded`.
 
 Migration smoke:
 

@@ -373,4 +373,5 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 14: v0.1.0 release.
+CivicCode v0.1.0 is the first runtime release. Future work moves to the next
+module or release plan in the CivicSuite unified roadmap.

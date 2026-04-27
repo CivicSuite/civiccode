@@ -95,7 +95,7 @@ Migration smoke
 1. set DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/civiccode
 2. python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 
-Next work
----------
+Release
+-------
 
-Milestone 14: v0.1.0 release.
+CivicCode v0.1.0 is the first runtime release.

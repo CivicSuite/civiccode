@@ -30,11 +30,11 @@ def load_app_module():
     return importlib.import_module("civiccode.main")
 
 
-def test_pyproject_declares_runtime_package_and_dev_version() -> None:
+def test_pyproject_declares_runtime_package_and_release_version() -> None:
     data = load_pyproject()
 
     assert data["project"]["name"] == "civiccode"
-    assert data["project"]["version"] == "0.1.0.dev0"
+    assert data["project"]["version"] == "0.1.0"
     assert "CivicCode" in data["project"]["description"]
 
 
@@ -90,7 +90,7 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
-    assert payload["next_step"] == "Milestone 14: v0.1.0 release"
+    assert payload["next_step"] == "CivicCode v0.1.0 released; next work follows the CivicSuite roadmap."
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
@@ -121,7 +121,7 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
     assert payload == {
         "status": "ok",
         "service": "civiccode",
-        "version": "0.1.0.dev0",
+            "version": "0.1.0",
         "civiccore": "0.2.0",
     }
 
@@ -133,6 +133,7 @@ def test_ci_runs_pytest_docs_and_placeholder_gates() -> None:
     assert "python -m pytest" in text
     assert "bash scripts/verify-docs.sh" in text
     assert "python scripts/check-civiccore-placeholder-imports.py" in text
+    assert "bash scripts/verify-release.sh" in text
 
 
 def test_placeholder_import_gate_passes_for_runtime_source() -> None:

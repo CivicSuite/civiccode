@@ -74,7 +74,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 13 is complete. Continue one milestone at a time from Milestone 14.
+Milestone 14 is complete. CivicCode v0.1.0 release work is the current boundary.
 
 ## Prohibitions
 
