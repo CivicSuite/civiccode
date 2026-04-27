@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CivicCode - CivicSuite municipal code module</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #586575;
+      --paper: #fbf7ef;
+      --card: #ffffff;
+      --line: #d8c8ad;
+      --accent: #8f4d24;
+      --good: #236044;
+    }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(143, 77, 36, .14), transparent 30rem),
+        linear-gradient(135deg, #fffaf1, var(--paper));
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 4rem 1.25rem;
+    }
+    .eyebrow {
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .82rem;
+    }
+    h1 {
+      font-size: clamp(2.6rem, 7vw, 5.8rem);
+      line-height: .92;
+      margin: .4rem 0 1rem;
+    }
+    .lead {
+      color: var(--muted);
+      font-size: 1.25rem;
+      max-width: 48rem;
+    }
+    .status {
+      display: inline-block;
+      margin: 1.5rem 0;
+      padding: .45rem .75rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--good);
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    section {
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      box-shadow: 0 18px 50px rgba(82, 58, 32, .08);
+    }
+    h2 { margin-top: 0; }
+    li { margin: .45rem 0; }
+    code { background: #f2e6d4; padding: .08rem .25rem; border-radius: .25rem; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">CivicSuite module planning lane</div>
+  <h1>CivicCode</h1>
+  <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
+  <p class="status">Scaffold only - no runtime code shipped yet</p>
+
+  <div class="grid">
+    <section>
+      <h2>What it will do</h2>
+      <ul>
+        <li>Import authoritative municipal code sources.</li>
+        <li>Preserve section versions and effective dates.</li>
+        <li>Answer routine code questions with citations.</li>
+        <li>Label summaries as non-authoritative.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>What it will not do</h2>
+      <ul>
+        <li>Replace the official codifier.</li>
+        <li>Give legal advice.</li>
+        <li>Automatically codify ordinances.</li>
+        <li>Start CivicZone runtime work.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Current next step</h2>
+      <p>Milestone 0 reconciliation against the upstream CivicSuite unified spec, ADR queue, and test-first implementation plan.</p>
+      <p>Runtime code starts only after that review is complete.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>
