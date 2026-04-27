@@ -109,6 +109,7 @@ class SectionCreate(BaseModel):
     administrative_regulation_refs: list[str] = Field(default_factory=list)
     resolution_refs: list[str] = Field(default_factory=list)
     policy_refs: list[str] = Field(default_factory=list)
+    approved_summary_refs: list[str] = Field(default_factory=list)
 
 
 class SectionVersionCreate(BaseModel):
@@ -144,17 +145,17 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "section version foundation",
+        "status": "search and permalink foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
-            "section/version lifecycle APIs are online. Search, citations, Q&A, summaries, "
-            "staff workbench, CivicClerk handoff, and public lookup workflows are not "
-            "implemented yet."
+            "section/version lifecycle APIs are online. Search and stable section permalink "
+            "APIs are online. citations, Q&A, summaries, staff workbench, CivicClerk handoff, "
+            "and public lookup UI are not implemented yet."
         ),
         "code_answer_behavior": "not_available",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 5: search and section permalinks",
+        "next_step": "Milestone 6: citation contract",
     }
 
 
@@ -355,5 +356,23 @@ async def section_history(section_id: str) -> dict[str, Any]:
     """Return immutable amendment/version history for a section."""
     try:
         return SECTION_STORE.section_history(section_id)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+
+
+@app.get("/api/v1/civiccode/sections/{section_id}/permalink")
+async def section_permalink(section_id: str) -> dict[str, Any]:
+    """Return the stable public-facing permalink for a section."""
+    try:
+        return SECTION_STORE.permalink(section_id)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+
+
+@app.get("/api/v1/civiccode/search")
+async def search_sections(q: str) -> dict[str, Any]:
+    """Search public-visible code sections and related public materials."""
+    try:
+        return SECTION_STORE.search(q)
     except SectionLifecycleError as exc:
         _raise_section_error(exc)

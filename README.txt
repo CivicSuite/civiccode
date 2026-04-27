@@ -6,18 +6,19 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a section/version foundation built on the source
-registry foundation, runtime foundation, and canonical schema foundation. The
-package can be installed, the FastAPI app can start, / plus /health are
-available for IT smoke checks, Alembic can create the canonical civiccode schema
-tables after CivicCore migrations run, staff can register official source
-records, and staff can create titles, chapters, sections, and adopted or pending
-section versions.
+As of 2026-04-27, CivicCode has a search and permalink foundation built on the
+section/version foundation, source registry foundation, runtime foundation, and
+canonical schema foundation. The package can be installed, the FastAPI app can
+start, / plus /health are available for IT smoke checks, Alembic can create the
+canonical civiccode schema tables after CivicCore migrations run, staff can
+register official source records, staff can create titles, chapters, sections,
+and adopted or pending section versions, and public-safe search/permalink APIs
+are available.
 
 This is not the code-answer product yet. There is no source persistence, import
-parser, search, frontend workflow, LLM workflow, or code answers yet. Source
-and section/version behavior exists so authoritative text can be modeled before
-any answer surface is enabled.
+parser, frontend workflow, LLM workflow, citation engine, or code answers yet.
+Source, section/version, search, and permalink behavior exists so authoritative
+text can be found before any answer surface is enabled.
 
 CivicCode is the next planning lane because CivicZone needs an authoritative
 municipal-code source before zoning runtime work begins.
@@ -53,4 +54,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 5: search and section permalinks.
+Milestone 6: citation contract.

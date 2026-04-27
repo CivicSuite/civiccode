@@ -23,6 +23,7 @@ required=(
   "MILESTONE_1_DONE.md"
   "MILESTONE_3_DONE.md"
   "MILESTONE_4_DONE.md"
+  "MILESTONE_5_DONE.md"
   "pyproject.toml"
   "civiccode/__init__.py"
   "civiccode/main.py"
@@ -43,7 +44,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> Section-version-foundation truth check"
+echo "==> Search-permalink-foundation truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"
@@ -52,7 +53,6 @@ bad_markers=(
   "not installable yet"
   "code answers are available"
   "municipal code answers are available"
-  "search is available"
   "citation engine is available"
   "public lookup UI is available"
 )

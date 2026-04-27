@@ -77,6 +77,7 @@ async def create_section_tree(client: AsyncClient, section_id: str = "sec_chicke
             "administrative_regulation_refs": ["admin-reg-animals-1"],
             "resolution_refs": ["resolution-2025-04"],
             "policy_refs": ["policy-animal-control-faq"],
+            "approved_summary_refs": ["approved-summary-chickens"],
         },
     )
     assert section.status_code == 201, section.text
@@ -124,6 +125,7 @@ async def test_create_section_tree_with_related_non_code_materials(client: Async
     assert section["administrative_regulation_refs"] == ["admin-reg-animals-1"]
     assert section["resolution_refs"] == ["resolution-2025-04"]
     assert section["policy_refs"] == ["policy-animal-control-faq"]
+    assert section["approved_summary_refs"] == ["approved-summary-chickens"]
 
 
 @pytest.mark.asyncio
