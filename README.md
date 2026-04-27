@@ -9,19 +9,20 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **section/version foundation** layered on the
-source registry foundation, runtime foundation, and canonical schema foundation:
-an installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
-an exact `civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata,
-Alembic migrations under the `civiccode` schema, staff/public APIs for
-registering official municipal-code sources, and APIs for title/chapter/section
-records with adopted/pending/historical section versions.
+As of 2026-04-27, CivicCode has a **search and permalink foundation** layered on
+the section/version foundation, source registry foundation, runtime foundation,
+and canonical schema foundation: an installable Python package, a FastAPI app
+shell, `/` and `/health` endpoints, an exact `civiccore==0.2.0` dependency pin,
+canonical SQLAlchemy table metadata, Alembic migrations under the `civiccode`
+schema, staff/public APIs for registering official municipal-code sources,
+title/chapter/section records with adopted/pending/historical section versions,
+public-safe text search, and stable section permalinks.
 
 This is deliberately not the code-answer product yet. There is no database
-source persistence, import parser, search, citation engine, Q&A workflow, public
-lookup UI, or LLM/code-answer behavior in this repo yet.
+source persistence, import parser, citation engine, Q&A workflow, public lookup
+UI, or LLM/code-answer behavior in this repo yet.
 
-The current deliverable is Milestone 4:
+The current deliverable is Milestone 5:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -36,8 +37,11 @@ The current deliverable is Milestone 4:
   date,
 - refuse ambiguous overlapping dates and pending ordinance language with an
   actionable fix path,
+- search public-visible adopted section text and related public material
+  references,
+- expose stable section permalinks that survive text revisions,
 - tell users plainly that code answers are not available yet,
-- keep docs and CI gates green before search/permalink work begins.
+- keep docs and CI gates green before citation-contract work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -96,10 +100,10 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `section version foundation`, exposes
-source registry endpoints under `/api/v1/civiccode/sources`, exposes
-section/version endpoints under `/api/v1/civiccode/sections`, and
-`code_answer_behavior` remains `not_available`.
+Expected truth today: the service reports `search and permalink foundation`,
+exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
+section/version and search endpoints under `/api/v1/civiccode/sections` and
+`/api/v1/civiccode/search`, and `code_answer_behavior` remains `not_available`.
 
 Migration smoke:
 
@@ -131,6 +135,16 @@ curl "http://127.0.0.1:8000/api/v1/civiccode/sections/lookup?section_number=6.12
 Expected section/version truth today: adopted versions can be looked up by
 current flag or effective date, pending ordinance language is not treated as
 adopted law, and overlapping effective dates return actionable 409 responses.
+
+Search smoke:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/search?q=6.12.040"
+curl "http://127.0.0.1:8000/api/v1/civiccode/sections/sec_chickens/permalink"
+```
+
+Expected search truth today: search returns public-safe structured results and
+stable section permalinks. It does not generate citations or code answers.
 
 ## License
 

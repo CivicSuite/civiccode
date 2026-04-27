@@ -54,6 +54,7 @@ class CodeSection:
     administrative_regulation_refs: list[str] = field(default_factory=list)
     resolution_refs: list[str] = field(default_factory=list)
     policy_refs: list[str] = field(default_factory=list)
+    approved_summary_refs: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -154,6 +155,7 @@ class SectionLifecycleStore:
             administrative_regulation_refs=list(data.get("administrative_regulation_refs", [])),
             resolution_refs=list(data.get("resolution_refs", [])),
             policy_refs=list(data.get("policy_refs", [])),
+            approved_summary_refs=list(data.get("approved_summary_refs", [])),
         )
         if section.section_id in self._sections:
             raise SectionLifecycleError(
@@ -299,6 +301,64 @@ class SectionLifecycleStore:
             "versions": [version_to_dict(version) for version in versions],
         }
 
+    def permalink(self, section_id: str) -> dict[str, Any]:
+        section = self.get_section(section_id)
+        return {
+            "section_id": section.section_id,
+            "section_number": section.section_number,
+            "permalink": section_permalink(section),
+            "stable": True,
+            "code_answer_behavior": "not_available",
+        }
+
+    def search(self, query: str) -> dict[str, Any]:
+        normalized = query.strip().lower()
+        if not normalized:
+            raise SectionLifecycleError(
+                "Search query cannot be empty.",
+                "Provide q with a section number or plain-language phrase.",
+            )
+
+        results: list[dict[str, Any]] = []
+        for section in self._sections.values():
+            current = self._current_adopted_version(section.section_id)
+            chapter = self._chapters.get(section.chapter_id)
+            title = self._titles.get(chapter.title_id) if chapter else None
+            haystack = " ".join(
+                value
+                for value in [
+                    title.title_name if title else "",
+                    chapter.chapter_name if chapter else "",
+                    section.section_number,
+                    section.section_heading,
+                    current.body if current else "",
+                ]
+            ).lower()
+            if normalized in haystack:
+                results.append(search_result(section, current, result_type="code_section"))
+
+            results.extend(self._related_results(section, normalized))
+
+        deduped: dict[tuple[str, str], dict[str, Any]] = {}
+        for result in results:
+            deduped[(result["result_type"], result["id"])] = result
+        sorted_results = sorted(
+            deduped.values(),
+            key=lambda result: (result["result_type"] != "code_section", result["label"]),
+        )
+        return {
+            "query": query,
+            "results": sorted_results,
+            "count": len(sorted_results),
+            "code_answer_behavior": "not_available",
+            "empty_state": None
+            if sorted_results
+            else {
+                "message": "No public CivicCode results matched that search.",
+                "fix": "Try an exact section number, fewer words, or a different code term.",
+            },
+        }
+
     def get_section(self, section_id: str) -> CodeSection:
         try:
             return self._sections[section_id]
@@ -321,6 +381,41 @@ class SectionLifecycleStore:
             for version in self._versions.values()
             if version.section_id == section_id
         ]
+
+    def _current_adopted_version(self, section_id: str) -> SectionVersion | None:
+        current = [
+            version
+            for version in self._versions_for_section(section_id)
+            if version.status == "adopted" and version.is_current
+        ]
+        if len(current) == 1:
+            return current[0]
+        return None
+
+    def _related_results(self, section: CodeSection, normalized: str) -> list[dict[str, Any]]:
+        related_groups = [
+            ("administrative_regulation", section.administrative_regulation_refs),
+            ("resolution", section.resolution_refs),
+            ("policy", section.policy_refs),
+            ("approved_summary", section.approved_summary_refs),
+        ]
+        results: list[dict[str, Any]] = []
+        for result_type, references in related_groups:
+            for reference in references:
+                if normalized in reference.lower() or normalized.replace(" ", "-") in reference.lower():
+                    results.append(
+                        {
+                            "id": reference,
+                            "result_type": result_type,
+                            "label": reference,
+                            "source_section_id": section.section_id,
+                            "source_section_number": section.section_number,
+                            "permalink": section_permalink(section),
+                            "public_visible": True,
+                            "code_answer_behavior": "not_available",
+                        }
+                    )
+        return results
 
 
 def title_to_dict(title: CodeTitle) -> dict[str, Any]:
@@ -355,6 +450,7 @@ def section_to_dict(section: CodeSection) -> dict[str, Any]:
         "administrative_regulation_refs": section.administrative_regulation_refs,
         "resolution_refs": section.resolution_refs,
         "policy_refs": section.policy_refs,
+        "approved_summary_refs": section.approved_summary_refs,
         "created_at": section.created_at.isoformat(),
     }
 
@@ -389,5 +485,29 @@ def section_lookup_payload(
         "version": version_to_dict(version),
         "as_of": as_of.isoformat() if as_of else None,
         "legal_effect": "adopted_law",
+        "code_answer_behavior": "not_available",
+    }
+
+
+def section_permalink(section: CodeSection) -> str:
+    return f"/civiccode/sections/{section.section_id}"
+
+
+def search_result(
+    section: CodeSection,
+    version: SectionVersion | None,
+    *,
+    result_type: str,
+) -> dict[str, Any]:
+    return {
+        "id": section.section_id,
+        "result_type": result_type,
+        "label": f"{section.section_number} - {section.section_heading}",
+        "section_number": section.section_number,
+        "section_heading": section.section_heading,
+        "version_id": version.version_id if version else None,
+        "effective_start": version.effective_start.isoformat() if version else None,
+        "permalink": section_permalink(section),
+        "public_visible": True,
         "code_answer_behavior": "not_available",
     }

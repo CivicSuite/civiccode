@@ -1,8 +1,9 @@
 # CivicCode User Manual
 
-CivicCode currently ships a section/version foundation built on the source registry
-foundation, runtime foundation, and canonical schema foundation. This manual
-explains what a first-time installer can do today and what is still planned.
+CivicCode currently ships a search and permalink foundation built on the
+section/version foundation, source registry foundation, runtime foundation, and
+canonical schema foundation. This manual explains what a first-time installer
+can do today and what is still planned.
 
 ## For municipal decision-makers
 
@@ -27,17 +28,20 @@ Current truth:
 - current and historical lookup returns adopted law only,
 - pending ordinance language and ambiguous overlapping effective dates return
   actionable errors instead of being treated as settled law,
+- public-safe search can find adopted section text and related public material
+  references,
+- stable section permalinks remain the same across text revisions,
 - no frontend exists yet,
 - no LLM answers or code-answer behavior are generated yet.
 
 For a non-technical user, there is not yet a public product workflow. The
 honest experience today is an IT smoke test that proves the module can start
 and that source and section/version records can be registered before import,
-search, citation, and public lookup work begins.
+citation, Q&A, and public lookup work begins.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 4 section/version foundation plus
+This repo currently contains the Milestone 5 search and permalink foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -145,6 +149,23 @@ curl "http://127.0.0.1:8000/api/v1/civiccode/sections/lookup?section_number=6.12
 The lookup response is still not a code answer. It returns structured section
 and version data with `code_answer_behavior=not_available`.
 
+Search public-safe section data:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/search?q=chickens"
+```
+
+Read a stable section permalink:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/sections/sec_chickens/permalink"
+```
+
+Search results distinguish code sections from related administrative
+regulations, resolutions, policies, and approved summaries when those public
+references exist. Empty search results include a fix path such as trying an
+exact section number or fewer words.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -162,4 +183,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 5: search and section permalinks.
+The next runtime design step is Milestone 6: citation contract.
