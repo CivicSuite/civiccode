@@ -7,6 +7,7 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+from starlette.responses import HTMLResponse
 
 from civiccode import __version__
 from civiccode.citation_contract import build_citation_payload, refusal
@@ -22,6 +23,14 @@ from civiccode.plain_language import (
     summary_audit_event_to_dict,
     summary_to_public_dict,
     summary_to_staff_dict,
+)
+from civiccode.public_lookup import (
+    is_legal_advice_query,
+    render_error_page,
+    render_home_page,
+    render_refusal_page,
+    render_search_page,
+    render_section_page,
 )
 from civiccode.qa_harness import QuestionRequestContext, build_grounded_answer
 from civiccode.section_lifecycle import (
@@ -257,7 +266,7 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "CivicClerk handoff foundation",
+        "status": "public code lookup foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
@@ -266,14 +275,73 @@ async def root() -> dict[str, str]:
             "interpretation-note APIs and staff Q&A context are online. Staff-approved "
             "plain-language summaries are online and labeled non-authoritative. "
             "CivicClerk ordinance handoff intake and affected-section warnings are "
-            "online. Public lookup UI, live LLM calls, and "
+            "online. Resident-facing public lookup pages are online at /civiccode. "
+            "Live LLM calls and "
             "legal determinations are not implemented yet."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 11: public code lookup surface",
+        "next_step": "Milestone 12: import and connector hardening",
     }
+
+
+@app.get("/civiccode", response_class=HTMLResponse)
+async def public_lookup_home() -> str:
+    """Render the resident-facing public code lookup home page."""
+    return render_home_page()
+
+
+@app.get("/civiccode/search", response_class=HTMLResponse)
+async def public_lookup_search(q: str = "") -> str:
+    """Render public search results, empty states, or refusal states."""
+    query = q.strip()
+    if not query:
+        return render_error_page(
+            "Search query required",
+            "Search query cannot be empty.",
+            "Enter a section number like 6.12.040 or a resident phrase like backyard chickens.",
+            status_label="Empty search",
+        )
+    if is_legal_advice_query(query):
+        return render_refusal_page(query)
+    try:
+        results = SECTION_STORE.search(query)["results"]
+    except SectionLifecycleError:
+        results = []
+    return render_search_page(query, results)
+
+
+@app.get("/civiccode/sections/{section_ref}", response_class=HTMLResponse)
+async def public_section_detail(section_ref: str, as_of: date | None = None) -> str:
+    """Render a public section detail page with citation and warning context."""
+    try:
+        try:
+            lookup = SECTION_STORE.lookup_section(section_ref, as_of=as_of)
+        except SectionLifecycleError:
+            section = SECTION_STORE.get_section(section_ref)
+            lookup = SECTION_STORE.lookup_section(section.section_number, as_of=as_of)
+    except SectionLifecycleError as exc:
+        return render_error_page(
+            "Section not found",
+            exc.message,
+            exc.fix,
+            status_label="Section lookup problem",
+        )
+    section_number = lookup["section"]["section_number"]
+    citation_payload = _build_citation_for_section(section_number, as_of=as_of)
+    summaries = []
+    for summary in SUMMARY_STORE.list_for_section(lookup["section"]["section_id"]):
+        version = SECTION_STORE.get_version(summary.section_version_id)
+        summaries.append(
+            summary_to_public_dict(
+                summary,
+                authoritative_section=lookup["section"],
+                authoritative_text=version.body,
+            )
+        )
+    warnings = HANDOFF_STORE.warnings_for_section(section_number)
+    return render_section_page(lookup, citation_payload, summaries, warnings)
 
 
 @app.get("/health")

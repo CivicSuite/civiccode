@@ -9,8 +9,8 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **CivicClerk handoff foundation** layered on
-the plain-language summaries, staff workbench, citation-grounded Q&A, citation
+As of 2026-04-27, CivicCode has a **public code lookup surface** layered on
+the CivicClerk handoff, plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
@@ -21,15 +21,19 @@ deterministic citation/refusal objects, deterministic citation-grounded answers,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
 staff-approved plain-language summaries labeled as non-authoritative, and
 CivicClerk ordinance/adoption handoff intake with pending codification warnings.
+Residents can open `/civiccode`, search by section number or plain-language
+phrase, read adopted code text, see deterministic citations, view approved
+plain-language summaries, and see pending-codification warnings when CivicClerk
+handoffs may affect a section.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
-There is no database source persistence, import parser, public lookup UI, live
+There is no database source persistence, import parser, live
 LLM call, automatic ordinance codification, or legal determination behavior in
 this repo yet. Staff interpretation notes are staff-only and must not be
 published to public endpoints. CivicClerk handoff events warn about pending
 codification but do not replace adopted code text.
 
-The current deliverable is Milestone 10:
+The current deliverable is Milestone 11:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -70,7 +74,10 @@ The current deliverable is Milestone 10:
 - distinguish pending codification from adopted codified law,
 - warn affected section lookups when a handoff may make the codified text stale,
 - detect likely conflicts when ordinance text references affected sections,
-- keep docs and CI gates green before public lookup UI work begins.
+- render a resident-facing public code lookup surface under `/civiccode`,
+- show accessible search success, empty, refusal, stale-source, and section
+  detail states,
+- keep docs and CI gates green before import/connector hardening begins.
 
 ## Why CivicCode before CivicZone
 
@@ -266,6 +273,19 @@ codification, CivicClerk meeting/agenda provenance is preserved, affected
 lookups include `handoff_warnings`, likely conflicts cite the affected section,
 and pending ordinance language is not adopted law or automatic ordinance
 codification.
+
+Public lookup smoke:
+
+```bash
+curl "http://127.0.0.1:8000/civiccode"
+curl "http://127.0.0.1:8000/civiccode/search?q=6.12.040"
+curl "http://127.0.0.1:8000/civiccode/sections/6.12.040"
+```
+
+Expected public lookup truth today: the page separates authoritative adopted
+code text, non-authoritative plain-language summaries, citations, and pending
+codification warnings. Legal-advice requests receive refusal copy with a staff
+contact route. Live LLM calls remain disabled.
 
 ## License
 

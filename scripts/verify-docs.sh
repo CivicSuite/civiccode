@@ -29,6 +29,7 @@ required=(
   "MILESTONE_8_DONE.md"
   "MILESTONE_9_DONE.md"
   "MILESTONE_10_DONE.md"
+  "MILESTONE_11_DONE.md"
   "pyproject.toml"
   "civiccode/__init__.py"
   "civiccode/main.py"
@@ -36,6 +37,7 @@ required=(
   "civiccode/qa_harness.py"
   "civiccode/plain_language.py"
   "civiccode/ordinance_handoff.py"
+  "civiccode/public_lookup.py"
   "civiccode/staff_workbench.py"
   "civiccode/source_registry.py"
   "civiccode/section_lifecycle.py"
@@ -54,7 +56,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> CivicClerk-handoff-foundation truth check"
+echo "==> Public-code-lookup-surface truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"

@@ -86,11 +86,11 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["name"] == "CivicCode"
-    assert payload["status"] == "CivicClerk handoff foundation"
+    assert payload["status"] == "public code lookup foundation"
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
-    assert payload["next_step"] == "Milestone 11: public code lookup surface"
+    assert payload["next_step"] == "Milestone 12: import and connector hardening"
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
@@ -99,7 +99,7 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert "plain-language summaries" in payload["message"]
     assert "CivicClerk" in payload["message"]
     assert "handoff" in payload["message"]
-    assert "live LLM" in payload["message"]
+    assert "live llm" in payload["message"].lower()
     assert "public lookup" in payload["message"].lower()
 
 

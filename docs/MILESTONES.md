@@ -110,7 +110,7 @@ Acceptance criteria:
 
 Expected tests/gates: contract tests, integration tests, failure-state tests.
 
-## Milestone 10 - Public Code Lookup Surface
+## Milestone 11 - Public Code Lookup Surface
 
 Acceptance criteria:
 
@@ -120,7 +120,7 @@ Acceptance criteria:
 
 Expected tests/gates: browser QA, accessibility checks, API tests.
 
-## Milestone 11 - Import/Connector Hardening
+## Milestone 12 - Import/Connector Hardening
 
 Acceptance criteria:
 
@@ -131,7 +131,7 @@ Acceptance criteria:
 
 Expected tests/gates: connector tests, import fixture tests, air-gap checks.
 
-## Milestone 12 - v0.1.0 Release
+## Milestone 13 - v0.1.0 Release
 
 Acceptance criteria:
 

@@ -69,7 +69,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 10 is complete. Continue one milestone at a time from Milestone 11.
+Milestone 11 is complete. Continue one milestone at a time from Milestone 12.
 
 ## Prohibitions
 

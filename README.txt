@@ -6,7 +6,8 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a CivicClerk handoff foundation built on the
+As of 2026-04-27, CivicCode has a public code lookup surface built on the
+CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and permalink foundation, section/version
 foundation, source registry foundation, runtime foundation, and canonical
@@ -23,10 +24,13 @@ available behind the trusted staff header seam.
 Staff-approved plain-language summaries are available after review, are labeled
 non-authoritative, and keep authoritative code text visible.
 CivicClerk ordinance/adoption handoff events are accepted as pending
-codification warnings without replacing adopted code text.
+codification warnings without replacing adopted code text. Residents can open
+/civiccode, search by section number or plain-language phrase, read adopted
+code text, see citations, view approved summaries, and see pending
+codification warnings.
 
 This is not a legal-advice product and does not make live LLM calls. There is
-no source persistence, import parser, frontend workflow, public lookup UI,
+no source persistence, import parser, live LLM-backed frontend workflow,
 live LLM calls, automatic ordinance codification, or legal determination
 behavior yet. Staff notes are not public. Summaries are not law. Pending
 ordinance language is not adopted law. Source,
@@ -70,4 +74,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 11: public code lookup surface.
+Milestone 12: import and connector hardening.

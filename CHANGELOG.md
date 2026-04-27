@@ -24,11 +24,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Milestone 8 staff workbench foundation: staff-only interpretation-note endpoints, trusted staff header seam, staff Q&A context with `staff_only_do_not_publish`, staff workbench audit events, and public-surface leakage tests for lookup, search, and Q&A.
 - Milestone 9 plain-language summaries foundation: staff draft/approval workflow, approved-only public summary endpoint, non-authoritative `non_authoritative_explanation` labeling, authoritative code text kept visible beside summaries, adopted-version guardrails, and summary audit events.
 - Milestone 10 CivicClerk handoff foundation: ordinance/adoption event intake, meeting/agenda provenance preservation, pending codification warnings on affected lookups, likely conflict detection, failed-handoff visibility, and guardrails proving pending ordinance language is not adopted law.
+- Milestone 11 public code lookup surface: resident-facing `/civiccode` "Read code" pages for search, section detail, citations, approved summaries, pending codification warnings, stale-source warnings, actionable empty states, and legal-advice refusal routing.
 
 ### Not Shipped
 
 - No source persistence beyond the current in-memory registry.
-- No frontend workflow.
 - No live LLM calls.
 - No legal-determination behavior.
-- No public lookup UI, automatic ordinance codification, or public staff-note visibility yet.
+- No import parser or automatic ordinance codification yet; staff notes remain staff-only.
