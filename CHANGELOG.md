@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Initial scaffold for the future `CivicSuite/civiccode` module.
 - Professional documentation baseline, landing page, contribution/support/security docs, issue templates, PR template, and docs verification gate.
 - Milestone 0 operating contract in `AGENTS.md`.
+- Milestone 0 reconciliation report, ADR queue, milestone plan, and CivicCore placeholder-import CI gate.
 
 ### Not Shipped
 
