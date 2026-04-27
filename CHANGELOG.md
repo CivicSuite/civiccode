@@ -16,10 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CivicCode implementation plan cross-checked against the original Module Catalog v1 extract, preserving codifier imports, resident/staff Q&A, administrative materials, popular questions, conflict detection, and CivicClerk handoff requirements under the current Apache 2.0 suite decision.
 - Milestone 1 runtime foundation: installable package, FastAPI app shell, `/` and `/health` endpoints, exact `civiccore==0.2.0` dependency pin, pytest CI gate, and documentation updated to state that code-answer behavior is not available yet.
 - Milestone 2 canonical schema foundation: CivicCore-first Alembic migration chain, separate `alembic_version_civiccode` table, schema-aware migration guard, canonical SQLAlchemy metadata, and ten `civiccode.*` foundation tables.
+- Milestone 3 official source registry foundation: source vocabulary endpoint, source create/list/read/transition APIs, official-source provenance enforcement, public/staff source visibility split, source-state matrix, and actionable stale/failed-source messages.
 
 ### Not Shipped
 
-- No database schema.
+- No source persistence beyond the current in-memory registry.
 - No frontend workflow.
 - No LLM/code-answer behavior.
-- No official source registry API yet.
+- No section/version lifecycle, search, citation engine, Q&A workflow, public lookup UI, or CivicClerk handoff yet.

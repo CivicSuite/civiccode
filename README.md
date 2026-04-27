@@ -9,24 +9,30 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **schema foundation**: an installable Python
+As of 2026-04-27, CivicCode has a **source registry foundation** layered on the
+runtime foundation and canonical schema foundation: an installable Python
 package, a FastAPI app shell, `/` and `/health` endpoints, an exact
 `civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata, Alembic
-migrations under the `civiccode` schema, and CI gates for tests, docs, and
-CivicCore placeholder imports.
+migrations under the `civiccode` schema, and staff/public APIs for registering
+official municipal-code sources before any code-answer behavior exists.
 
 This is deliberately not the code-answer product yet. There is no database
-source registry API, search, citation engine, Q&A workflow, public lookup UI,
-or LLM/code-answer behavior in this repo yet.
+source persistence, import parser, section/version workflow, search, citation
+engine, Q&A workflow, public lookup UI, or LLM/code-answer behavior in this repo
+yet.
 
-The current deliverable is Milestone 2:
+The current deliverable is Milestone 3:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
 - run CivicCore migrations before CivicCode migrations,
 - create the canonical CivicCode schema tables,
+- register official and explicitly non-official source records,
+- track source provenance, owner, retrieval method, retrieved timestamp, status,
+  and staff notes,
+- keep staff-only source notes out of public endpoints,
 - tell users plainly that code answers are not available yet,
-- keep docs and CI gates green before source registry work begins.
+- keep docs and CI gates green before section/version lifecycle work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -85,8 +91,9 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `runtime foundation`, and
-`code_answer_behavior` is `not_available`.
+Expected truth today: the service reports `source registry foundation`, exposes
+source registry endpoints under `/api/v1/civiccode/sources`, and
+`code_answer_behavior` remains `not_available`.
 
 Migration smoke:
 
@@ -97,6 +104,17 @@ python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 
 Expected migration truth today: CivicCore migrations run first, CivicCode uses
 `alembic_version_civiccode`, and ten canonical `civiccode.*` tables are created.
+
+Source registry smoke:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/civiccode/sources/catalog
+```
+
+Expected source-registry truth today: source types include Municode, American
+Legal, Code Publishing, General Code, official XML/DOCX exports, official file
+drops, and official web scrape/export paths. Source states are `draft`,
+`active`, `stale`, `superseded`, and `failed`.
 
 ## License
 

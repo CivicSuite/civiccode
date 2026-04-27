@@ -365,7 +365,7 @@ def test_migration_table_list_matches_model_metadata() -> None:
         assert f'"{table_name}"' in text or f"'{table_name}'" in text
 
 
-def test_docs_and_changelog_record_schema_milestone_without_claiming_source_registry() -> None:
+def test_docs_and_changelog_record_schema_milestone_without_claiming_code_answers() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8").lower()
     manual = (ROOT / "USER-MANUAL.md").read_text(encoding="utf-8").lower()
     landing = (ROOT / "docs" / "index.html").read_text(encoding="utf-8").lower()
@@ -373,5 +373,4 @@ def test_docs_and_changelog_record_schema_milestone_without_claiming_source_regi
     for document_text in [changelog, manual, landing]:
         assert "canonical schema" in document_text
         assert "alembic" in document_text
-        assert "source registry api is available" not in document_text
         assert "code answers are available" not in document_text
