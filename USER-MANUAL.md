@@ -1,8 +1,8 @@
 # CivicCode User Manual
 
-CivicCode currently ships a canonical schema foundation built on the Milestone
-1 runtime foundation. This manual explains what a first-time installer can do
-today and what is still planned.
+CivicCode currently ships a source registry foundation built on the runtime foundation
+and canonical schema foundation. This manual explains what a first-time
+installer can do today and what is still planned.
 
 ## For municipal decision-makers
 
@@ -19,17 +19,20 @@ Current truth:
 - `/health` reports service, CivicCode version, and CivicCore version,
 - Alembic can create ten canonical `civiccode.*` tables after CivicCore
   migrations run,
+- staff can register source records for official and explicitly non-official
+  municipal code materials,
+- public source endpoints do not expose staff-only notes,
 - no frontend exists yet,
 - no LLM answers or code-answer behavior are generated yet.
 
 For a non-technical user, there is not yet a public product workflow. The
 honest experience today is an IT smoke test that proves the module can start
-and that the database schema can be created before source registry, import,
+and that source records can be registered before import, section/version,
 search, citation, and public lookup work begins.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 2 canonical schema foundation plus
+This repo currently contains the Milestone 3 source registry foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -64,6 +67,37 @@ python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 The migration chain runs CivicCore first and stores CivicCode's revision in
 `alembic_version_civiccode`.
 
+Inspect source-registry vocabulary:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/civiccode/sources/catalog
+```
+
+Register an official source:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/sources \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source_id": "municode_current",
+    "name": "Example Municipal Code",
+    "publisher": "Municode",
+    "source_type": "municode",
+    "source_category": "municipal_code",
+    "source_url": "https://library.municode.com/example/codes/code_of_ordinances",
+    "retrieved_at": "2026-04-27T12:00:00Z",
+    "retrieval_method": "official_web_export",
+    "source_owner": "City Clerk",
+    "is_official": true,
+    "status": "active"
+  }'
+```
+
+The registry accepts `draft`, `active`, `stale`, `superseded`, and `failed`
+source states. `active` official sources require source owner and retrieval
+metadata. `active` non-official sources require an explicit non-official note.
+Stale and failed sources return actionable fix guidance.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -81,4 +115,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 3: official source registry.
+The next runtime design step is Milestone 4: code section and version lifecycle.

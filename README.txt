@@ -6,14 +6,17 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a schema foundation built on the runtime foundation
-from Milestone 1. The package can be installed, the FastAPI app can
-start, / plus /health are available for IT smoke checks, and Alembic can create
-the canonical civiccode schema tables after CivicCore migrations run.
+As of 2026-04-27, CivicCode has a source registry foundation built on the
+runtime foundation and canonical schema foundation. The package can be
+installed, the FastAPI app can start, / plus /health are available for IT smoke
+checks, Alembic can create the canonical civiccode schema tables after
+CivicCore migrations run, and staff can register official source records
+through the source registry API.
 
-This is not the code-answer product yet. There is no database schema, no
-source registry API, no frontend workflow, no LLM workflow, and no code answers
-yet. The schema exists; source registry behavior starts in Milestone 3.
+This is not the code-answer product yet. There is no source persistence, import
+parser, section/version workflow, search, frontend workflow, LLM workflow, or
+code answers yet. Source registry behavior exists so authoritative sources can
+be recorded before any answer surface is enabled.
 
 CivicCode is the next planning lane because CivicZone needs an authoritative
 municipal-code source before zoning runtime work begins.
@@ -38,6 +41,7 @@ Run locally
 2. python -m pip install -e ".[dev]"
 3. python -m uvicorn civiccode.main:app --reload
 4. curl http://127.0.0.1:8000/health
+5. curl http://127.0.0.1:8000/api/v1/civiccode/sources/catalog
 
 Migration smoke
 ---------------
@@ -48,4 +52,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 3: official source registry.
+Milestone 4: code section and version lifecycle.
