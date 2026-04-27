@@ -9,19 +9,19 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **source registry foundation** layered on the
-runtime foundation and canonical schema foundation: an installable Python
-package, a FastAPI app shell, `/` and `/health` endpoints, an exact
-`civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata, Alembic
-migrations under the `civiccode` schema, and staff/public APIs for registering
-official municipal-code sources before any code-answer behavior exists.
+As of 2026-04-27, CivicCode has a **section/version foundation** layered on the
+source registry foundation, runtime foundation, and canonical schema foundation:
+an installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
+an exact `civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata,
+Alembic migrations under the `civiccode` schema, staff/public APIs for
+registering official municipal-code sources, and APIs for title/chapter/section
+records with adopted/pending/historical section versions.
 
 This is deliberately not the code-answer product yet. There is no database
-source persistence, import parser, section/version workflow, search, citation
-engine, Q&A workflow, public lookup UI, or LLM/code-answer behavior in this repo
-yet.
+source persistence, import parser, search, citation engine, Q&A workflow, public
+lookup UI, or LLM/code-answer behavior in this repo yet.
 
-The current deliverable is Milestone 3:
+The current deliverable is Milestone 4:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -31,8 +31,13 @@ The current deliverable is Milestone 3:
 - track source provenance, owner, retrieval method, retrieved timestamp, status,
   and staff notes,
 - keep staff-only source notes out of public endpoints,
+- create titles, chapters, sections, subsections, and immutable section versions,
+- look up current or historical adopted text by section number and effective
+  date,
+- refuse ambiguous overlapping dates and pending ordinance language with an
+  actionable fix path,
 - tell users plainly that code answers are not available yet,
-- keep docs and CI gates green before section/version lifecycle work begins.
+- keep docs and CI gates green before search/permalink work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -91,8 +96,9 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `source registry foundation`, exposes
-source registry endpoints under `/api/v1/civiccode/sources`, and
+Expected truth today: the service reports `section version foundation`, exposes
+source registry endpoints under `/api/v1/civiccode/sources`, exposes
+section/version endpoints under `/api/v1/civiccode/sections`, and
 `code_answer_behavior` remains `not_available`.
 
 Migration smoke:
@@ -115,6 +121,16 @@ Expected source-registry truth today: source types include Municode, American
 Legal, Code Publishing, General Code, official XML/DOCX exports, official file
 drops, and official web scrape/export paths. Source states are `draft`,
 `active`, `stale`, `superseded`, and `failed`.
+
+Section/version smoke:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/sections/lookup?section_number=6.12.040"
+```
+
+Expected section/version truth today: adopted versions can be looked up by
+current flag or effective date, pending ordinance language is not treated as
+adopted law, and overlapping effective dates return actionable 409 responses.
 
 ## License
 

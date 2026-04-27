@@ -1,0 +1,393 @@
+"""Code section and version lifecycle rules for CivicCode Milestone 4."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import UTC, date, datetime
+from typing import Any
+from uuid import uuid4
+
+
+VERSION_STATUSES = {"draft", "pending", "adopted", "superseded", "retired"}
+
+
+class SectionLifecycleError(ValueError):
+    """Validation error with an operator-facing fix path."""
+
+    def __init__(self, message: str, fix: str, status_code: int = 422) -> None:
+        super().__init__(message)
+        self.message = message
+        self.fix = fix
+        self.status_code = status_code
+
+    def detail(self) -> dict[str, str]:
+        return {"message": self.message, "fix": self.fix}
+
+
+@dataclass(slots=True)
+class CodeTitle:
+    title_id: str
+    title_number: str
+    title_name: str
+    sort_order: int = 0
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+@dataclass(slots=True)
+class CodeChapter:
+    chapter_id: str
+    title_id: str
+    chapter_number: str
+    chapter_name: str
+    sort_order: int = 0
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+@dataclass(slots=True)
+class CodeSection:
+    section_id: str
+    chapter_id: str
+    section_number: str
+    section_heading: str
+    parent_section_id: str | None = None
+    sort_order: int = 0
+    administrative_regulation_refs: list[str] = field(default_factory=list)
+    resolution_refs: list[str] = field(default_factory=list)
+    policy_refs: list[str] = field(default_factory=list)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+@dataclass(slots=True)
+class SectionVersion:
+    version_id: str
+    section_id: str
+    source_id: str
+    version_label: str
+    body: str
+    effective_start: date
+    effective_end: date | None = None
+    status: str = "draft"
+    is_current: bool = False
+    adoption_event_id: str | None = None
+    amendment_event_id: str | None = None
+    amendment_summary: str | None = None
+    prior_version_id: str | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+    def covers(self, as_of: date) -> bool:
+        if as_of < self.effective_start:
+            return False
+        return self.effective_end is None or as_of <= self.effective_end
+
+
+class SectionLifecycleStore:
+    """In-memory section/version store for Milestone 4 API behavior."""
+
+    def __init__(self) -> None:
+        self._titles: dict[str, CodeTitle] = {}
+        self._chapters: dict[str, CodeChapter] = {}
+        self._sections: dict[str, CodeSection] = {}
+        self._versions: dict[str, SectionVersion] = {}
+
+    def create_title(self, data: dict[str, Any]) -> CodeTitle:
+        title = CodeTitle(
+            title_id=data.get("title_id") or f"title_{uuid4().hex}",
+            title_number=data["title_number"],
+            title_name=data["title_name"],
+            sort_order=data.get("sort_order", 0),
+        )
+        if title.title_id in self._titles:
+            raise SectionLifecycleError(
+                f"Title '{title.title_id}' already exists.",
+                "Use a unique title_id or reference the existing title.",
+                status_code=409,
+            )
+        self._titles[title.title_id] = title
+        return title
+
+    def create_chapter(self, data: dict[str, Any]) -> CodeChapter:
+        title_id = data["title_id"]
+        if title_id not in self._titles:
+            raise SectionLifecycleError(
+                f"Title '{title_id}' was not found.",
+                "Create the title before creating chapters under it.",
+                status_code=404,
+            )
+        chapter = CodeChapter(
+            chapter_id=data.get("chapter_id") or f"chapter_{uuid4().hex}",
+            title_id=title_id,
+            chapter_number=data["chapter_number"],
+            chapter_name=data["chapter_name"],
+            sort_order=data.get("sort_order", 0),
+        )
+        if chapter.chapter_id in self._chapters:
+            raise SectionLifecycleError(
+                f"Chapter '{chapter.chapter_id}' already exists.",
+                "Use a unique chapter_id or reference the existing chapter.",
+                status_code=409,
+            )
+        self._chapters[chapter.chapter_id] = chapter
+        return chapter
+
+    def create_section(self, data: dict[str, Any]) -> CodeSection:
+        chapter_id = data["chapter_id"]
+        if chapter_id not in self._chapters:
+            raise SectionLifecycleError(
+                f"Chapter '{chapter_id}' was not found.",
+                "Create the chapter before creating sections under it.",
+                status_code=404,
+            )
+        parent_section_id = data.get("parent_section_id")
+        if parent_section_id and parent_section_id not in self._sections:
+            raise SectionLifecycleError(
+                f"Parent section '{parent_section_id}' was not found.",
+                "Create the parent section first or omit parent_section_id.",
+                status_code=404,
+            )
+        section = CodeSection(
+            section_id=data.get("section_id") or f"section_{uuid4().hex}",
+            chapter_id=chapter_id,
+            section_number=data["section_number"],
+            section_heading=data["section_heading"],
+            parent_section_id=parent_section_id,
+            sort_order=data.get("sort_order", 0),
+            administrative_regulation_refs=list(data.get("administrative_regulation_refs", [])),
+            resolution_refs=list(data.get("resolution_refs", [])),
+            policy_refs=list(data.get("policy_refs", [])),
+        )
+        if section.section_id in self._sections:
+            raise SectionLifecycleError(
+                f"Section '{section.section_id}' already exists.",
+                "Use a unique section_id or reference the existing section.",
+                status_code=409,
+            )
+        self._sections[section.section_id] = section
+        return section
+
+    def create_version(self, data: dict[str, Any]) -> SectionVersion:
+        section_id = data["section_id"]
+        if section_id not in self._sections:
+            raise SectionLifecycleError(
+                f"Section '{section_id}' was not found.",
+                "Create the section before adding versions.",
+                status_code=404,
+            )
+        status = data.get("status", "draft")
+        if status not in VERSION_STATUSES:
+            raise SectionLifecycleError(
+                f"Unknown section version status '{status}'.",
+                f"Use one of: {', '.join(sorted(VERSION_STATUSES))}.",
+            )
+        if data.get("is_current") and status != "adopted":
+            raise SectionLifecycleError(
+                "Only adopted section versions can be current law.",
+                "Set status to adopted before marking a version as current.",
+            )
+        effective_end = data.get("effective_end")
+        if effective_end and effective_end < data["effective_start"]:
+            raise SectionLifecycleError(
+                "effective_end cannot be before effective_start.",
+                "Correct the effective date range before saving this version.",
+            )
+        prior_version_id = data.get("prior_version_id")
+        if prior_version_id and prior_version_id not in self._versions:
+            raise SectionLifecycleError(
+                f"Prior version '{prior_version_id}' was not found.",
+                "Reference an existing version or omit prior_version_id.",
+                status_code=404,
+            )
+
+        version = SectionVersion(
+            version_id=data.get("version_id") or f"version_{uuid4().hex}",
+            section_id=section_id,
+            source_id=data["source_id"],
+            version_label=data["version_label"],
+            body=data["body"],
+            effective_start=data["effective_start"],
+            effective_end=effective_end,
+            status=status,
+            is_current=data.get("is_current", False),
+            adoption_event_id=data.get("adoption_event_id"),
+            amendment_event_id=data.get("amendment_event_id"),
+            amendment_summary=data.get("amendment_summary"),
+            prior_version_id=prior_version_id,
+        )
+        if version.version_id in self._versions:
+            raise SectionLifecycleError(
+                f"Version '{version.version_id}' already exists.",
+                "Use a unique version_id or reference the existing version.",
+                status_code=409,
+            )
+        self._versions[version.version_id] = version
+        if version.is_current:
+            for prior in self._versions_for_section(section_id):
+                if prior.version_id != version.version_id and prior.is_current:
+                    prior.is_current = False
+        return version
+
+    def lookup_section(self, section_number: str, as_of: date | None = None) -> dict[str, Any]:
+        matching_sections = [
+            section for section in self._sections.values() if section.section_number == section_number
+        ]
+        if not matching_sections:
+            raise SectionLifecycleError(
+                f"Section '{section_number}' was not found.",
+                "Check the section number or create the section before lookup.",
+                status_code=404,
+            )
+        if len(matching_sections) > 1:
+            raise SectionLifecycleError(
+                f"Section number '{section_number}' is ambiguous across multiple chapters.",
+                "Lookup by section_id or include chapter context before relying on the result.",
+                status_code=409,
+            )
+
+        section = matching_sections[0]
+        versions = self._versions_for_section(section.section_id)
+        if as_of is None:
+            current_versions = [
+                version
+                for version in versions
+                if version.status == "adopted" and version.is_current
+            ]
+            if len(current_versions) != 1:
+                raise SectionLifecycleError(
+                    f"Section '{section_number}' does not have one deterministic current version.",
+                    "Provide as_of for historical lookup or correct the current-version flags.",
+                    status_code=409,
+                )
+            return section_lookup_payload(section, current_versions[0], as_of=None)
+
+        adopted_matches = [
+            version
+            for version in versions
+            if version.status == "adopted" and version.covers(as_of)
+        ]
+        pending_matches = [
+            version
+            for version in versions
+            if version.status == "pending" and version.covers(as_of)
+        ]
+        if pending_matches and not adopted_matches:
+            raise SectionLifecycleError(
+                f"Section '{section_number}' only has pending language for {as_of.isoformat()}.",
+                "Wait for adoption/codification before treating this text as current law.",
+                status_code=409,
+            )
+        if len(adopted_matches) > 1:
+            raise SectionLifecycleError(
+                f"Section '{section_number}' has overlapping adopted versions for {as_of.isoformat()}.",
+                "Fix the effective date ranges before answering with this section.",
+                status_code=409,
+            )
+        if not adopted_matches:
+            raise SectionLifecycleError(
+                f"Section '{section_number}' has no adopted version for {as_of.isoformat()}.",
+                "Choose a different as_of date or add an adopted section version for that date.",
+                status_code=404,
+            )
+        return section_lookup_payload(section, adopted_matches[0], as_of=as_of)
+
+    def section_history(self, section_id: str) -> dict[str, Any]:
+        section = self.get_section(section_id)
+        versions = sorted(
+            self._versions_for_section(section_id),
+            key=lambda version: (version.effective_start, version.created_at),
+        )
+        return {
+            "section": section_to_dict(section),
+            "versions": [version_to_dict(version) for version in versions],
+        }
+
+    def get_section(self, section_id: str) -> CodeSection:
+        try:
+            return self._sections[section_id]
+        except KeyError as exc:
+            raise SectionLifecycleError(
+                f"Section '{section_id}' was not found.",
+                "Create the section first or check the section_id in the request URL.",
+                status_code=404,
+            ) from exc
+
+    def reset(self) -> None:
+        self._titles.clear()
+        self._chapters.clear()
+        self._sections.clear()
+        self._versions.clear()
+
+    def _versions_for_section(self, section_id: str) -> list[SectionVersion]:
+        return [
+            version
+            for version in self._versions.values()
+            if version.section_id == section_id
+        ]
+
+
+def title_to_dict(title: CodeTitle) -> dict[str, Any]:
+    return {
+        "title_id": title.title_id,
+        "title_number": title.title_number,
+        "title_name": title.title_name,
+        "sort_order": title.sort_order,
+        "created_at": title.created_at.isoformat(),
+    }
+
+
+def chapter_to_dict(chapter: CodeChapter) -> dict[str, Any]:
+    return {
+        "chapter_id": chapter.chapter_id,
+        "title_id": chapter.title_id,
+        "chapter_number": chapter.chapter_number,
+        "chapter_name": chapter.chapter_name,
+        "sort_order": chapter.sort_order,
+        "created_at": chapter.created_at.isoformat(),
+    }
+
+
+def section_to_dict(section: CodeSection) -> dict[str, Any]:
+    return {
+        "section_id": section.section_id,
+        "chapter_id": section.chapter_id,
+        "section_number": section.section_number,
+        "section_heading": section.section_heading,
+        "parent_section_id": section.parent_section_id,
+        "sort_order": section.sort_order,
+        "administrative_regulation_refs": section.administrative_regulation_refs,
+        "resolution_refs": section.resolution_refs,
+        "policy_refs": section.policy_refs,
+        "created_at": section.created_at.isoformat(),
+    }
+
+
+def version_to_dict(version: SectionVersion) -> dict[str, Any]:
+    return {
+        "version_id": version.version_id,
+        "section_id": version.section_id,
+        "source_id": version.source_id,
+        "version_label": version.version_label,
+        "body": version.body,
+        "effective_start": version.effective_start.isoformat(),
+        "effective_end": version.effective_end.isoformat() if version.effective_end else None,
+        "status": version.status,
+        "is_current": version.is_current,
+        "adoption_event_id": version.adoption_event_id,
+        "amendment_event_id": version.amendment_event_id,
+        "amendment_summary": version.amendment_summary,
+        "prior_version_id": version.prior_version_id,
+        "created_at": version.created_at.isoformat(),
+    }
+
+
+def section_lookup_payload(
+    section: CodeSection,
+    version: SectionVersion,
+    *,
+    as_of: date | None,
+) -> dict[str, Any]:
+    return {
+        "section": section_to_dict(section),
+        "version": version_to_dict(version),
+        "as_of": as_of.isoformat() if as_of else None,
+        "legal_effect": "adopted_law",
+        "code_answer_behavior": "not_available",
+    }

@@ -77,7 +77,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Source registry foundation online on top of the runtime foundation and canonical schema foundation - code answers not available yet</p>
+  <p class="status">Section/version foundation online on top of the source registry foundation, runtime foundation, and canonical schema foundation - code answers not available yet</p>
 
   <div class="grid">
     <section>
@@ -106,12 +106,13 @@
         <li>Exact <code>civiccore==0.2.0</code> dependency pin.</li>
         <li>Canonical SQLAlchemy metadata and Alembic migrations for ten <code>civiccode.*</code> tables.</li>
         <li>Official source registry API for codifier/source metadata, provenance, and source-state checks.</li>
-        <li>No municipal code answers, section/version workflow, search, or public lookup UI yet.</li>
+        <li>Section/version lifecycle APIs for adopted, historical, and pending text boundaries.</li>
+        <li>No municipal code answers, search, citation engine, or public lookup UI yet.</li>
       </ul>
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>Milestone 4: code section and version lifecycle.</p>
+      <p>Milestone 5: search and section permalinks.</p>
       <p>The service is intentionally honest: <code>code_answer_behavior</code> is <code>not_available</code> until citations and source data exist.</p>
     </section>
   </div>

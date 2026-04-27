@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from civiccode import __version__
+from civiccode.section_lifecycle import (
+    SectionLifecycleError,
+    SectionLifecycleStore,
+    chapter_to_dict,
+    section_to_dict,
+    title_to_dict,
+    version_to_dict,
+)
 from civiccode.source_registry import (
     SOURCE_CATEGORIES,
     SOURCE_STATES,
@@ -29,6 +37,7 @@ app = FastAPI(
 )
 
 SOURCE_STORE = SourceRegistryStore()
+SECTION_STORE = SectionLifecycleStore()
 
 
 class SourceCreate(BaseModel):
@@ -63,7 +72,70 @@ class SourceTransitionRequest(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class TitleCreate(BaseModel):
+    """Request body for creating a code title."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title_id: str | None = None
+    title_number: str = Field(min_length=1)
+    title_name: str = Field(min_length=1)
+    sort_order: int = 0
+
+
+class ChapterCreate(BaseModel):
+    """Request body for creating a code chapter."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    chapter_id: str | None = None
+    title_id: str = Field(min_length=1)
+    chapter_number: str = Field(min_length=1)
+    chapter_name: str = Field(min_length=1)
+    sort_order: int = 0
+
+
+class SectionCreate(BaseModel):
+    """Request body for creating a code section or subsection."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    section_id: str | None = None
+    chapter_id: str = Field(min_length=1)
+    section_number: str = Field(min_length=1)
+    section_heading: str = Field(min_length=1)
+    parent_section_id: str | None = None
+    sort_order: int = 0
+    administrative_regulation_refs: list[str] = Field(default_factory=list)
+    resolution_refs: list[str] = Field(default_factory=list)
+    policy_refs: list[str] = Field(default_factory=list)
+
+
+class SectionVersionCreate(BaseModel):
+    """Request body for adding an immutable section version."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version_id: str | None = None
+    section_id: str = Field(min_length=1)
+    source_id: str = Field(min_length=1)
+    version_label: str = Field(min_length=1)
+    body: str = Field(min_length=1)
+    effective_start: date
+    effective_end: date | None = None
+    status: str = "draft"
+    is_current: bool = False
+    adoption_event_id: str | None = None
+    amendment_event_id: str | None = None
+    amendment_summary: str | None = None
+    prior_version_id: str | None = None
+
+
 def _raise_source_error(exc: SourceRegistryError) -> None:
+    raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
+
+
+def _raise_section_error(exc: SectionLifecycleError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
 
@@ -72,16 +144,17 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "source registry foundation",
+        "status": "section version foundation",
         "message": (
-            "CivicCode runtime, canonical schema, and official source registry API are online. "
-            "Section/version workflows, search, citations, Q&A, summaries, staff workbench, "
-            "CivicClerk handoff, and public lookup workflows are not implemented yet."
+            "CivicCode runtime, canonical schema, official source registry API, and "
+            "section/version lifecycle APIs are online. Search, citations, Q&A, summaries, "
+            "staff workbench, CivicClerk handoff, and public lookup workflows are not "
+            "implemented yet."
         ),
         "code_answer_behavior": "not_available",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 4: code section and version lifecycle",
+        "next_step": "Milestone 5: search and section permalinks",
     }
 
 
@@ -188,3 +261,99 @@ async def transition_source(
     except SourceRegistryError as exc:
         _raise_source_error(exc)
     return source_to_staff_dict(source)
+
+
+@app.post("/api/v1/civiccode/titles", status_code=201)
+async def create_title(request: TitleCreate) -> dict[str, Any]:
+    """Create a municipal code title container."""
+    try:
+        title = SECTION_STORE.create_title(request.model_dump())
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    return title_to_dict(title)
+
+
+@app.post("/api/v1/civiccode/chapters", status_code=201)
+async def create_chapter(request: ChapterCreate) -> dict[str, Any]:
+    """Create a municipal code chapter under a title."""
+    try:
+        chapter = SECTION_STORE.create_chapter(request.model_dump())
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    return chapter_to_dict(chapter)
+
+
+@app.post("/api/v1/civiccode/sections", status_code=201)
+async def create_section(request: SectionCreate) -> dict[str, Any]:
+    """Create a code section or subsection without generating answers."""
+    try:
+        section = SECTION_STORE.create_section(request.model_dump())
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    return section_to_dict(section)
+
+
+@app.post("/api/v1/civiccode/sections/{section_id}/versions", status_code=201)
+async def create_section_version(
+    section_id: str,
+    request: SectionVersionCreate,
+) -> dict[str, Any]:
+    """Create an immutable section version for adopted, pending, or retired text."""
+    data = request.model_dump()
+    if data["section_id"] != section_id:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Path section_id must match request body section_id.",
+                "fix": "Use the same section_id in the URL and JSON body.",
+            },
+        )
+    try:
+        source = SOURCE_STORE.get(data["source_id"])
+    except SourceRegistryError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "message": f"Source '{data['source_id']}' was not found for this section version.",
+                "fix": "Register the source before adding section text from it.",
+            },
+        ) from exc
+    if source.status in {"failed", "superseded"}:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": f"Source '{source.source_id}' is {source.status} and cannot back section text.",
+                "fix": "Use an active source or refresh the source registry record first.",
+            },
+        )
+    if data["status"] == "adopted" and (source.status != "active" or not source.public_visible):
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "Adopted section versions require an active public-visible source.",
+                "fix": "Activate an official source in the registry before marking text as adopted law.",
+            },
+        )
+    try:
+        version = SECTION_STORE.create_version(data)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    return version_to_dict(version)
+
+
+@app.get("/api/v1/civiccode/sections/lookup")
+async def lookup_section(section_number: str, as_of: date | None = None) -> dict[str, Any]:
+    """Lookup adopted section text by current flag or effective date."""
+    try:
+        return SECTION_STORE.lookup_section(section_number, as_of=as_of)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+
+
+@app.get("/api/v1/civiccode/sections/{section_id}/history")
+async def section_history(section_id: str) -> dict[str, Any]:
+    """Return immutable amendment/version history for a section."""
+    try:
+        return SECTION_STORE.section_history(section_id)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
