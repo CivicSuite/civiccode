@@ -77,7 +77,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Search and permalink foundation online on top of the section/version foundation, source registry foundation, runtime foundation, and canonical schema foundation - code answers not available yet</p>
+  <p class="status">Citation contract foundation online on top of the search and permalink, section/version, source registry, runtime, and canonical schema foundations - code answers not available yet</p>
 
   <div class="grid">
     <section>
@@ -102,18 +102,19 @@
       <h2>What ships today</h2>
       <ul>
         <li>Installable Python package.</li>
-        <li>FastAPI app shell with <code>/</code> and <code>/health</code>.</li>
+        <li>FastAPI runtime foundation with <code>/</code> and <code>/health</code>.</li>
         <li>Exact <code>civiccore==0.2.0</code> dependency pin.</li>
         <li>Canonical SQLAlchemy metadata and Alembic migrations for ten <code>civiccode.*</code> tables.</li>
         <li>Official source registry API for codifier/source metadata, provenance, and source-state checks.</li>
         <li>Section/version lifecycle APIs for adopted, historical, and pending text boundaries.</li>
         <li>Public-safe search and stable section permalink APIs.</li>
-        <li>No municipal code answers, citation engine, Q&amp;A, or public lookup UI yet.</li>
+        <li>Deterministic citation/refusal objects with section, version, source, and effective-date fields.</li>
+        <li>No municipal code answers, Q&amp;A, or public lookup UI yet.</li>
       </ul>
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>Milestone 6: citation contract.</p>
+      <p>Milestone 7: citation-grounded Q&amp;A harness.</p>
       <p>The service is intentionally honest: <code>code_answer_behavior</code> is <code>not_available</code> until citations and source data exist.</p>
     </section>
   </div>
