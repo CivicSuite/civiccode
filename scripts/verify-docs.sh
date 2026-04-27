@@ -28,12 +28,14 @@ required=(
   "MILESTONE_7_DONE.md"
   "MILESTONE_8_DONE.md"
   "MILESTONE_9_DONE.md"
+  "MILESTONE_10_DONE.md"
   "pyproject.toml"
   "civiccode/__init__.py"
   "civiccode/main.py"
   "civiccode/citation_contract.py"
   "civiccode/qa_harness.py"
   "civiccode/plain_language.py"
+  "civiccode/ordinance_handoff.py"
   "civiccode/staff_workbench.py"
   "civiccode/source_registry.py"
   "civiccode/section_lifecycle.py"
@@ -52,7 +54,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> Plain-language-summaries-foundation truth check"
+echo "==> CivicClerk-handoff-foundation truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"
@@ -69,6 +71,8 @@ bad_markers=(
   "public staff-note visibility"
   "plain-language summaries are law"
   "summaries provide legal advice"
+  "pending ordinance language is adopted law"
+  "automatic ordinance codification is available"
 )
 
 for file in "${current_files[@]}"; do

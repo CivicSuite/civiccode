@@ -9,25 +9,27 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **plain-language summaries foundation**
-layered on the staff workbench, citation-grounded Q&A, citation contract,
-search and permalink, section/version, source registry, runtime foundation, and
-canonical schema foundations: an
+As of 2026-04-27, CivicCode has a **CivicClerk handoff foundation** layered on
+the plain-language summaries, staff workbench, citation-grounded Q&A, citation
+contract, search and permalink, section/version, source registry, runtime
+foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
 an exact `civiccore==0.2.0` dependency pin, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
-and staff-approved plain-language summaries labeled as non-authoritative.
+staff-approved plain-language summaries labeled as non-authoritative, and
+CivicClerk ordinance/adoption handoff intake with pending codification warnings.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
 There is no database source persistence, import parser, public lookup UI, live
-LLM call, CivicClerk handoff, or legal
-determination behavior in this repo yet. Staff interpretation notes are
-staff-only and must not be published to public endpoints.
+LLM call, automatic ordinance codification, or legal determination behavior in
+this repo yet. Staff interpretation notes are staff-only and must not be
+published to public endpoints. CivicClerk handoff events warn about pending
+codification but do not replace adopted code text.
 
-The current deliverable is Milestone 9:
+The current deliverable is Milestone 10:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -63,7 +65,12 @@ The current deliverable is Milestone 9:
 - label public summaries as `non_authoritative_explanation`,
 - keep authoritative code text visible beside approved summaries,
 - append audit events when summaries are created and approved,
-- keep docs and CI gates green before CivicClerk handoff work begins.
+- accept CivicClerk ordinance/adoption handoff events with meeting and agenda
+  item provenance,
+- distinguish pending codification from adopted codified law,
+- warn affected section lookups when a handoff may make the codified text stale,
+- detect likely conflicts when ordinance text references affected sections,
+- keep docs and CI gates green before public lookup UI work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -122,15 +129,16 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `plain-language summaries foundation`,
+Expected truth today: the service reports `CivicClerk handoff foundation`,
 exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
 section/version and search endpoints under `/api/v1/civiccode/sections` and
 `/api/v1/civiccode/search`, exposes deterministic citation objects under
 `/api/v1/civiccode/citations/build`, exposes citation-grounded answers under
 `/api/v1/civiccode/questions/answer`, exposes staff-only workbench endpoints
 under `/api/v1/civiccode/staff`, exposes approved public summaries under
-`/api/v1/civiccode/sections/{section_id}/summaries`, and marks successful
-answers with `code_answer_behavior=citation_grounded`.
+`/api/v1/civiccode/sections/{section_id}/summaries`, receives CivicClerk
+handoff events at `/api/v1/civiccode/staff/civicclerk/ordinance-events`, and
+marks successful answers with `code_answer_behavior=citation_grounded`.
 
 Migration smoke:
 
@@ -240,6 +248,24 @@ Expected plain-language truth today: public summaries appear only after staff
 approval, are labeled `non_authoritative_explanation`, warn that
 plain-language summaries are not law, and include authoritative section text so
 the official code remains visible.
+
+CivicClerk handoff smoke:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/civicclerk/ordinance-events \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  -d '{"external_event_id":"cc_event_2026_041","civicclerk_meeting_id":"meeting_2026_04_27","civicclerk_agenda_item_id":"agenda_14","ordinance_number":"2026-041","title":"Ordinance amending backyard chicken permits","status":"adopted","affected_sections":["6.12.040"],"source_document_url":"https://example.gov/minutes/2026-041.pdf","source_document_hash":"sha256:abc123","ordinance_text":"An ordinance amending Section 6.12.040."}'
+
+curl "http://127.0.0.1:8000/api/v1/civiccode/sections/lookup?section_number=6.12.040"
+```
+
+Expected CivicClerk handoff truth today: the handoff is stored as pending
+codification, CivicClerk meeting/agenda provenance is preserved, affected
+lookups include `handoff_warnings`, likely conflicts cite the affected section,
+and pending ordinance language is not adopted law or automatic ordinance
+codification.
 
 ## License
 

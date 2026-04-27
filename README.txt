@@ -6,9 +6,9 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a plain-language summaries foundation built on
-the staff workbench foundation, citation-grounded Q&A foundation, citation
-contract foundation, search and permalink foundation, section/version
+As of 2026-04-27, CivicCode has a CivicClerk handoff foundation built on the
+plain-language summaries foundation, staff workbench foundation,
+citation-grounded Q&A foundation, citation contract foundation, search and permalink foundation, section/version
 foundation, source registry foundation, runtime foundation, and canonical
 schema foundation. The package can
 be installed, the FastAPI app can start, / plus /health are available for IT
@@ -22,11 +22,14 @@ interpretation notes, staff Q&A context, and staff workbench audit events are
 available behind the trusted staff header seam.
 Staff-approved plain-language summaries are available after review, are labeled
 non-authoritative, and keep authoritative code text visible.
+CivicClerk ordinance/adoption handoff events are accepted as pending
+codification warnings without replacing adopted code text.
 
 This is not a legal-advice product and does not make live LLM calls. There is
 no source persistence, import parser, frontend workflow, public lookup UI,
-CivicClerk handoff, live LLM calls, or legal determination
-behavior yet. Staff notes are not public. Summaries are not law. Source,
+live LLM calls, automatic ordinance codification, or legal determination
+behavior yet. Staff notes are not public. Summaries are not law. Pending
+ordinance language is not adopted law. Source,
 section/version, search, permalink, citation-contract, citation-grounded Q&A,
 and staff workbench behavior exists so authoritative text can be found, cited,
 and annotated internally without uncited public answers. Code answers are
@@ -67,4 +70,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 10: CivicClerk handoff intake.
+Milestone 11: public code lookup surface.
