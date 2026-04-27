@@ -9,8 +9,9 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **public code lookup surface** layered on
-the CivicClerk handoff, plain-language summaries, staff workbench, citation-grounded Q&A, citation
+As of 2026-04-27, CivicCode has a **local import and connector hardening
+foundation** layered on the public code lookup surface, CivicClerk handoff,
+plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
@@ -27,13 +28,13 @@ plain-language summaries, and see pending-codification warnings when CivicClerk
 handoffs may affect a section.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
-There is no database source persistence, import parser, live
-LLM call, automatic ordinance codification, or legal determination behavior in
-this repo yet. Staff interpretation notes are staff-only and must not be
-published to public endpoints. CivicClerk handoff events warn about pending
-codification but do not replace adopted code text.
+There is no database source persistence beyond the current in-memory stores,
+live codifier sync, live LLM call, automatic ordinance codification, or legal
+determination behavior in this repo yet. Staff interpretation notes are
+staff-only and must not be published to public endpoints. CivicClerk handoff
+events warn about pending codification but do not replace adopted code text.
 
-The current deliverable is Milestone 11:
+The current deliverable is Milestone 12:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -77,7 +78,13 @@ The current deliverable is Milestone 11:
 - render a resident-facing public code lookup surface under `/civiccode`,
 - show accessible search success, empty, refusal, stale-source, and section
   detail states,
-- keep docs and CI gates green before import/connector hardening begins.
+- import local CSV/file-drop bundles and official HTML extract fixtures through
+  staff-only endpoints,
+- record import jobs with success or actionable failure states,
+- retry failed import jobs with corrected local bundles,
+- produce provenance reports with fixture checksums, source metadata, and a
+  no-outbound-dependency marker,
+- keep docs and CI gates green before accessibility/export hardening begins.
 
 ## Why CivicCode before CivicZone
 
@@ -286,6 +293,27 @@ Expected public lookup truth today: the page separates authoritative adopted
 code text, non-authoritative plain-language summaries, citations, and pending
 codification warnings. Legal-advice requests receive refusal copy with a staff
 contact route. Live LLM calls remain disabled.
+
+Local import smoke:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/imports/local-bundle \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  --data-binary @tests/fixtures/milestone_12/csv_bundle.json
+
+curl -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  http://127.0.0.1:8000/api/v1/civiccode/staff/imports/import_csv_animals/provenance
+```
+
+Expected import truth today: local fixtures can populate the in-memory
+title/chapter/section/version tree, re-importing the same bundle is
+idempotent, failed imports remain visible through staff endpoints with a fix
+path, and provenance reports show source metadata and fixture checksums.
+Milestone 12 does not require outbound network calls, Redis/Celery workers, or
+live codifier sync.
 
 ## License
 

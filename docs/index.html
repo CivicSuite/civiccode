@@ -77,13 +77,13 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Public code lookup surface online on top of the CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, and automatic ordinance codification not available</p>
+  <p class="status">Local import and connector hardening foundation online on top of the public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
       <h2>What it will do</h2>
       <ul>
-        <li>Import authoritative municipal code sources.</li>
+        <li>Import authoritative municipal code sources from local fixtures and file drops.</li>
         <li>Preserve section versions and effective dates.</li>
         <li>Answer routine code questions with citations.</li>
         <li>Label summaries as non-authoritative.</li>
@@ -116,6 +116,9 @@
         <li>CivicClerk handoff intake with pending codification warnings and likely conflict signals.</li>
         <li>Resident-facing public code lookup surface under <code>/civiccode</code> for the "Read code" workflow.</li>
         <li>Search, empty, legal-advice refusal, stale-source warning, and section detail states.</li>
+        <li>Staff-only local import jobs for CSV/file-drop bundles and official HTML extract fixtures.</li>
+        <li>Import retry, visible failure records, imported-tree verification, and provenance report endpoints.</li>
+        <li>No outbound network dependency, Redis/Celery worker, or live codifier sync required for local import.</li>
         <li>Pending ordinance language is not adopted law and does not replace codified text.</li>
         <li>Staff context is marked <code>staff_only_do_not_publish</code>; public answers stay <code>citation_grounded</code>.</li>
         <li>No legal advice, live LLM calls, or automatic ordinance codification yet. Staff notes remain staff-only.</li>
@@ -123,7 +126,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>Milestone 12: import and connector hardening.</p>
+      <p>Milestone 13: accessibility and export hardening.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

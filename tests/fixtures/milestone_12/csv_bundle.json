@@ -1,0 +1,63 @@
+{
+  "job_id": "import_csv_animals",
+  "connector_type": "csv_bundle",
+  "source": {
+    "source_id": "csv_active",
+    "name": "Example City Code CSV Export",
+    "publisher": "City Clerk",
+    "source_type": "official_file_drop",
+    "source_category": "municipal_code",
+    "file_reference": "file-drop/example-city-code-2026-04-27.csv",
+    "retrieved_at": "2026-04-27T12:00:00Z",
+    "retrieval_method": "official_file_drop",
+    "source_owner": "City Clerk",
+    "is_official": true,
+    "status": "active"
+  },
+  "titles": [
+    {
+      "title_id": "title_6",
+      "title_number": "6",
+      "title_name": "Animals",
+      "sort_order": 6
+    }
+  ],
+  "chapters": [
+    {
+      "chapter_id": "chapter_6_12",
+      "title_id": "title_6",
+      "chapter_number": "6.12",
+      "chapter_name": "Urban Livestock",
+      "sort_order": 12
+    }
+  ],
+  "sections": [
+    {
+      "section_id": "sec_6_12_040",
+      "chapter_id": "chapter_6_12",
+      "section_number": "6.12.040",
+      "section_heading": "Backyard chickens",
+      "sort_order": 40,
+      "administrative_regulation_refs": ["animal-permit-form"],
+      "resolution_refs": [],
+      "policy_refs": ["animal-control-faq"],
+      "approved_summary_refs": []
+    }
+  ],
+  "versions": [
+    {
+      "version_id": "version_6_12_040_current",
+      "section_id": "sec_6_12_040",
+      "source_id": "csv_active",
+      "version_label": "CSV current export",
+      "body": "Residents may keep up to six backyard chickens with a city permit.",
+      "effective_start": "2026-01-01",
+      "status": "adopted",
+      "is_current": true
+    }
+  ],
+  "provenance": {
+    "fixture_name": "csv_bundle.json",
+    "retrieval_method": "official_file_drop"
+  }
+}

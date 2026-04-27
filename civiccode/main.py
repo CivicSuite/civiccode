@@ -11,6 +11,14 @@ from starlette.responses import HTMLResponse
 
 from civiccode import __version__
 from civiccode.citation_contract import build_citation_payload, refusal
+from civiccode.import_connectors import (
+    CONNECTOR_TYPES,
+    CivicCodeImportError,
+    ImportConnectorStore,
+    imported_tree_snapshot,
+    job_to_dict,
+    provenance_report,
+)
 from civiccode.ordinance_handoff import (
     OrdinanceHandoffError,
     OrdinanceHandoffStore,
@@ -71,6 +79,10 @@ SECTION_STORE = SectionLifecycleStore()
 STAFF_NOTE_STORE = StaffWorkbenchStore()
 SUMMARY_STORE = PlainLanguageSummaryStore()
 HANDOFF_STORE = OrdinanceHandoffStore()
+IMPORT_STORE = ImportConnectorStore(
+    source_store=SOURCE_STORE,
+    section_store=SECTION_STORE,
+)
 
 
 class SourceCreate(BaseModel):
@@ -217,6 +229,21 @@ class CivicClerkOrdinanceEventCreate(BaseModel):
     failure_reason: str | None = None
 
 
+class ImportBundleCreate(BaseModel):
+    """Request body for local fixture/file-drop import jobs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    job_id: str | None = None
+    connector_type: str = Field(min_length=1)
+    source: SourceCreate
+    titles: list[TitleCreate] = Field(default_factory=list)
+    chapters: list[ChapterCreate] = Field(default_factory=list)
+    sections: list[SectionCreate] = Field(default_factory=list)
+    versions: list[SectionVersionCreate] = Field(default_factory=list)
+    provenance: dict[str, str] = Field(default_factory=dict)
+
+
 def _raise_source_error(exc: SourceRegistryError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
@@ -234,6 +261,10 @@ def _raise_summary_error(exc: PlainLanguageSummaryError) -> None:
 
 
 def _raise_handoff_error(exc: OrdinanceHandoffError) -> None:
+    raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
+
+
+def _raise_import_error(exc: CivicCodeImportError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
 
@@ -266,7 +297,7 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "public code lookup foundation",
+        "status": "import connector foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
@@ -276,13 +307,14 @@ async def root() -> dict[str, str]:
             "plain-language summaries are online and labeled non-authoritative. "
             "CivicClerk ordinance handoff intake and affected-section warnings are "
             "online. Resident-facing public lookup pages are online at /civiccode. "
-            "Live LLM calls and "
-            "legal determinations are not implemented yet."
+            "Local file-drop and fixture import jobs are online with provenance, "
+            "retry, and no required outbound dependency. Live LLM calls, live "
+            "codifier sync, and legal determinations are not implemented yet."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 12: import and connector hardening",
+        "next_step": "Milestone 13: accessibility and export hardening",
     }
 
 
@@ -362,6 +394,7 @@ async def source_registry_catalog() -> dict[str, Any]:
         "source_types": sorted(SOURCE_TYPES),
         "source_categories": SOURCE_CATEGORIES,
         "source_states": sorted(SOURCE_STATES),
+        "import_connector_types": sorted(CONNECTOR_TYPES),
         "source_transitions": {
             status: sorted(targets) for status, targets in SOURCE_TRANSITIONS.items()
         },
@@ -639,6 +672,97 @@ async def list_staff_audit_events(
     ]
     events.sort(key=lambda event: event["created_at"])
     return {"events": events}
+
+
+@app.post("/api/v1/civiccode/staff/imports/local-bundle", status_code=201)
+async def create_local_import_job(
+    request: ImportBundleCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Import a local codifier/file-drop fixture without outbound network calls."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    job = IMPORT_STORE.run_import(request.model_dump(), actor=actor)
+    return job_to_dict(job)
+
+
+@app.get("/api/v1/civiccode/staff/imports")
+async def list_import_jobs(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """List local import jobs and their visible success/failure states."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    return {"imports": [job_to_dict(job) for job in IMPORT_STORE.list_jobs()]}
+
+
+@app.get("/api/v1/civiccode/staff/imports/{job_id}")
+async def get_import_job(
+    job_id: str,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Read a local import job, including actionable failure details."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        job = IMPORT_STORE.get(job_id)
+    except CivicCodeImportError as exc:
+        _raise_import_error(exc)
+    return job_to_dict(job)
+
+
+@app.post("/api/v1/civiccode/staff/imports/{job_id}/retry", status_code=201)
+async def retry_import_job(
+    job_id: str,
+    request: ImportBundleCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Retry a failed import job with a corrected local bundle."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        job = IMPORT_STORE.retry_import(job_id, request.model_dump(), actor=actor)
+    except CivicCodeImportError as exc:
+        _raise_import_error(exc)
+    return job_to_dict(job)
+
+
+@app.get("/api/v1/civiccode/staff/imports/{job_id}/provenance")
+async def get_import_provenance(
+    job_id: str,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return a provenance report for a local import job."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        job = IMPORT_STORE.get(job_id)
+    except CivicCodeImportError as exc:
+        _raise_import_error(exc)
+    return provenance_report(job, SOURCE_STORE)
+
+
+@app.get("/api/v1/civiccode/staff/imports/{job_id}/tree")
+async def get_imported_tree(
+    job_id: str,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Show imported title/chapter/section/version tree for staff verification."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        job = IMPORT_STORE.get(job_id)
+        if job.status != "completed" or not job.source_id:
+            raise CivicCodeImportError(
+                f"Import job '{job_id}' does not have a completed source tree.",
+                "Open the job details, fix the failure, and retry before reading its imported tree.",
+                status_code=409,
+            )
+        return imported_tree_snapshot(job.source_id, SOURCE_STORE, SECTION_STORE)
+    except CivicCodeImportError as exc:
+        _raise_import_error(exc)
+    except SourceRegistryError as exc:
+        _raise_source_error(exc)
 
 
 @app.post("/api/v1/civiccode/staff/civicclerk/ordinance-events", status_code=201)

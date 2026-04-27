@@ -1,0 +1,63 @@
+{
+  "job_id": "import_html_parking",
+  "connector_type": "official_html_extract",
+  "source": {
+    "source_id": "html_active",
+    "name": "Example City Official HTML Code Extract",
+    "publisher": "City Clerk",
+    "source_type": "official_web_scrape",
+    "source_category": "municipal_code",
+    "source_url": "https://example.gov/code/title-10",
+    "retrieved_at": "2026-04-27T13:00:00Z",
+    "retrieval_method": "official_web_scrape",
+    "source_owner": "City Clerk",
+    "is_official": true,
+    "status": "active"
+  },
+  "titles": [
+    {
+      "title_id": "title_10",
+      "title_number": "10",
+      "title_name": "Vehicles and Traffic",
+      "sort_order": 10
+    }
+  ],
+  "chapters": [
+    {
+      "chapter_id": "chapter_10_08",
+      "title_id": "title_10",
+      "chapter_number": "10.08",
+      "chapter_name": "Parking",
+      "sort_order": 8
+    }
+  ],
+  "sections": [
+    {
+      "section_id": "sec_10_08_020",
+      "chapter_id": "chapter_10_08",
+      "section_number": "10.08.020",
+      "section_heading": "Overnight parking",
+      "sort_order": 20,
+      "administrative_regulation_refs": [],
+      "resolution_refs": ["resolution-2024-18"],
+      "policy_refs": [],
+      "approved_summary_refs": []
+    }
+  ],
+  "versions": [
+    {
+      "version_id": "version_10_08_020_current",
+      "section_id": "sec_10_08_020",
+      "source_id": "html_active",
+      "version_label": "Official HTML extract",
+      "body": "No vehicle may remain parked on a public street between 2:00 a.m. and 5:00 a.m. without a permit.",
+      "effective_start": "2026-02-01",
+      "status": "adopted",
+      "is_current": true
+    }
+  ],
+  "provenance": {
+    "fixture_name": "official_html_extract.json",
+    "retrieval_method": "official_web_scrape"
+  }
+}

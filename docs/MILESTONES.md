@@ -124,14 +124,26 @@ Expected tests/gates: browser QA, accessibility checks, API tests.
 
 Acceptance criteria:
 
-- Codifier import strategy follows accepted ADR.
-- Import failures are recoverable.
-- No outbound runtime dependency is required for air-gapped deployments unless
-  explicitly configured by the city.
+- Local CSV/file-drop and official HTML extract fixtures can import source,
+  title, chapter, section, and version records.
+- Import failures are recoverable and visible through staff APIs.
+- Re-importing the same local bundle is idempotent.
+- Provenance reports expose source metadata, fixture checksum, and import mode.
+- No outbound runtime dependency is required for local import.
 
 Expected tests/gates: connector tests, import fixture tests, air-gap checks.
 
-## Milestone 13 - v0.1.0 Release
+## Milestone 13 - Accessibility And Export Hardening
+
+Acceptance criteria:
+
+- Public pages and exports meet CivicAccess-ready accessibility expectations.
+- Exported code/section packages preserve citation and source provenance.
+- Browser QA covers desktop/mobile, focus, contrast, and copy states.
+
+Expected tests/gates: accessibility checks, browser QA, export tests.
+
+## Milestone 14 - v0.1.0 Release
 
 Acceptance criteria:
 

@@ -1,7 +1,7 @@
 # CivicCode User Manual
 
-CivicCode currently ships a public code lookup surface built on the
-CivicClerk handoff foundation,
+CivicCode currently ships a local import and connector hardening foundation
+built on the public code lookup surface, CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
 permalink foundation, section/version foundation, source
@@ -59,6 +59,11 @@ Current truth:
 - affected section lookups include pending codification warnings,
 - pending ordinance language is not adopted law and does not replace codified
   text,
+- staff can run local CSV/file-drop bundle and official HTML extract imports,
+- failed imports remain visible with an actionable fix and can be retried with
+  corrected local bundles,
+- provenance reports show source metadata, fixture checksum, and
+  no-outbound-dependency status,
 - residents can open `/civiccode`, search by section number or phrase, and read
   adopted code text with citations and warnings,
 - no live LLM calls or legal determinations are generated yet.
@@ -71,7 +76,8 @@ routes legal-advice questions back to staff.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 11 public code lookup surface plus
+This repo currently contains the Milestone 12 local import and connector
+hardening foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -311,6 +317,25 @@ signals when ordinance text references existing sections. They do not perform
 automatic ordinance codification and pending ordinance language is not adopted
 law.
 
+Local import route:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/imports/local-bundle \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  --data-binary @tests/fixtures/milestone_12/csv_bundle.json
+
+curl -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  http://127.0.0.1:8000/api/v1/civiccode/staff/imports/import_csv_animals/provenance
+```
+
+Local imports are synchronous and air-gap friendly in this milestone. The
+fixture import creates or reuses source, title, chapter, section, and version
+records; failed imports are stored with a fix path and can be retried. This is
+not live codifier sync and does not require Redis/Celery workers.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -328,4 +353,5 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 12: import and connector hardening.
+The next runtime design step is Milestone 13: accessibility and export
+hardening.
