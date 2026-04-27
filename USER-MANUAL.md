@@ -1,7 +1,7 @@
 # CivicCode User Manual
 
-CivicCode currently ships a citation contract foundation built on the search
-and permalink foundation, section/version foundation, source registry
+CivicCode currently ships a citation-grounded Q&A foundation built on the
+citation contract foundation, search and permalink foundation, section/version foundation, source registry
 foundation, runtime foundation, and canonical schema foundation. This manual
 explains what a first-time installer can do today and what is still planned.
 
@@ -34,17 +34,21 @@ Current truth:
 - deterministic citation objects can be built from adopted section text,
 - citation refusals include reasons and fix paths for missing, stale, or
   contradictory source situations,
+- citation-grounded questions can be answered when they resolve to one adopted
+  section and one active source,
+- legal-determination, uncited, stale, missing, ambiguous, or contradictory
+  questions return structured refusals,
 - no frontend exists yet,
-- no LLM answers or code-answer behavior are generated yet.
+- no live LLM calls or legal determinations are generated yet.
 
 For a non-technical user, there is not yet a public product workflow. The
 honest experience today is an IT smoke test that proves the module can start
-and that source and section/version records can be registered before import,
-citation, Q&A, and public lookup work begins.
+and that source, section/version, citation, and citation-grounded Q&A records
+can be exercised before import and public lookup work begins.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 6 citation contract foundation plus
+This repo currently contains the Milestone 7 citation-grounded Q&A foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -177,8 +181,21 @@ curl "http://127.0.0.1:8000/api/v1/civiccode/citations/build?section_number=6.12
 
 Citation objects include section id, version id, source id, effective date, and
 canonical URL. If the source is missing, stale, contradictory, or ambiguous, the
-response is a structured refusal with a reason and fix path. This is still not a
-Q&A answer and still not legal advice.
+response is a structured refusal with a reason and fix path.
+
+Ask a citation-grounded code question:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/questions/answer \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What does section 6.12.040 say about backyard chickens?","section_number":"6.12.040"}'
+```
+
+Code-answer behavior is limited to citation-grounded responses. The Q&A harness returns an answer only when it can attach one deterministic
+citation to adopted code text. It refuses legal determinations, uncited
+questions, missing sections, stale sources, and contradictory effective-date
+windows with a reason and fix path. It sets `llm_provider=not_used` because
+Milestone 7 is a deterministic harness, not a live LLM integration.
 
 ## Architecture reference
 
@@ -197,4 +214,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 7: citation-grounded Q&A harness.
+The next runtime design step is Milestone 8: staff workbench foundation.

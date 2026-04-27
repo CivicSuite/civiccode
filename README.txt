@@ -6,21 +6,23 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a citation contract foundation built on the
-search and permalink foundation, section/version foundation, source registry
+As of 2026-04-27, CivicCode has a citation-grounded Q&A foundation built on the
+citation contract foundation, search and permalink foundation, section/version foundation, source registry
 foundation, runtime foundation, and canonical schema foundation. The package can
 be installed, the FastAPI app can start, / plus /health are available for IT
 smoke checks, Alembic can create the canonical civiccode schema tables after
 CivicCore migrations run, staff can register official source records, staff can
 create titles, chapters, sections, and adopted or pending section versions,
-public-safe search/permalink APIs are available, and deterministic citation or
-refusal objects can be built.
+public-safe search/permalink APIs are available, deterministic citation or
+refusal objects can be built, and citation-grounded questions can be answered
+when one adopted section and active source can be cited.
 
-This is not the code-answer product yet. There is no source persistence, import
-parser, frontend workflow, LLM workflow, Q&A workflow, or code answers yet.
-Source, section/version, search, permalink, and citation-contract behavior
-exists so authoritative text can be found and cited before any answer surface is
-enabled.
+This is not a legal-advice product and does not make live LLM calls. There is
+no source persistence, import parser, frontend workflow, public lookup UI, staff
+workbench, or legal determination behavior yet. Source, section/version, search,
+permalink, citation-contract, and citation-grounded Q&A behavior exists so
+authoritative text can be found and cited without uncited answers. Code answers
+are limited to citation_grounded responses.
 
 CivicCode is the next planning lane because CivicZone needs an authoritative
 municipal-code source before zoning runtime work begins.
@@ -56,4 +58,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 7: citation-grounded Q&A harness.
+Milestone 8: staff workbench foundation.

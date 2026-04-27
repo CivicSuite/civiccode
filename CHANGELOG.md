@@ -20,10 +20,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Milestone 4 section/version foundation: title/chapter/section creation APIs, immutable section-version records, current and historical section lookup, related non-code material references, pending-law refusal, overlapping-date ambiguity checks, and amendment history.
 - Milestone 5 search and permalink foundation: public-safe search endpoint, exact section-number lookup through search, phrase search over adopted text, related public material result types, actionable empty search state, stable section permalink endpoint, and leakage guardrails.
 - Milestone 6 citation contract foundation: deterministic citation object, section/version/source/effective-date fields, canonical URL, information-not-determination classification, and structured refusals for missing, stale, or contradictory source situations.
+- Milestone 7 citation-grounded Q&A foundation: deterministic question-answer endpoint, exact citation requirement, single-result search resolution, legal-determination refusal, uncited-question refusal, stale-source refusal, and `llm_provider=not_used` guardrail.
 
 ### Not Shipped
 
 - No source persistence beyond the current in-memory registry.
 - No frontend workflow.
-- No LLM/code-answer behavior.
-- No Q&A workflow, public lookup UI, or CivicClerk handoff yet.
+- No live LLM calls.
+- No legal-determination behavior.
+- No public lookup UI, staff workbench, or CivicClerk handoff yet.

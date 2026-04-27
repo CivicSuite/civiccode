@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civiccode import __version__
 from civiccode.citation_contract import build_citation_payload, refusal
+from civiccode.qa_harness import QuestionRequestContext, build_grounded_answer
 from civiccode.section_lifecycle import (
     SectionLifecycleError,
     SectionLifecycleStore,
@@ -133,6 +134,16 @@ class SectionVersionCreate(BaseModel):
     prior_version_id: str | None = None
 
 
+class QuestionAnswerRequest(BaseModel):
+    """Request body for citation-grounded code Q&A."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question: str = Field(min_length=1)
+    section_number: str | None = None
+    as_of: date | None = None
+
+
 def _raise_source_error(exc: SourceRegistryError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
@@ -146,18 +157,19 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "citation contract foundation",
+        "status": "citation-grounded Q&A foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
-            "APIs are online. Deterministic citations and refusal objects are online. Q&A, "
-            "summaries, staff workbench, CivicClerk handoff, and public lookup UI are not "
-            "implemented yet."
+            "APIs are online. Deterministic citations and refusal objects are online. "
+            "Citation-grounded Q&A harness is online for adopted sections. Summaries, "
+            "staff workbench, CivicClerk handoff, public lookup UI, live LLM calls, and "
+            "legal determinations are not implemented yet."
         ),
-        "code_answer_behavior": "not_available",
+        "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 7: citation-grounded Q&A harness",
+        "next_step": "Milestone 8: staff workbench foundation",
     }
 
 
@@ -383,6 +395,24 @@ async def search_sections(q: str) -> dict[str, Any]:
 @app.get("/api/v1/civiccode/citations/build")
 async def build_citation(section_number: str, as_of: date | None = None) -> dict[str, Any]:
     """Build a deterministic citation object or a structured refusal."""
+    return _build_citation_for_section(section_number, as_of)
+
+
+@app.post("/api/v1/civiccode/questions/answer")
+async def answer_question(request: QuestionAnswerRequest) -> dict[str, Any]:
+    """Answer code questions only when an adopted section citation grounds them."""
+    return build_grounded_answer(
+        QuestionRequestContext(
+            question=request.question,
+            section_number=request.section_number,
+            as_of=request.as_of,
+        ),
+        search=SECTION_STORE.search,
+        build_citation=_build_citation_for_section,
+    )
+
+
+def _build_citation_for_section(section_number: str, as_of: date | None = None) -> dict[str, Any]:
     try:
         context = SECTION_STORE.citation_context(section_number, as_of=as_of)
     except SectionLifecycleError as exc:
