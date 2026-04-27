@@ -17,6 +17,7 @@ required=(
   "CODE_OF_CONDUCT.md"
   "docs/RECONCILIATION.md"
   "docs/MILESTONES.md"
+  "docs/IMPLEMENTATION_PLAN.md"
   "docs/github-discussions-seed.md"
   "docs/index.html"
 )

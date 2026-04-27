@@ -3,6 +3,9 @@
 This plan is scaffolded from the CivicSuite unified spec, the CivicCode
 roadmap, and suite ADRs. Runtime code starts only after Milestone 0 is reviewed.
 
+For PR-sized execution details, see
+[`docs/IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md).
+
 ## Milestone 0 - Reconciliation And Gates
 
 Acceptance criteria:
