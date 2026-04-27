@@ -10,6 +10,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civiccode import __version__
 from civiccode.citation_contract import build_citation_payload, refusal
+from civiccode.plain_language import (
+    PlainLanguageSummaryError,
+    PlainLanguageSummaryStore,
+    summary_audit_event_to_dict,
+    summary_to_public_dict,
+    summary_to_staff_dict,
+)
 from civiccode.qa_harness import QuestionRequestContext, build_grounded_answer
 from civiccode.section_lifecycle import (
     SectionLifecycleError,
@@ -47,6 +54,7 @@ app = FastAPI(
 SOURCE_STORE = SourceRegistryStore()
 SECTION_STORE = SectionLifecycleStore()
 STAFF_NOTE_STORE = StaffWorkbenchStore()
+SUMMARY_STORE = PlainLanguageSummaryStore()
 
 
 class SourceCreate(BaseModel):
@@ -161,6 +169,18 @@ class InterpretationNoteCreate(BaseModel):
     status: str = "draft"
 
 
+class PlainLanguageSummaryCreate(BaseModel):
+    """Request body for staff-drafted plain-language summaries."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    summary_id: str | None = None
+    section_version_id: str = Field(min_length=1)
+    summary_text: str = Field(min_length=1)
+    language_code: str = "en"
+    status: str = "draft"
+
+
 def _raise_source_error(exc: SourceRegistryError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
@@ -170,6 +190,10 @@ def _raise_section_error(exc: SectionLifecycleError) -> None:
 
 
 def _raise_staff_error(exc: StaffWorkbenchError) -> None:
+    raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
+
+
+def _raise_summary_error(exc: PlainLanguageSummaryError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
 
@@ -202,20 +226,21 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "staff workbench foundation",
+        "status": "plain-language summaries foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
             "APIs are online. Deterministic citations and refusal objects are online. "
             "Citation-grounded Q&A harness is online for adopted sections. Staff "
-            "interpretation-note APIs and staff Q&A context are online. Summaries, "
+            "interpretation-note APIs and staff Q&A context are online. Staff-approved "
+            "plain-language summaries are online and labeled non-authoritative. "
             "CivicClerk handoff, public lookup UI, live LLM calls, and "
             "legal determinations are not implemented yet."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 9: plain-language summaries",
+        "next_step": "Milestone 10: CivicClerk handoff intake",
     }
 
 
@@ -505,7 +530,100 @@ async def list_staff_audit_events(
 ) -> dict[str, Any]:
     """List staff workbench audit events for authorized staff clients."""
     _require_staff(x_civiccode_role, x_civiccode_actor)
-    return {"events": [audit_event_to_dict(event) for event in STAFF_NOTE_STORE.audit_events()]}
+    events = [
+        *[audit_event_to_dict(event) for event in STAFF_NOTE_STORE.audit_events()],
+        *[summary_audit_event_to_dict(event) for event in SUMMARY_STORE.audit_events()],
+    ]
+    return {"events": events}
+
+
+@app.post("/api/v1/civiccode/staff/sections/{section_id}/summaries", status_code=201)
+async def create_plain_language_summary(
+    section_id: str,
+    request: PlainLanguageSummaryCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Create a staff-drafted plain-language summary tied to adopted code text."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        SECTION_STORE.get_section(section_id)
+        version = SECTION_STORE.get_version(request.section_version_id)
+        if version.section_id != section_id:
+            raise PlainLanguageSummaryError(
+                "Plain-language summary section does not match the cited section version.",
+                "Use a section_version_id that belongs to the section in the request URL.",
+                status_code=409,
+            )
+        if version.status != "adopted":
+            raise PlainLanguageSummaryError(
+                "Plain-language summaries require an adopted section version.",
+                "Attach summaries only to adopted law, not draft or pending text.",
+            )
+        summary = SUMMARY_STORE.create_summary(
+            section_id,
+            request.model_dump(),
+            actor=actor,
+        )
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    except PlainLanguageSummaryError as exc:
+        _raise_summary_error(exc)
+    return summary_to_staff_dict(summary)
+
+
+@app.post("/api/v1/civiccode/staff/summaries/{summary_id}/approve")
+async def approve_plain_language_summary(
+    summary_id: str,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Approve a plain-language summary for public display after staff review."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        summary = SUMMARY_STORE.get_summary(summary_id)
+        version = SECTION_STORE.get_version(summary.section_version_id)
+        if version.status != "adopted":
+            raise PlainLanguageSummaryError(
+                "Only summaries tied to adopted section text can be approved.",
+                "Attach the summary to an adopted section version before approving it.",
+                status_code=409,
+            )
+        summary = SUMMARY_STORE.approve_summary(summary_id, actor=actor)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    except PlainLanguageSummaryError as exc:
+        _raise_summary_error(exc)
+    return summary_to_staff_dict(summary)
+
+
+@app.get("/api/v1/civiccode/sections/{section_id}/summaries")
+async def list_public_plain_language_summaries(section_id: str) -> dict[str, Any]:
+    """List public approved summaries while keeping authoritative code visible."""
+    try:
+        section = SECTION_STORE.get_section(section_id)
+        summaries = []
+        for summary in SUMMARY_STORE.list_for_section(section_id):
+            version = SECTION_STORE.get_version(summary.section_version_id)
+            summaries.append(
+                summary_to_public_dict(
+                    summary,
+                    authoritative_section={
+                        "section_id": section.section_id,
+                        "section_number": section.section_number,
+                        "section_heading": section.section_heading,
+                    },
+                    authoritative_text=version.body,
+                )
+            )
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    return {
+        "section_id": section_id,
+        "summaries": summaries,
+        "count": len(summaries),
+        "code_answer_behavior": "not_available",
+    }
 
 
 @app.post("/api/v1/civiccode/staff/questions/answer")

@@ -392,6 +392,16 @@ class SectionLifecycleStore:
                 status_code=404,
             ) from exc
 
+    def get_version(self, version_id: str) -> SectionVersion:
+        try:
+            return self._versions[version_id]
+        except KeyError as exc:
+            raise SectionLifecycleError(
+                f"Section version '{version_id}' was not found.",
+                "Create the adopted section version before attaching summaries to it.",
+                status_code=404,
+            ) from exc
+
     def reset(self) -> None:
         self._titles.clear()
         self._chapters.clear()

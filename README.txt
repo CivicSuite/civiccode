@@ -6,10 +6,11 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a staff workbench foundation built on the
-citation-grounded Q&A foundation, citation contract foundation, search and
-permalink foundation, section/version foundation, source registry foundation,
-runtime foundation, and canonical schema foundation. The package can
+As of 2026-04-27, CivicCode has a plain-language summaries foundation built on
+the staff workbench foundation, citation-grounded Q&A foundation, citation
+contract foundation, search and permalink foundation, section/version
+foundation, source registry foundation, runtime foundation, and canonical
+schema foundation. The package can
 be installed, the FastAPI app can start, / plus /health are available for IT
 smoke checks, Alembic can create the canonical civiccode schema tables after
 CivicCore migrations run, staff can register official source records, staff can
@@ -19,11 +20,13 @@ refusal objects can be built, and citation-grounded questions can be answered
 when one adopted section and active source can be cited. Staff-only
 interpretation notes, staff Q&A context, and staff workbench audit events are
 available behind the trusted staff header seam.
+Staff-approved plain-language summaries are available after review, are labeled
+non-authoritative, and keep authoritative code text visible.
 
 This is not a legal-advice product and does not make live LLM calls. There is
-no source persistence, import parser, frontend workflow, public lookup UI, staff
-plain-language summary workflow, CivicClerk handoff, live LLM calls, or legal
-determination behavior yet. Staff notes are not public. Source,
+no source persistence, import parser, frontend workflow, public lookup UI,
+CivicClerk handoff, live LLM calls, or legal determination
+behavior yet. Staff notes are not public. Summaries are not law. Source,
 section/version, search, permalink, citation-contract, citation-grounded Q&A,
 and staff workbench behavior exists so authoritative text can be found, cited,
 and annotated internally without uncited public answers. Code answers are
@@ -64,4 +67,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 9: plain-language summaries.
+Milestone 10: CivicClerk handoff intake.
