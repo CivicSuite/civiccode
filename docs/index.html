@@ -77,7 +77,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Staff workbench foundation online on top of the citation-grounded Q&amp;A, citation contract, search and permalink, section/version, source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, public lookup UI, and plain-language summaries not available</p>
+  <p class="status">Plain-language summaries foundation online on top of the staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, public lookup UI, and CivicClerk handoff not available</p>
 
   <div class="grid">
     <section>
@@ -111,13 +111,15 @@
         <li>Deterministic citation/refusal objects with section, version, source, and effective-date fields.</li>
         <li>Citation-grounded Q&amp;A harness for questions that resolve to one adopted section and active source.</li>
         <li>Staff interpretation notes, staff Q&amp;A context, and staff workbench audit events.</li>
+        <li>Staff-approved plain-language summaries labeled non-authoritative with <code>non_authoritative_explanation</code>.</li>
+        <li>Authoritative code text remains visible beside approved summaries.</li>
         <li>Staff context is marked <code>staff_only_do_not_publish</code>; public answers stay <code>citation_grounded</code>.</li>
-        <li>No legal advice, live LLM calls, plain-language summaries, CivicClerk handoff, or public lookup UI yet.</li>
+        <li>No legal advice, live LLM calls, CivicClerk handoff, or public lookup UI yet.</li>
       </ul>
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>Milestone 9: plain-language summaries.</p>
+      <p>Milestone 10: CivicClerk handoff intake.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

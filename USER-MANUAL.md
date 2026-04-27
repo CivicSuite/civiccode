@@ -1,10 +1,13 @@
 # CivicCode User Manual
 
-CivicCode currently ships a staff workbench foundation built on the
-citation-grounded Q&A foundation, citation contract foundation, search and
-permalink foundation, section/version foundation, source registry foundation,
-runtime foundation, and canonical schema foundation. This manual
+CivicCode currently ships a plain-language summaries foundation built on the
+staff workbench foundation, citation-grounded Q&A foundation, citation contract
+foundation, search and permalink foundation, section/version foundation, source
+registry foundation, runtime foundation, and canonical schema foundation. This manual
 explains what a first-time installer can do today and what is still planned.
+
+The source registry remains the official source metadata foundation for every
+summary, citation, lookup, and Q&A response.
 
 ## For municipal decision-makers
 
@@ -45,18 +48,23 @@ Current truth:
 - public lookup, public search, and public Q&A responses do not expose staff
   notes or staff note counts,
 - staff note writes append audit events,
+- staff can draft and approve plain-language summaries tied to adopted section
+  versions,
+- public summaries are visible only after staff approval,
+- approved public summaries are labeled `non_authoritative_explanation` and
+  displayed with authoritative section text,
 - no frontend exists yet,
 - no live LLM calls or legal determinations are generated yet.
 
 For a non-technical user, there is not yet a public product workflow. The
 honest experience today is an IT smoke test that proves the module can start
-and that source, section/version, citation, citation-grounded Q&A, and staff
-workbench records can be exercised before import, summaries, and public lookup
-work begin.
+and that source, section/version, citation, citation-grounded Q&A, staff
+workbench, and plain-language summary records can be exercised before import,
+CivicClerk handoff, and public lookup work begin.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 8 staff workbench foundation plus
+This repo currently contains the Milestone 9 plain-language summaries foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -233,6 +241,34 @@ Staff Q&A context is explicitly marked `staff_only_do_not_publish`. Public
 lookup, public search, and public Q&A responses must not expose staff note text
 or staff note counts.
 
+Draft and approve a plain-language summary:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/sections/sec_chickens/summaries \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  -d '{
+    "summary_id": "summary_chickens",
+    "section_version_id": "v_current",
+    "summary_text": "In plain language: residents may keep up to six chickens if they get a city permit."
+  }'
+
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/summaries/summary_chickens/approve \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov"
+```
+
+Read approved public summaries:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/civiccode/sections/sec_chickens/summaries
+```
+
+Public summaries are non-authoritative explanations. They must link back to the
+adopted section version and keep the authoritative code text visible beside the
+summary.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -250,4 +286,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 9: plain-language summaries.
+The next runtime design step is Milestone 10: CivicClerk handoff intake.
