@@ -1,6 +1,7 @@
 # CivicCode User Manual
 
-CivicCode currently ships a CivicClerk handoff foundation built on the
+CivicCode currently ships a public code lookup surface built on the
+CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
 permalink foundation, section/version foundation, source
@@ -58,18 +59,19 @@ Current truth:
 - affected section lookups include pending codification warnings,
 - pending ordinance language is not adopted law and does not replace codified
   text,
-- no frontend exists yet,
+- residents can open `/civiccode`, search by section number or phrase, and read
+  adopted code text with citations and warnings,
 - no live LLM calls or legal determinations are generated yet.
 
-For a non-technical user, there is not yet a public product workflow. The
-honest experience today is an IT smoke test that proves the module can start
-and that source, section/version, citation, citation-grounded Q&A, staff
-workbench, plain-language summary, and CivicClerk handoff records can be
-exercised before import and public lookup work begin.
+For a non-technical user, the first public "Read code" workflow is now available: open
+`/civiccode`, enter a section number or phrase, review search results, open a
+section detail page, and read the authoritative code text, citation,
+plain-language summary, and any pending codification warning. The page also
+routes legal-advice questions back to staff.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 10 CivicClerk handoff foundation plus
+This repo currently contains the Milestone 11 public code lookup surface plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -295,6 +297,14 @@ curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/civicclerk/ordinance-e
   }'
 ```
 
+Public lookup route:
+
+```bash
+curl "http://127.0.0.1:8000/civiccode"
+curl "http://127.0.0.1:8000/civiccode/search?q=6.12.040"
+curl "http://127.0.0.1:8000/civiccode/sections/6.12.040"
+```
+
 CivicClerk handoff events preserve meeting and agenda item provenance. They
 surface pending codification warnings on affected lookups and likely conflict
 signals when ordinance text references existing sections. They do not perform
@@ -318,4 +328,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 11: public code lookup surface.
+The next runtime design step is Milestone 12: import and connector hardening.
