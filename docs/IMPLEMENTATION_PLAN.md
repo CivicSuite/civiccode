@@ -11,7 +11,9 @@ and no planned behavior promoted as shipped.
 
 ## Unified Spec Traceability
 
-This plan is keyed directly to `CivicSuite/civicsuite/docs/CivicSuiteUnifiedSpec.md`:
+This plan is keyed directly to `CivicSuite/civicsuite/docs/CivicSuiteUnifiedSpec.md`
+and cross-checked against the original catalog extract at
+`docx-canonical-extracts/CivicSuiteAI_Module_Catalog_v1 (1).txt`.
 
 - Section 4.4: documentation, QA, version, browser-QA, and shipped/planned
   truth are release gates.
@@ -38,6 +40,35 @@ This plan is keyed directly to `CivicSuite/civicsuite/docs/CivicSuiteUnifiedSpec
 - Section 19: CivicCode is the next lane before CivicZone runtime, and CivicZone
   starts only after CivicCode has a versioned source-of-code contract or an ADR
   accepts a temporary substitute.
+
+## Catalog v1 Traceability
+
+The catalog extract is older than the current umbrella specification in two
+ways: it says MIT licensing and "26 modules across 6 tiers." CivicSuite's
+current governing decisions supersede those with Apache 2.0 licensing and 26
+modules across 7 tiers. The CivicCode product requirements from the catalog are
+still preserved here:
+
+- Import municipal code from codifier exports or official source material,
+  including Municode, American Legal, Code Publishing, General Code, XML, DOCX,
+  file drops, and official web scrape/export paths.
+- Search across titles, chapters, sections, subsections, administrative
+  regulations, resolutions, policies, and approved summaries.
+- Answer resident questions such as "can I have chickens" only when the answer
+  can cite exact code sections and link to the authoritative text.
+- Support staff Q&A with richer context, cross-references, and prior approved
+  interpretations while keeping staff-only material out of public answers.
+- Provide section permalinks, version history, amendment tracking, and
+  effective-date lookup.
+- Track adopted ordinances from CivicClerk, mark affected code stale or pending
+  codification, and detect likely conflicts when proposed or adopted language
+  touches existing sections.
+- Publish popular questions and related sections without implying legal advice.
+- Generate plain-language summaries that are approved by staff before public
+  display and remain ready for CivicAccess multilingual/accessibility workflows.
+- Preserve the catalog's "not a codifier replacement" boundary: CivicCode helps
+  residents and staff find and understand official code, but it does not replace
+  the official codifier contract or make legal determinations.
 
 ## Operating Pattern
 
@@ -69,13 +100,14 @@ Required gates for every PR:
 | 5 | Search + permalinks | Search and stable section URLs | Yes | Medium |
 | 6 | Citation contract | Deterministic citation model and refusal rules | No | High |
 | 7 | Q&A harness | Local-LLM provider wiring with no legal advice | Optional | High |
-| 8 | Plain-language summaries | Staff-approved non-authoritative summaries | Yes | High |
-| 9 | Staff notes | Staff-only interpretation notes + leakage tests | Yes | High |
-| 10 | CivicClerk handoff | Ordinance/adoption event intake | No | High |
-| 11 | Resident portal/public lookup | Resident-facing "Read code" surface | Yes | High |
-| 12 | Import and async hardening | Codifier/import fixtures, Redis/Celery recovery paths | Optional | High |
-| 13 | Accessibility/export hardening | CivicAccess-ready publishing/export posture | Yes | High |
-| 14 | Release | v0.1.0 packaging, docs, compatibility PR | Yes | High |
+| 8 | Popular questions + related sections | Safe resident discovery helpers | Yes | Medium |
+| 9 | Plain-language summaries | Staff-approved non-authoritative summaries | Yes | High |
+| 10 | Staff workbench | Staff Q&A, notes, cross-references, interpretation history | Yes | High |
+| 11 | CivicClerk handoff + conflict detection | Ordinance/adoption event intake and likely-code-conflict warnings | No | High |
+| 12 | Resident portal/public lookup | Resident-facing "Read code" surface | Yes | High |
+| 13 | Import and async hardening | Codifier/import fixtures, Redis/Celery recovery paths | Optional | High |
+| 14 | Accessibility/export hardening | CivicAccess-ready publishing/export posture | Yes | High |
+| 15 | Release | v0.1.0 packaging, docs, compatibility PR | Yes | High |
 
 ## Chunk 1 - Runtime Foundation
 
@@ -88,6 +120,9 @@ Work:
 - Add `civiccode/__init__.py` with `__version__ = "0.1.0.dev0"`.
 - Add `civiccode/main.py` FastAPI app with `/` and `/health`.
 - Add app settings surface for local-only runtime defaults.
+- Establish route naming for the future module API under `/api/v1/civiccode`
+  and document that frontend pages will mount under `/civiccode` in the shared
+  CivicSuite shell when UI ships.
 - Add tests for package import, version, root payload, health payload, and
   no accidental shipped-feature claims.
 - Update README/manual/landing page from "scaffold only" to "runtime
@@ -154,6 +189,12 @@ Work:
 - Add source registry service/API.
 - Support source type, publisher, URL/file reference, retrieved timestamp,
   status, and notes.
+- Include codifier/source names needed by catalog v1: Municode, American Legal,
+  Code Publishing, General Code, official XML/DOCX exports, official file drops,
+  and official web scrape/export paths.
+- Support source categories for municipal code, administrative regulations,
+  resolutions, policies, adopted ordinances, historical versions, approved
+  summaries, and internal staff notes.
 - Add source provenance fields required for "configuration transparency":
   source owner, retrieval method, checksum/hash where available, and whether the
   source is official.
@@ -168,6 +209,7 @@ Acceptance tests:
 - Public endpoints do not expose staff-only source notes.
 - Active source cannot be promoted without official-source metadata or an
   explicit non-official label.
+- Source category controls public visibility and downstream search eligibility.
 
 ## Chunk 4 - Section And Version Model
 
@@ -178,6 +220,8 @@ Work:
 - Add title/chapter/section/subsection APIs.
 - Add section version effective-date semantics.
 - Add deterministic lookup by section number and date.
+- Add admin regulation, resolution, and policy linkage fields so search can
+  surface related non-code materials without labeling them as code.
 - Add amendment/version history fields so CivicCode can answer what changed and
   when.
 - Refuse when date context is ambiguous or missing.
@@ -197,7 +241,10 @@ Goal: let users find code sections without Q&A.
 Work:
 
 - Add full-text search across titles/chapters/sections.
+- Include subsections, administrative regulations, resolutions, policies, and
+  approved summaries in the indexed corpus with public/staff visibility labels.
 - Add stable section permalink endpoint.
+- Add related-section suggestions for exact section lookups and search results.
 - Add empty/no-result/error states.
 - Make public search permission-aware even before staff-only notes exist, so the
   leakage contract is established early.
@@ -215,10 +262,13 @@ Browser states if UI changes:
 Acceptance tests:
 
 - Search by exact section number.
-- Search by phrase.
+- Search by phrase, including resident-style questions such as "can I have
+  chickens" when matching source text exists.
 - No-result response tells the user what to try next.
 - Permalink stays stable across text revisions.
 - Public search response never includes internal-only fields.
+- Public search clearly distinguishes code, regulation, policy, resolution, and
+  summary result types.
 
 ## Chunk 6 - Citation Contract
 
@@ -252,6 +302,9 @@ Work:
 - Add no-live-provider-call tests.
 - Add prompt eval fixtures for routine questions.
 - Add refusal tests for missing, stale, ambiguous, and legal-advice questions.
+- Add staff-mode answer path only after leakage tests exist; staff answers may
+  cite prior approved interpretations and cross-references, but public answers
+  may not use staff-only notes.
 
 Acceptance tests:
 
@@ -260,8 +313,40 @@ Acceptance tests:
 - Missing/stale sources refuse.
 - Air-gap/no outbound-network check passes.
 - Prompt evals fail if an answer lacks citations or presents legal advice.
+- Resident answers include authoritative links and "not legal advice" routing.
+- Staff answers include richer cross-references without changing the public
+  refusal/citation contract.
 
-## Chunk 8 - Plain-Language Summaries
+## Chunk 8 - Popular Questions And Related Sections
+
+Goal: provide safe discovery aids without pretending popular questions are legal
+advice.
+
+Work:
+
+- Add popular-question records tied to approved Q&A fixtures or staff-approved
+  summaries.
+- Add related-section service using explicit cross-references and search signals.
+- Add public display rules for popular questions, related sections, and "people
+  also ask" style prompts.
+- Add clear labels that these are navigation aids, not determinations.
+
+Browser states if UI changes:
+
+- Popular questions populated.
+- No popular questions yet.
+- Related sections populated.
+- Related sections unavailable.
+- Mobile and desktop.
+
+Acceptance tests:
+
+- Public popular questions only link to cited, approved source-backed answers.
+- Related sections never include staff-only notes or hidden source material.
+- Empty states explain how staff can approve public questions later.
+- UI copy says navigation aid, not legal determination.
+
+## Chunk 9 - Plain-Language Summaries
 
 Goal: allow staff-approved summaries without making them authoritative.
 
@@ -289,13 +374,16 @@ Acceptance tests:
 - Summary cannot be approved without source citation.
 - Summary copy is distinguishable from authoritative code text in API and UI.
 
-## Chunk 9 - Staff Interpretation Notes
+## Chunk 10 - Staff Workbench
 
-Goal: add internal notes without public leakage.
+Goal: support staff Q&A, internal interpretation notes, and prior approved
+interpretations without public leakage.
 
 Work:
 
 - Add staff-only note model/API.
+- Add staff Q&A workbench that can show cross-references and prior approved
+  interpretations.
 - Add visibility tests before implementation.
 - Add retention/audit behavior once ADR is accepted.
 - Add public endpoint leakage tests.
@@ -306,12 +394,14 @@ Acceptance tests:
 
 - Anonymous/public requests never include note text, metadata, or counts.
 - Staff requests include notes only with correct role.
+- Staff Q&A can cite internal notes only in staff responses.
 - Every note create/update/delete writes audit entry.
 - Search and Q&A never use staff-only notes for public answers.
 
-## Chunk 10 - CivicClerk Handoff Intake
+## Chunk 11 - CivicClerk Handoff And Conflict Detection
 
-Goal: receive ordinance/adoption events from CivicClerk.
+Goal: receive ordinance/adoption events from CivicClerk and flag likely code
+conflicts.
 
 Work:
 
@@ -321,6 +411,8 @@ Work:
 - Distinguish adopted law from pending codifier update.
 - Preserve CivicClerk event provenance so the code history can point back to the
   public meeting/action record.
+- Detect likely conflicts when proposed or adopted ordinance language touches
+  existing sections, repeal/amend phrases, or overlapping effective dates.
 
 Acceptance tests:
 
@@ -328,9 +420,11 @@ Acceptance tests:
 - Invalid event rejected with fix path.
 - Pending ordinance language never appears as codified law.
 - Stale-code warning appears in affected lookups.
+- Likely conflict warnings cite the affected sections and the triggering
+  ordinance/resolution event.
 - Handoff failures are actionable and do not mutate code state.
 
-## Chunk 11 - Resident Portal/Public Code Lookup UI
+## Chunk 12 - Resident Portal/Public Code Lookup UI
 
 Goal: provide CivicCode's resident-facing "Read code" surface while remaining
 compatible with the future shared resident portal shell.
@@ -338,6 +432,8 @@ compatible with the future shared resident portal shell.
 Work:
 
 - Add public search/section pages.
+- Mount pages under `/civiccode` while remaining compatible with a future shared
+  resident portal shell.
 - Add clear citation UI.
 - Add legal-disclaimer and staff-contact routing.
 - Add accessible empty/error/ambiguous states.
@@ -364,7 +460,7 @@ Acceptance tests:
 - UI copy separates authoritative code text, plain-language explanation, and
   staff-contact routing.
 
-## Chunk 12 - Import And Async Hardening
+## Chunk 13 - Import And Async Hardening
 
 Goal: make source ingestion recoverable, auditable, and ready for background
 work.
@@ -373,6 +469,8 @@ Work:
 
 - Implement chosen codifier/file import strategy.
 - Add file-drop/CSV/export import first unless ADR-0002 decides otherwise.
+- Support fixture coverage for XML, DOCX, official HTML/web scrape, and
+  codifier export shapes where legally available.
 - Add Redis/Celery worker path only when async import/indexing needs it.
 - Add fixtures for at least two source shapes.
 - Add import failure recovery and retry.
@@ -386,7 +484,7 @@ Acceptance tests:
 - No outbound dependency is required for local file import.
 - Background failures are visible through API and docs.
 
-## Chunk 13 - Accessibility And Export Hardening
+## Chunk 14 - Accessibility And Export Hardening
 
 Goal: align CivicCode public outputs with CivicAccess expectations before
 release.
@@ -408,7 +506,7 @@ Acceptance tests:
 - Docs state that CivicAccess is planned infrastructure, not a shipped
   dependency.
 
-## Chunk 14 - v0.1.0 Release
+## Chunk 15 - v0.1.0 Release
 
 Goal: publish CivicCode's first runtime release only after the product is
 honest, documented, tested, and browser-verified.
@@ -436,11 +534,11 @@ Acceptance tests:
 These ADRs block the listed chunks:
 
 - ADR-0001 official source precedence blocks Chunk 4 and later.
-- ADR-0002 codifier import strategy blocks Chunk 12.
+- ADR-0002 codifier import strategy blocks Chunk 13.
 - ADR-0003 section versioning blocks Chunk 4.
-- ADR-0004 CivicClerk handoff blocks Chunk 10.
-- ADR-0005 disclaimer/refusal policy blocks Chunk 7 and Chunk 11.
-- ADR-0006 staff interpretation notes blocks Chunk 9.
+- ADR-0004 CivicClerk handoff blocks Chunk 11.
+- ADR-0005 disclaimer/refusal policy blocks Chunk 7 and Chunk 12.
+- ADR-0006 staff interpretation notes blocks Chunk 10.
 
 If an ADR is not decided when a chunk starts, stop and resolve the ADR before
 coding that chunk.
