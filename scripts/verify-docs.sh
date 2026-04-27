@@ -30,6 +30,7 @@ required=(
   "MILESTONE_9_DONE.md"
   "MILESTONE_10_DONE.md"
   "MILESTONE_11_DONE.md"
+  "MILESTONE_12_DONE.md"
   "pyproject.toml"
   "civiccode/__init__.py"
   "civiccode/main.py"
@@ -37,6 +38,7 @@ required=(
   "civiccode/qa_harness.py"
   "civiccode/plain_language.py"
   "civiccode/ordinance_handoff.py"
+  "civiccode/import_connectors.py"
   "civiccode/public_lookup.py"
   "civiccode/staff_workbench.py"
   "civiccode/source_registry.py"
@@ -46,6 +48,9 @@ required=(
   "civiccode/migrations/env.py"
   "civiccode/migrations/guards.py"
   "civiccode/migrations/versions/civiccode_0001_schema.py"
+  "tests/fixtures/milestone_12/csv_bundle.json"
+  "tests/fixtures/milestone_12/official_html_extract.json"
+  "tests/fixtures/milestone_12/broken_missing_section.json"
 )
 
 echo "==> Required-artifact check"
@@ -56,7 +61,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> Public-code-lookup-surface truth check"
+echo "==> Import-connector-hardening truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"

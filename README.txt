@@ -6,8 +6,8 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a public code lookup surface built on the
-CivicClerk handoff foundation,
+As of 2026-04-27, CivicCode has a local import and connector hardening
+foundation built on the public code lookup surface, CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and permalink foundation, section/version
 foundation, source registry foundation, runtime foundation, and canonical
@@ -23,21 +23,34 @@ interpretation notes, staff Q&A context, and staff workbench audit events are
 available behind the trusted staff header seam.
 Staff-approved plain-language summaries are available after review, are labeled
 non-authoritative, and keep authoritative code text visible.
-CivicClerk ordinance/adoption handoff events are accepted as pending
+Local CSV/file-drop bundle and official HTML extract imports are available
+through staff-only endpoints, with job status, retry, and provenance report
+behavior. CivicClerk ordinance/adoption handoff events are accepted as pending
 codification warnings without replacing adopted code text. Residents can open
 /civiccode, search by section number or plain-language phrase, read adopted
 code text, see citations, view approved summaries, and see pending
 codification warnings.
 
 This is not a legal-advice product and does not make live LLM calls. There is
-no source persistence, import parser, live LLM-backed frontend workflow,
-live LLM calls, automatic ordinance codification, or legal determination
-behavior yet. Staff notes are not public. Summaries are not law. Pending
-ordinance language is not adopted law. Source,
+no source persistence beyond the current in-memory stores, live codifier sync,
+live LLM-backed frontend workflow, live LLM calls, automatic ordinance
+codification, or legal determination behavior yet. Staff notes are not public.
+Summaries are not law. Pending ordinance language is not adopted law. Source,
 section/version, search, permalink, citation-contract, citation-grounded Q&A,
-and staff workbench behavior exists so authoritative text can be found, cited,
-and annotated internally without uncited public answers. Code answers are
-limited to citation_grounded responses.
+staff workbench, and local import behavior exists so authoritative text can be
+found, cited, imported from local fixtures, and annotated internally without
+uncited public answers. Code answers are limited to citation_grounded responses.
+
+Local import truth today
+------------------------
+
+Staff can submit local CSV/file-drop bundles and official HTML extract fixtures
+to /api/v1/civiccode/staff/imports/local-bundle. Completed imports populate the
+in-memory source/title/chapter/section/version tree. Failed imports remain
+visible through staff endpoints with an actionable fix path. Re-importing the
+same bundle is idempotent. Provenance report endpoints expose source metadata,
+fixture checksums, and a no-outbound-dependency marker. Redis/Celery workers
+and live codifier sync are not required in this milestone.
 
 CivicCode is the next planning lane because CivicZone needs an authoritative
 municipal-code source before zoning runtime work begins.
@@ -74,4 +87,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 12: import and connector hardening.
+Milestone 13: accessibility and export hardening.

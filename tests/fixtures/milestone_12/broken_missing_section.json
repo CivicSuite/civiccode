@@ -1,0 +1,36 @@
+{
+  "job_id": "import_broken_missing_section",
+  "connector_type": "csv_bundle",
+  "source": {
+    "source_id": "broken_source",
+    "name": "Broken Local Export",
+    "publisher": "City Clerk",
+    "source_type": "official_file_drop",
+    "source_category": "municipal_code",
+    "file_reference": "file-drop/broken.csv",
+    "retrieved_at": "2026-04-27T14:00:00Z",
+    "retrieval_method": "official_file_drop",
+    "source_owner": "City Clerk",
+    "is_official": true,
+    "status": "active"
+  },
+  "titles": [],
+  "chapters": [],
+  "sections": [],
+  "versions": [
+    {
+      "version_id": "version_orphan",
+      "section_id": "missing_section",
+      "source_id": "broken_source",
+      "version_label": "Broken orphan version",
+      "body": "This row references a section missing from the bundle.",
+      "effective_start": "2026-01-01",
+      "status": "adopted",
+      "is_current": true
+    }
+  ],
+  "provenance": {
+    "fixture_name": "broken_missing_section.json",
+    "retrieval_method": "official_file_drop"
+  }
+}

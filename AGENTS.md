@@ -11,7 +11,7 @@ ordinance access for CivicSuite.
 
 ## Current state
 
-This repo has completed Milestone 10 CivicClerk handoff foundation. It has an
+This repo has completed Milestone 12 import and connector hardening. It has an
 installable Python package, a FastAPI app shell, `/` and `/health`, an exact
 `civiccore==0.2.0` dependency pin, canonical SQLAlchemy metadata, and Alembic
 migrations for the `civiccode` schema. It also has staff/public source registry
@@ -22,10 +22,13 @@ staff-only interpretation-note endpoints, staff Q&A context marked
 `staff_only_do_not_publish`, staff workbench audit events, and staff-approved
 plain-language summaries labeled `non_authoritative_explanation`. It also has
 CivicClerk ordinance/adoption handoff intake with pending codification warnings
-and likely conflict signals.
+and likely conflict signals. It also has staff-only local import jobs for
+CSV/file-drop bundles and official HTML extract fixtures, idempotent re-import,
+failed-import visibility, retry, imported-tree verification, and provenance
+report endpoints.
 
-Do not promote CivicCode as a legal-advice product. Live LLM and public lookup
-workflows remain planned until their milestones land. Staff notes remain
+Do not promote CivicCode as a legal-advice product. Live LLM and live codifier
+sync workflows remain planned until their milestones land. Staff notes remain
 staff-only. Plain-language summaries are not law. Pending ordinance language is
 not adopted law and handoff intake is not automatic ordinance codification.
 
@@ -69,7 +72,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 11 is complete. Continue one milestone at a time from Milestone 12.
+Milestone 12 is complete. Continue one milestone at a time from Milestone 13.
 
 ## Prohibitions
 

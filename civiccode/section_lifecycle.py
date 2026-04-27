@@ -392,6 +392,26 @@ class SectionLifecycleStore:
                 status_code=404,
             ) from exc
 
+    def get_title(self, title_id: str) -> CodeTitle:
+        try:
+            return self._titles[title_id]
+        except KeyError as exc:
+            raise SectionLifecycleError(
+                f"Title '{title_id}' was not found.",
+                "Create the title before referencing it in an import.",
+                status_code=404,
+            ) from exc
+
+    def get_chapter(self, chapter_id: str) -> CodeChapter:
+        try:
+            return self._chapters[chapter_id]
+        except KeyError as exc:
+            raise SectionLifecycleError(
+                f"Chapter '{chapter_id}' was not found.",
+                "Create the chapter before referencing it in an import.",
+                status_code=404,
+            ) from exc
+
     def get_version(self, version_id: str) -> SectionVersion:
         try:
             return self._versions[version_id]
