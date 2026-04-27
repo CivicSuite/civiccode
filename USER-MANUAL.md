@@ -1,9 +1,9 @@
 # CivicCode User Manual
 
-CivicCode currently ships a search and permalink foundation built on the
-section/version foundation, source registry foundation, runtime foundation, and
-canonical schema foundation. This manual explains what a first-time installer
-can do today and what is still planned.
+CivicCode currently ships a citation contract foundation built on the search
+and permalink foundation, section/version foundation, source registry
+foundation, runtime foundation, and canonical schema foundation. This manual
+explains what a first-time installer can do today and what is still planned.
 
 ## For municipal decision-makers
 
@@ -31,6 +31,9 @@ Current truth:
 - public-safe search can find adopted section text and related public material
   references,
 - stable section permalinks remain the same across text revisions,
+- deterministic citation objects can be built from adopted section text,
+- citation refusals include reasons and fix paths for missing, stale, or
+  contradictory source situations,
 - no frontend exists yet,
 - no LLM answers or code-answer behavior are generated yet.
 
@@ -41,7 +44,7 @@ citation, Q&A, and public lookup work begins.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 5 search and permalink foundation plus
+This repo currently contains the Milestone 6 citation contract foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -166,6 +169,17 @@ regulations, resolutions, policies, and approved summaries when those public
 references exist. Empty search results include a fix path such as trying an
 exact section number or fewer words.
 
+Build a deterministic citation object:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/citations/build?section_number=6.12.040"
+```
+
+Citation objects include section id, version id, source id, effective date, and
+canonical URL. If the source is missing, stale, contradictory, or ambiguous, the
+response is a structured refusal with a reason and fix path. This is still not a
+Q&A answer and still not legal advice.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -183,4 +197,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 6: citation contract.
+The next runtime design step is Milestone 7: citation-grounded Q&A harness.

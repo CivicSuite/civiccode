@@ -234,7 +234,7 @@ class SectionLifecycleStore:
         if not matching_sections:
             raise SectionLifecycleError(
                 f"Section '{section_number}' was not found.",
-                "Check the section number or create the section before lookup.",
+                "Create the section first or check the section number before lookup.",
                 status_code=404,
             )
         if len(matching_sections) > 1:
@@ -309,6 +309,29 @@ class SectionLifecycleStore:
             "permalink": section_permalink(section),
             "stable": True,
             "code_answer_behavior": "not_available",
+        }
+
+    def citation_context(self, section_number: str, as_of: date | None = None) -> dict[str, Any]:
+        lookup = self.lookup_section(section_number, as_of=as_of)
+        section = self.get_section(lookup["section"]["section_id"])
+        chapter = self._chapters.get(section.chapter_id)
+        if not chapter:
+            raise SectionLifecycleError(
+                f"Chapter '{section.chapter_id}' was not found for section '{section.section_id}'.",
+                "Repair the section's chapter reference before building citations.",
+                status_code=409,
+            )
+        title = self._titles.get(chapter.title_id)
+        if not title:
+            raise SectionLifecycleError(
+                f"Title '{chapter.title_id}' was not found for chapter '{chapter.chapter_id}'.",
+                "Repair the chapter's title reference before building citations.",
+                status_code=409,
+            )
+        return {
+            **lookup,
+            "chapter": chapter_to_dict(chapter),
+            "title": title_to_dict(title),
         }
 
     def search(self, query: str) -> dict[str, Any]:

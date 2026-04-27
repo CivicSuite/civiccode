@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from civiccode import __version__
+from civiccode.citation_contract import build_citation_payload, refusal
 from civiccode.section_lifecycle import (
     SectionLifecycleError,
     SectionLifecycleStore,
@@ -145,17 +146,18 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "search and permalink foundation",
+        "status": "citation contract foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
-            "APIs are online. citations, Q&A, summaries, staff workbench, CivicClerk handoff, "
-            "and public lookup UI are not implemented yet."
+            "APIs are online. Deterministic citations and refusal objects are online. Q&A, "
+            "summaries, staff workbench, CivicClerk handoff, and public lookup UI are not "
+            "implemented yet."
         ),
         "code_answer_behavior": "not_available",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 6: citation contract",
+        "next_step": "Milestone 7: citation-grounded Q&A harness",
     }
 
 
@@ -376,3 +378,35 @@ async def search_sections(q: str) -> dict[str, Any]:
         return SECTION_STORE.search(q)
     except SectionLifecycleError as exc:
         _raise_section_error(exc)
+
+
+@app.get("/api/v1/civiccode/citations/build")
+async def build_citation(section_number: str, as_of: date | None = None) -> dict[str, Any]:
+    """Build a deterministic citation object or a structured refusal."""
+    try:
+        context = SECTION_STORE.citation_context(section_number, as_of=as_of)
+    except SectionLifecycleError as exc:
+        return refusal(exc.message, exc.fix, "section_lookup")
+    source_id = context["version"]["source_id"]
+    try:
+        source = SOURCE_STORE.get(source_id)
+    except SourceRegistryError:
+        return refusal(
+            f"Source '{source_id}' was not found for this citation.",
+            "Register or restore the source before building a citation.",
+            "missing_source",
+        )
+    if source.status != "active":
+        return refusal(
+            f"Source '{source.source_id}' is {source.status}, not active.",
+            "Refresh or reactivate the source before using it for citations.",
+            "stale_source",
+        )
+    return build_citation_payload(
+        section=context["section"],
+        version=context["version"],
+        title=context["title"],
+        chapter=context["chapter"],
+        source=source_to_public_dict(source),
+        as_of=context["as_of"],
+    )

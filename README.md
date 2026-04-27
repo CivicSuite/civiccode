@@ -9,20 +9,20 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **search and permalink foundation** layered on
-the section/version foundation, source registry foundation, runtime foundation,
-and canonical schema foundation: an installable Python package, a FastAPI app
-shell, `/` and `/health` endpoints, an exact `civiccore==0.2.0` dependency pin,
-canonical SQLAlchemy table metadata, Alembic migrations under the `civiccode`
-schema, staff/public APIs for registering official municipal-code sources,
-title/chapter/section records with adopted/pending/historical section versions,
-public-safe text search, and stable section permalinks.
+As of 2026-04-27, CivicCode has a **citation contract foundation** layered on
+the search and permalink foundation, section/version foundation, source registry
+foundation, runtime foundation, and canonical schema foundation: an installable
+Python package, a FastAPI app shell, `/` and `/health` endpoints, an exact
+`civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata, Alembic
+migrations under the `civiccode` schema, source registry APIs, section/version
+APIs, public-safe text search, stable section permalinks, and deterministic
+citation/refusal objects.
 
 This is deliberately not the code-answer product yet. There is no database
-source persistence, import parser, citation engine, Q&A workflow, public lookup
-UI, or LLM/code-answer behavior in this repo yet.
+source persistence, import parser, Q&A workflow, public lookup UI, or
+LLM/code-answer behavior in this repo yet.
 
-The current deliverable is Milestone 5:
+The current deliverable is Milestone 6:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -40,8 +40,11 @@ The current deliverable is Milestone 5:
 - search public-visible adopted section text and related public material
   references,
 - expose stable section permalinks that survive text revisions,
+- build deterministic citation objects for adopted section text,
+- return structured refusals for missing, stale, or contradictory source
+  situations,
 - tell users plainly that code answers are not available yet,
-- keep docs and CI gates green before citation-contract work begins.
+- keep docs and CI gates green before Q&A harness work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -100,10 +103,12 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `search and permalink foundation`,
+Expected truth today: the service reports `citation contract foundation`,
 exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
 section/version and search endpoints under `/api/v1/civiccode/sections` and
-`/api/v1/civiccode/search`, and `code_answer_behavior` remains `not_available`.
+`/api/v1/civiccode/search`, exposes deterministic citation objects under
+`/api/v1/civiccode/citations/build`, and `code_answer_behavior` remains
+`not_available`.
 
 Migration smoke:
 
@@ -145,6 +150,16 @@ curl "http://127.0.0.1:8000/api/v1/civiccode/sections/sec_chickens/permalink"
 
 Expected search truth today: search returns public-safe structured results and
 stable section permalinks. It does not generate citations or code answers.
+
+Citation contract smoke:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/citations/build?section_number=6.12.040"
+```
+
+Expected citation truth today: citation responses are deterministic objects with
+section id, version id, source id, effective date, and canonical URL. Refusals
+include a reason and fix path. This is still not a Q&A or legal-advice surface.
 
 ## License
 

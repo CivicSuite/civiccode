@@ -86,11 +86,11 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["name"] == "CivicCode"
-    assert payload["status"] == "search and permalink foundation"
+    assert payload["status"] == "citation contract foundation"
     assert payload["code_answer_behavior"] == "not_available"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
-    assert payload["next_step"] == "Milestone 6: citation contract"
+    assert payload["next_step"] == "Milestone 7: citation-grounded Q&A harness"
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
