@@ -27,6 +27,26 @@
       margin: 0 auto;
       padding: 4rem 1.25rem;
     }
+    .skip-link {
+      position: absolute;
+      left: 1rem;
+      top: -4rem;
+      z-index: 10;
+      padding: .7rem 1rem;
+      border-radius: .6rem;
+      background: var(--ink);
+      color: white;
+      font-weight: 700;
+    }
+    .skip-link:focus {
+      top: 1rem;
+    }
+    a:focus-visible,
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
     .eyebrow {
       color: var(--accent);
       font-weight: 700;
@@ -73,11 +93,12 @@
   </style>
 </head>
 <body>
-<main>
+<a class="skip-link" href="#content">Skip to CivicCode content</a>
+<main id="content">
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Local import and connector hardening foundation online on top of the public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, and automatic ordinance codification not available</p>
+  <p class="status">Records-ready export and accessibility hardening foundation online on top of local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
@@ -85,6 +106,7 @@
       <ul>
         <li>Import authoritative municipal code sources from local fixtures and file drops.</li>
         <li>Preserve section versions and effective dates.</li>
+        <li>Export records-ready section packages with citations and source provenance.</li>
         <li>Answer routine code questions with citations.</li>
         <li>Label summaries as non-authoritative.</li>
       </ul>
@@ -119,6 +141,9 @@
         <li>Staff-only local import jobs for CSV/file-drop bundles and official HTML extract fixtures.</li>
         <li>Import retry, visible failure records, imported-tree verification, and provenance report endpoints.</li>
         <li>No outbound network dependency, Redis/Celery worker, or live codifier sync required for local import.</li>
+        <li>Records-ready export API and accessible HTML export page for adopted sections.</li>
+        <li>Semantic headings, labels, focus styling, and print-friendly export output.</li>
+        <li>CivicAccess integration notes without a shipped CivicAccess runtime dependency.</li>
         <li>Pending ordinance language is not adopted law and does not replace codified text.</li>
         <li>Staff context is marked <code>staff_only_do_not_publish</code>; public answers stay <code>citation_grounded</code>.</li>
         <li>No legal advice, live LLM calls, or automatic ordinance codification yet. Staff notes remain staff-only.</li>
@@ -126,7 +151,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>Milestone 13: accessibility and export hardening.</p>
+      <p>Milestone 14: v0.1.0 release.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

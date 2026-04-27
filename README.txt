@@ -6,8 +6,9 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a local import and connector hardening
-foundation built on the public code lookup surface, CivicClerk handoff foundation,
+As of 2026-04-27, CivicCode has a records-ready export and accessibility
+hardening foundation built on the local import foundation, public code lookup
+surface, CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and permalink foundation, section/version
 foundation, source registry foundation, runtime foundation, and canonical
@@ -33,9 +34,9 @@ codification warnings.
 
 This is not a legal-advice product and does not make live LLM calls. There is
 no source persistence beyond the current in-memory stores, live codifier sync,
-live LLM-backed frontend workflow, live LLM calls, automatic ordinance
-codification, or legal determination behavior yet. Staff notes are not public.
-Summaries are not law. Pending ordinance language is not adopted law. Source,
+CivicAccess runtime dependency, live LLM-backed frontend workflow, live LLM
+calls, automatic ordinance codification, or legal determination behavior yet.
+Staff notes are not public. Summaries are not law. Pending ordinance language is not adopted law. Source,
 section/version, search, permalink, citation-contract, citation-grounded Q&A,
 staff workbench, and local import behavior exists so authoritative text can be
 found, cited, imported from local fixtures, and annotated internally without
@@ -51,6 +52,16 @@ visible through staff endpoints with an actionable fix path. Re-importing the
 same bundle is idempotent. Provenance report endpoints expose source metadata,
 fixture checksums, and a no-outbound-dependency marker. Redis/Celery workers
 and live codifier sync are not required in this milestone.
+
+Records-ready export truth today
+--------------------------------
+
+Public adopted sections can be exported through
+/api/v1/civiccode/sections/{section}/export and
+/civiccode/sections/{section}/export. The export includes authoritative text,
+version metadata, deterministic citation, source provenance, retrieval
+metadata, accessibility labels, semantic headings, and legal-boundary copy.
+CivicAccess is planned infrastructure, not a shipped runtime dependency.
 
 CivicCode is the next planning lane because CivicZone needs an authoritative
 municipal-code source before zoning runtime work begins.
@@ -87,4 +98,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 13: accessibility and export hardening.
+Milestone 14: v0.1.0 release.

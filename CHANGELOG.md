@@ -26,10 +26,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Milestone 10 CivicClerk handoff foundation: ordinance/adoption event intake, meeting/agenda provenance preservation, pending codification warnings on affected lookups, likely conflict detection, failed-handoff visibility, and guardrails proving pending ordinance language is not adopted law.
 - Milestone 11 public code lookup surface: resident-facing `/civiccode` "Read code" pages for search, section detail, citations, approved summaries, pending codification warnings, stale-source warnings, actionable empty states, and legal-advice refusal routing.
 - Milestone 12 import and connector hardening: staff-only local import jobs for CSV/file-drop bundles and official HTML extract fixtures, idempotent re-import behavior, actionable failed-import records, retry support, provenance report endpoints, imported-tree verification, and no required outbound dependency for local import.
+- Milestone 13 accessibility and export hardening: records-ready export API and HTML page for adopted sections, source/version/citation/retrieval metadata in export payloads, semantic headings and labels, print-friendly output, stale-source export refusals, and CivicAccess integration notes without a shipped CivicAccess runtime dependency.
 
 ### Not Shipped
 
 - No source persistence beyond the current in-memory registry.
 - No live LLM calls.
 - No legal-determination behavior.
-- No live codifier sync, Redis/Celery worker requirement, database source persistence beyond the current in-memory stores, or automatic ordinance codification yet; staff notes remain staff-only.
+- No live codifier sync, Redis/Celery worker requirement, CivicAccess runtime dependency, database source persistence beyond the current in-memory stores, or automatic ordinance codification yet; staff notes remain staff-only.

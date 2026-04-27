@@ -11,7 +11,7 @@ ordinance access for CivicSuite.
 
 ## Current state
 
-This repo has completed Milestone 12 import and connector hardening. It has an
+This repo has completed Milestone 13 accessibility and export hardening. It has an
 installable Python package, a FastAPI app shell, `/` and `/health`, an exact
 `civiccore==0.2.0` dependency pin, canonical SQLAlchemy metadata, and Alembic
 migrations for the `civiccode` schema. It also has staff/public source registry
@@ -25,7 +25,9 @@ CivicClerk ordinance/adoption handoff intake with pending codification warnings
 and likely conflict signals. It also has staff-only local import jobs for
 CSV/file-drop bundles and official HTML extract fixtures, idempotent re-import,
 failed-import visibility, retry, imported-tree verification, and provenance
-report endpoints.
+report endpoints. It also has records-ready JSON and HTML exports for adopted
+sections with source, version, citation, retrieval, accessibility, and
+legal-boundary metadata.
 
 Do not promote CivicCode as a legal-advice product. Live LLM and live codifier
 sync workflows remain planned until their milestones land. Staff notes remain
@@ -72,7 +74,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 12 is complete. Continue one milestone at a time from Milestone 13.
+Milestone 13 is complete. Continue one milestone at a time from Milestone 14.
 
 ## Prohibitions
 
