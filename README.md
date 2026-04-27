@@ -9,21 +9,24 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **runtime foundation**: an installable Python
+As of 2026-04-27, CivicCode has a **schema foundation**: an installable Python
 package, a FastAPI app shell, `/` and `/health` endpoints, an exact
-`civiccore==0.2.0` dependency pin, and CI gates for tests, docs, and CivicCore
-placeholder imports.
+`civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata, Alembic
+migrations under the `civiccode` schema, and CI gates for tests, docs, and
+CivicCore placeholder imports.
 
 This is deliberately not the code-answer product yet. There is no database
-schema, source registry, search, citation engine, Q&A workflow, public lookup
-UI, or LLM/code-answer behavior in this repo yet.
+source registry API, search, citation engine, Q&A workflow, public lookup UI,
+or LLM/code-answer behavior in this repo yet.
 
-The current deliverable is Milestone 1:
+The current deliverable is Milestone 2:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
+- run CivicCore migrations before CivicCode migrations,
+- create the canonical CivicCode schema tables,
 - tell users plainly that code answers are not available yet,
-- keep docs and CI gates green before schema work begins.
+- keep docs and CI gates green before source registry work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -84,6 +87,16 @@ curl http://127.0.0.1:8000/health
 
 Expected truth today: the service reports `runtime foundation`, and
 `code_answer_behavior` is `not_available`.
+
+Migration smoke:
+
+```bash
+set DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/civiccode
+python -m alembic -c civiccode/migrations/alembic.ini upgrade head
+```
+
+Expected migration truth today: CivicCore migrations run first, CivicCode uses
+`alembic_version_civiccode`, and ten canonical `civiccode.*` tables are created.
 
 ## License
 

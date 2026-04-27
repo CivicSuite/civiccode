@@ -11,11 +11,12 @@ ordinance access for CivicSuite.
 
 ## Current state
 
-This repo has completed Milestone 1 runtime foundation. It has an installable
-Python package, a FastAPI app shell, `/` and `/health`, and an exact
-`civiccore==0.2.0` dependency pin.
+This repo has completed Milestone 2 schema foundation. It has an installable
+Python package, a FastAPI app shell, `/` and `/health`, an exact
+`civiccore==0.2.0` dependency pin, canonical SQLAlchemy metadata, and Alembic
+migrations for the `civiccode` schema.
 
-Do not promote CivicCode as a code-answer product yet. Source registry, schema,
+Do not promote CivicCode as a code-answer product yet. Source registry API,
 search, citations, Q&A, staff workbench, CivicClerk handoff, and public lookup
 workflows remain planned until their milestones land.
 
@@ -59,7 +60,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 1 is complete. Continue one milestone at a time from Milestone 2.
+Milestone 2 is complete. Continue one milestone at a time from Milestone 3.
 
 ## Prohibitions
 
