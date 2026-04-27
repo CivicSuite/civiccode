@@ -15,6 +15,9 @@ required=(
   "SECURITY.md"
   "SUPPORT.md"
   "CODE_OF_CONDUCT.md"
+  "docs/RECONCILIATION.md"
+  "docs/MILESTONES.md"
+  "docs/github-discussions-seed.md"
   "docs/index.html"
 )
 
