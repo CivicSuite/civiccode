@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from civiccode import __version__
@@ -18,6 +18,12 @@ from civiccode.section_lifecycle import (
     section_to_dict,
     title_to_dict,
     version_to_dict,
+)
+from civiccode.staff_workbench import (
+    StaffWorkbenchError,
+    StaffWorkbenchStore,
+    audit_event_to_dict,
+    note_to_staff_dict,
 )
 from civiccode.source_registry import (
     SOURCE_CATEGORIES,
@@ -40,6 +46,7 @@ app = FastAPI(
 
 SOURCE_STORE = SourceRegistryStore()
 SECTION_STORE = SectionLifecycleStore()
+STAFF_NOTE_STORE = StaffWorkbenchStore()
 
 
 class SourceCreate(BaseModel):
@@ -144,6 +151,16 @@ class QuestionAnswerRequest(BaseModel):
     as_of: date | None = None
 
 
+class InterpretationNoteCreate(BaseModel):
+    """Request body for staff-only interpretation notes."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    note_id: str | None = None
+    note_text: str = Field(min_length=1)
+    status: str = "draft"
+
+
 def _raise_source_error(exc: SourceRegistryError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
@@ -152,24 +169,53 @@ def _raise_section_error(exc: SectionLifecycleError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
 
+def _raise_staff_error(exc: StaffWorkbenchError) -> None:
+    raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
+
+
+def _require_staff(
+    x_civiccode_role: str | None,
+    x_civiccode_actor: str | None,
+) -> str:
+    if x_civiccode_role != "staff":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Staff role required for this CivicCode endpoint.",
+                "fix": "Send X-CivicCode-Role: staff from the trusted staff shell or service account.",
+            },
+        )
+    actor = (x_civiccode_actor or "").strip()
+    if not actor:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Staff actor required for this CivicCode endpoint.",
+                "fix": "Send X-CivicCode-Actor with the staff email or service account.",
+            },
+        )
+    return actor
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "citation-grounded Q&A foundation",
+        "status": "staff workbench foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
             "APIs are online. Deterministic citations and refusal objects are online. "
-            "Citation-grounded Q&A harness is online for adopted sections. Summaries, "
-            "staff workbench, CivicClerk handoff, public lookup UI, live LLM calls, and "
+            "Citation-grounded Q&A harness is online for adopted sections. Staff "
+            "interpretation-note APIs and staff Q&A context are online. Summaries, "
+            "CivicClerk handoff, public lookup UI, live LLM calls, and "
             "legal determinations are not implemented yet."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 8: staff workbench foundation",
+        "next_step": "Milestone 9: plain-language summaries",
     }
 
 
@@ -401,7 +447,7 @@ async def build_citation(section_number: str, as_of: date | None = None) -> dict
 @app.post("/api/v1/civiccode/questions/answer")
 async def answer_question(request: QuestionAnswerRequest) -> dict[str, Any]:
     """Answer code questions only when an adopted section citation grounds them."""
-    return build_grounded_answer(
+    payload = build_grounded_answer(
         QuestionRequestContext(
             question=request.question,
             section_number=request.section_number,
@@ -410,6 +456,87 @@ async def answer_question(request: QuestionAnswerRequest) -> dict[str, Any]:
         search=SECTION_STORE.search,
         build_citation=_build_citation_for_section,
     )
+    payload["audience"] = "public"
+    return payload
+
+
+@app.post("/api/v1/civiccode/staff/sections/{section_id}/notes", status_code=201)
+async def create_interpretation_note(
+    section_id: str,
+    request: InterpretationNoteCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Create a staff-only interpretation note without exposing it publicly."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        SECTION_STORE.get_section(section_id)
+        note = STAFF_NOTE_STORE.create_note(
+            section_id,
+            request.model_dump(),
+            actor=actor,
+        )
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    except StaffWorkbenchError as exc:
+        _raise_staff_error(exc)
+    return note_to_staff_dict(note)
+
+
+@app.get("/api/v1/civiccode/staff/sections/{section_id}/notes")
+async def list_interpretation_notes(
+    section_id: str,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """List staff-only interpretation notes for authorized staff clients."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        SECTION_STORE.get_section(section_id)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    return {"notes": [note_to_staff_dict(note) for note in STAFF_NOTE_STORE.list_notes(section_id)]}
+
+
+@app.get("/api/v1/civiccode/staff/audit-events")
+async def list_staff_audit_events(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """List staff workbench audit events for authorized staff clients."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    return {"events": [audit_event_to_dict(event) for event in STAFF_NOTE_STORE.audit_events()]}
+
+
+@app.post("/api/v1/civiccode/staff/questions/answer")
+async def answer_staff_question(
+    request: QuestionAnswerRequest,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Answer staff questions with staff-only notes kept out of public responses."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    payload = build_grounded_answer(
+        QuestionRequestContext(
+            question=request.question,
+            section_number=request.section_number,
+            as_of=request.as_of,
+        ),
+        search=SECTION_STORE.search,
+        build_citation=_build_citation_for_section,
+    )
+    payload["audience"] = "staff"
+    if payload.get("status") == "ok":
+        section_id = payload["citations"][0]["section_id"]
+        payload["staff_context"] = {
+            "warning": "staff_only_do_not_publish",
+            "notes": [
+                note_to_staff_dict(note)
+                for note in STAFF_NOTE_STORE.list_notes(section_id)
+                if note.status == "approved"
+            ],
+        }
+    return payload
 
 
 def _build_citation_for_section(section_number: str, as_of: date | None = None) -> dict[str, Any]:

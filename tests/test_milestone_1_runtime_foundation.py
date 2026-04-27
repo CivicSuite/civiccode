@@ -86,15 +86,16 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["name"] == "CivicCode"
-    assert payload["status"] == "citation-grounded Q&A foundation"
+    assert payload["status"] == "staff workbench foundation"
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
-    assert payload["next_step"] == "Milestone 8: staff workbench foundation"
+    assert payload["next_step"] == "Milestone 9: plain-language summaries"
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
     assert "Q&A" in payload["message"]
+    assert "Staff" in payload["message"]
     assert "live LLM" in payload["message"]
     assert "public lookup" in payload["message"]
 
