@@ -79,6 +79,6 @@ page at desktop and mobile widths. All checked pages rendered a main landmark,
 records-ready copy, and zero console errors. Export and landing pages include
 skip links and focus-visible styling.
 
-## Next Milestone
+## Follow-On
 
-Milestone 14: v0.1.0 release.
+Milestone 14 prepared the v0.1.0 release after this export-hardening milestone.

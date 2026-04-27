@@ -320,7 +320,7 @@ async def root() -> dict[str, str]:
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 14: v0.1.0 release",
+        "next_step": "CivicCode v0.1.0 released; next work follows the CivicSuite roadmap.",
     }
 
 

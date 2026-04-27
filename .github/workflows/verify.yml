@@ -23,3 +23,5 @@ jobs:
         run: bash scripts/verify-docs.sh
       - name: Check CivicCore placeholder imports
         run: python scripts/check-civiccore-placeholder-imports.py
+      - name: Verify release gate
+        run: bash scripts/verify-release.sh

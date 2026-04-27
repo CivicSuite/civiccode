@@ -19,6 +19,7 @@ required=(
   "docs/MILESTONES.md"
   "docs/IMPLEMENTATION_PLAN.md"
   "docs/github-discussions-seed.md"
+  "scripts/verify-release.sh"
   "docs/index.html"
   "MILESTONE_1_DONE.md"
   "MILESTONE_3_DONE.md"
@@ -32,6 +33,7 @@ required=(
   "MILESTONE_11_DONE.md"
   "MILESTONE_12_DONE.md"
   "MILESTONE_13_DONE.md"
+  "MILESTONE_14_DONE.md"
   "pyproject.toml"
   "civiccode/__init__.py"
   "civiccode/main.py"
@@ -63,7 +65,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> Accessibility-export-hardening truth check"
+echo "==> Current-facing shipped/planned truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"
