@@ -1,7 +1,8 @@
 # CivicCode User Manual
 
-CivicCode currently ships a runtime foundation. This manual explains what a
-first-time installer can do today and what is still planned.
+CivicCode currently ships a canonical schema foundation built on the Milestone
+1 runtime foundation. This manual explains what a first-time installer can do
+today and what is still planned.
 
 ## For municipal decision-makers
 
@@ -16,17 +17,19 @@ Current truth:
 - the FastAPI app can be started,
 - `/` explains the current product boundary,
 - `/health` reports service, CivicCode version, and CivicCore version,
-- no database schema exists yet,
+- Alembic can create ten canonical `civiccode.*` tables after CivicCore
+  migrations run,
 - no frontend exists yet,
 - no LLM answers or code-answer behavior are generated yet.
 
 For a non-technical user, there is not yet a public product workflow. The
 honest experience today is an IT smoke test that proves the module can start
-before schema, import, search, citation, and public lookup work begins.
+and that the database schema can be created before source registry, import,
+search, citation, and public lookup work begins.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 1 runtime foundation plus
+This repo currently contains the Milestone 2 canonical schema foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -51,6 +54,16 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
+Run migrations:
+
+```bash
+set DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/civiccode
+python -m alembic -c civiccode/migrations/alembic.ini upgrade head
+```
+
+The migration chain runs CivicCore first and stores CivicCode's revision in
+`alembic_version_civiccode`.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -68,4 +81,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 2: canonical schema and migrations.
+The next runtime design step is Milestone 3: official source registry.

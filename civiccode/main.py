@@ -19,16 +19,17 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "runtime foundation",
+        "status": "schema foundation",
         "message": (
-            "CivicCode runtime foundation is online. Municipal code source registry, "
-            "section/version storage, search, citations, Q&A, summaries, staff workbench, "
-            "CivicClerk handoff, and public lookup workflows are not implemented yet."
+            "CivicCode runtime and canonical schema foundation are online. Official source "
+            "registry API, section/version workflows, search, citations, Q&A, summaries, "
+            "staff workbench, CivicClerk handoff, and public lookup workflows are not "
+            "implemented yet."
         ),
         "code_answer_behavior": "not_available",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 2: canonical schema and migrations",
+        "next_step": "Milestone 3: official source registry",
     }
 
 

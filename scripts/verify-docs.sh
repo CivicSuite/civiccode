@@ -24,6 +24,11 @@ required=(
   "pyproject.toml"
   "civiccode/__init__.py"
   "civiccode/main.py"
+  "civiccode/models.py"
+  "civiccode/migrations/alembic.ini"
+  "civiccode/migrations/env.py"
+  "civiccode/migrations/guards.py"
+  "civiccode/migrations/versions/civiccode_0001_schema.py"
 )
 
 echo "==> Required-artifact check"
@@ -34,7 +39,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> Runtime-foundation truth check"
+echo "==> Schema-foundation truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"
