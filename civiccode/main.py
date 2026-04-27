@@ -40,6 +40,10 @@ from civiccode.public_lookup import (
     render_search_page,
     render_section_page,
 )
+from civiccode.public_exports import (
+    build_records_ready_export,
+    render_records_ready_export_page,
+)
 from civiccode.qa_harness import QuestionRequestContext, build_grounded_answer
 from civiccode.section_lifecycle import (
     SectionLifecycleError,
@@ -297,7 +301,7 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "import connector foundation",
+        "status": "accessibility export foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
@@ -308,13 +312,15 @@ async def root() -> dict[str, str]:
             "CivicClerk ordinance handoff intake and affected-section warnings are "
             "online. Resident-facing public lookup pages are online at /civiccode. "
             "Local file-drop and fixture import jobs are online with provenance, "
-            "retry, and no required outbound dependency. Live LLM calls, live "
-            "codifier sync, and legal determinations are not implemented yet."
+            "retry, and no required outbound dependency. Records-ready section "
+            "exports are online with citation, version, and source metadata. "
+            "Live LLM calls, live codifier sync, and legal determinations are "
+            "not implemented yet."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "Milestone 13: accessibility and export hardening",
+        "next_step": "Milestone 14: v0.1.0 release",
     }
 
 
@@ -374,6 +380,22 @@ async def public_section_detail(section_ref: str, as_of: date | None = None) -> 
         )
     warnings = HANDOFF_STORE.warnings_for_section(section_number)
     return render_section_page(lookup, citation_payload, summaries, warnings)
+
+
+@app.get("/civiccode/sections/{section_ref}/export", response_class=HTMLResponse)
+async def public_section_export(section_ref: str, as_of: date | None = None) -> str:
+    """Render an accessible records-ready export page for a section."""
+    try:
+        export = _build_export_for_section(section_ref, as_of)
+    except HTTPException as exc:
+        detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail), "fix": "Try again."}
+        return render_error_page(
+            "Export unavailable",
+            detail["message"],
+            detail["fix"],
+            status_label="Export problem",
+        )
+    return render_records_ready_export_page(export)
 
 
 @app.get("/health")
@@ -602,6 +624,12 @@ async def search_sections(q: str) -> dict[str, Any]:
 async def build_citation(section_number: str, as_of: date | None = None) -> dict[str, Any]:
     """Build a deterministic citation object or a structured refusal."""
     return _build_citation_for_section(section_number, as_of)
+
+
+@app.get("/api/v1/civiccode/sections/{section_ref}/export")
+async def export_section(section_ref: str, as_of: date | None = None) -> dict[str, Any]:
+    """Return a records-ready section export with citation and source provenance."""
+    return _build_export_for_section(section_ref, as_of)
 
 
 @app.post("/api/v1/civiccode/questions/answer")
@@ -931,4 +959,35 @@ def _build_citation_for_section(section_number: str, as_of: date | None = None) 
         chapter=context["chapter"],
         source=source_to_public_dict(source),
         as_of=context["as_of"],
+    )
+
+
+def _build_export_for_section(section_ref: str, as_of: date | None = None) -> dict[str, Any]:
+    try:
+        try:
+            lookup = SECTION_STORE.lookup_section(section_ref, as_of=as_of)
+        except SectionLifecycleError:
+            section = SECTION_STORE.get_section(section_ref)
+            lookup = SECTION_STORE.lookup_section(section.section_number, as_of=as_of)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+
+    section_number = lookup["section"]["section_number"]
+    citation_payload = _build_citation_for_section(section_number, as_of)
+    if citation_payload.get("status") != "ok":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": citation_payload.get("reason", "Citation could not be built for this export."),
+                "fix": citation_payload.get("fix", "Refresh the source and try exporting again."),
+            },
+        )
+    try:
+        source = SOURCE_STORE.get(citation_payload["citation"]["source_id"])
+    except SourceRegistryError as exc:
+        _raise_source_error(exc)
+    return build_records_ready_export(
+        lookup=lookup,
+        citation_payload=citation_payload,
+        source=source_to_public_dict(source),
     )

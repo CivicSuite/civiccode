@@ -132,6 +132,11 @@ def render_section_page(
           </section>
           {summary_html}
           {citation_html}
+          <section class="citation-card" aria-labelledby="export-heading">
+            <h2 id="export-heading">Records-ready export</h2>
+            <p><a href="/civiccode/sections/{escape(section['section_number'])}/export">
+            Open an accessible export with citation and source provenance.</a></p>
+          </section>
           <section class="contact-card" aria-labelledby="contact-heading">
             <h2 id="contact-heading">Need an official interpretation?</h2>
             <p>This page helps you read adopted code. It is not a legal

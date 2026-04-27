@@ -86,11 +86,11 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["name"] == "CivicCode"
-    assert payload["status"] == "import connector foundation"
+    assert payload["status"] == "accessibility export foundation"
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
-    assert payload["next_step"] == "Milestone 13: accessibility and export hardening"
+    assert payload["next_step"] == "Milestone 14: v0.1.0 release"
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
@@ -103,6 +103,8 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert "public lookup" in payload["message"].lower()
     assert "local file-drop" in payload["message"].lower()
     assert "provenance" in payload["message"].lower()
+    assert "records-ready" in payload["message"].lower()
+    assert "source metadata" in payload["message"].lower()
 
 
 @pytest.mark.asyncio

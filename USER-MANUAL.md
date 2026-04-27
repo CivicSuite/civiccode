@@ -1,7 +1,8 @@
 # CivicCode User Manual
 
-CivicCode currently ships a local import and connector hardening foundation
-built on the public code lookup surface, CivicClerk handoff foundation,
+CivicCode currently ships a records-ready export and accessibility hardening
+foundation built on the local import foundation, public code lookup surface,
+CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
 permalink foundation, section/version foundation, source
@@ -64,6 +65,12 @@ Current truth:
   corrected local bundles,
 - provenance reports show source metadata, fixture checksum, and
   no-outbound-dependency status,
+- adopted sections can be exported with source, version, citation, and
+  retrieval metadata,
+- records-ready HTML exports include semantic headings, labels, focus styling,
+  and print-friendly output,
+- CivicAccess is documented as future integration infrastructure, not a shipped
+  runtime dependency,
 - residents can open `/civiccode`, search by section number or phrase, and read
   adopted code text with citations and warnings,
 - no live LLM calls or legal determinations are generated yet.
@@ -76,8 +83,8 @@ routes legal-advice questions back to staff.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 12 local import and connector
-hardening foundation plus
+This repo currently contains the Milestone 13 accessibility and records-ready
+export hardening foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -336,6 +343,19 @@ fixture import creates or reuses source, title, chapter, section, and version
 records; failed imports are stored with a fix path and can be retried. This is
 not live codifier sync and does not require Redis/Celery workers.
 
+Records-ready export route:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/sections/6.12.040/export"
+curl "http://127.0.0.1:8000/civiccode/sections/6.12.040/export"
+```
+
+The export API returns authoritative section text, version metadata,
+deterministic citation, source provenance, retrieval metadata, accessibility
+labels, and legal-boundary copy. The HTML export page uses semantic headings,
+labels, focus styling, and print-friendly output. CivicAccess is planned
+infrastructure, not a required or shipped dependency in this repo.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -353,5 +373,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 13: accessibility and export
-hardening.
+The next runtime design step is Milestone 14: v0.1.0 release.

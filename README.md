@@ -9,8 +9,9 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **local import and connector hardening
-foundation** layered on the public code lookup surface, CivicClerk handoff,
+As of 2026-04-27, CivicCode has a **records-ready export and accessibility
+hardening foundation** layered on the local import foundation, public code
+lookup surface, CivicClerk handoff,
 plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
@@ -29,12 +30,13 @@ handoffs may affect a section.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
 There is no database source persistence beyond the current in-memory stores,
-live codifier sync, live LLM call, automatic ordinance codification, or legal
-determination behavior in this repo yet. Staff interpretation notes are
-staff-only and must not be published to public endpoints. CivicClerk handoff
-events warn about pending codification but do not replace adopted code text.
+live codifier sync, CivicAccess runtime dependency, live LLM call, automatic
+ordinance codification, or legal determination behavior in this repo yet.
+Staff interpretation notes are staff-only and must not be published to public
+endpoints. CivicClerk handoff events warn about pending codification but do not
+replace adopted code text.
 
-The current deliverable is Milestone 12:
+The current deliverable is Milestone 13:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -84,7 +86,12 @@ The current deliverable is Milestone 12:
 - retry failed import jobs with corrected local bundles,
 - produce provenance reports with fixture checksums, source metadata, and a
   no-outbound-dependency marker,
-- keep docs and CI gates green before accessibility/export hardening begins.
+- export adopted section records with source, version, citation, and retrieval
+  metadata,
+- render an accessible, print-friendly records-ready export page,
+- document CivicAccess as planned infrastructure, not a shipped runtime
+  dependency,
+- keep docs and CI gates green before v0.1.0 release work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -314,6 +321,20 @@ idempotent, failed imports remain visible through staff endpoints with a fix
 path, and provenance reports show source metadata and fixture checksums.
 Milestone 12 does not require outbound network calls, Redis/Celery workers, or
 live codifier sync.
+
+Records-ready export smoke:
+
+```bash
+curl "http://127.0.0.1:8000/api/v1/civiccode/sections/6.12.040/export"
+curl "http://127.0.0.1:8000/civiccode/sections/6.12.040/export"
+```
+
+Expected export truth today: export payloads include the adopted section text,
+section version, deterministic citation, source provenance, retrieval metadata,
+accessibility labels, and legal-boundary copy. The HTML export page includes
+semantic headings, labels, focus styling, and print-friendly output. CivicAccess
+is documented as a future integration target; no CivicAccess dependency is
+required or shipped in this repo.
 
 ## License
 

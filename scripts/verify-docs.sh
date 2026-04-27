@@ -31,6 +31,7 @@ required=(
   "MILESTONE_10_DONE.md"
   "MILESTONE_11_DONE.md"
   "MILESTONE_12_DONE.md"
+  "MILESTONE_13_DONE.md"
   "pyproject.toml"
   "civiccode/__init__.py"
   "civiccode/main.py"
@@ -39,6 +40,7 @@ required=(
   "civiccode/plain_language.py"
   "civiccode/ordinance_handoff.py"
   "civiccode/import_connectors.py"
+  "civiccode/public_exports.py"
   "civiccode/public_lookup.py"
   "civiccode/staff_workbench.py"
   "civiccode/source_registry.py"
@@ -61,7 +63,7 @@ for file in "${required[@]}"; do
   fi
 done
 
-echo "==> Import-connector-hardening truth check"
+echo "==> Accessibility-export-hardening truth check"
 current_files=("README.md" "README.txt" "USER-MANUAL.md" "docs/index.html")
 bad_markers=(
   "CivicCode is shipping"
