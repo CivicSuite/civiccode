@@ -1,8 +1,9 @@
 # CivicCode User Manual
 
-CivicCode currently ships a citation-grounded Q&A foundation built on the
-citation contract foundation, search and permalink foundation, section/version foundation, source registry
-foundation, runtime foundation, and canonical schema foundation. This manual
+CivicCode currently ships a staff workbench foundation built on the
+citation-grounded Q&A foundation, citation contract foundation, search and
+permalink foundation, section/version foundation, source registry foundation,
+runtime foundation, and canonical schema foundation. This manual
 explains what a first-time installer can do today and what is still planned.
 
 ## For municipal decision-makers
@@ -38,17 +39,24 @@ Current truth:
   section and one active source,
 - legal-determination, uncited, stale, missing, ambiguous, or contradictory
   questions return structured refusals,
+- staff can create staff-only interpretation notes for a code section,
+- staff Q&A responses can include approved staff interpretation notes with a
+  `staff_only_do_not_publish` warning,
+- public lookup, public search, and public Q&A responses do not expose staff
+  notes or staff note counts,
+- staff note writes append audit events,
 - no frontend exists yet,
 - no live LLM calls or legal determinations are generated yet.
 
 For a non-technical user, there is not yet a public product workflow. The
 honest experience today is an IT smoke test that proves the module can start
-and that source, section/version, citation, and citation-grounded Q&A records
-can be exercised before import and public lookup work begins.
+and that source, section/version, citation, citation-grounded Q&A, and staff
+workbench records can be exercised before import, summaries, and public lookup
+work begin.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 7 citation-grounded Q&A foundation plus
+This repo currently contains the Milestone 8 staff workbench foundation plus
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -197,6 +205,34 @@ questions, missing sections, stale sources, and contradictory effective-date
 windows with a reason and fix path. It sets `llm_provider=not_used` because
 Milestone 7 is a deterministic harness, not a live LLM integration.
 
+Create a staff-only interpretation note:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/sections/sec_chickens/notes \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: planner@example.gov" \
+  -d '{
+    "note_text": "Planning staff generally treats coop setbacks as measured from the property line.",
+    "status": "approved"
+  }'
+```
+
+Ask a staff Q&A question with approved staff note context:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/questions/answer \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: planner@example.gov" \
+  -d '{"question":"What does section 6.12.040 say about backyard chickens?","section_number":"6.12.040"}'
+```
+
+Staff endpoints require `X-CivicCode-Role: staff` and `X-CivicCode-Actor`.
+Staff Q&A context is explicitly marked `staff_only_do_not_publish`. Public
+lookup, public search, and public Q&A responses must not expose staff note text
+or staff note counts.
+
 ## Architecture reference
 
 Planned dependency direction:
@@ -214,4 +250,4 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-The next runtime design step is Milestone 8: staff workbench foundation.
+The next runtime design step is Milestone 9: plain-language summaries.

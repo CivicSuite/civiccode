@@ -6,23 +6,28 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a citation-grounded Q&A foundation built on the
-citation contract foundation, search and permalink foundation, section/version foundation, source registry
-foundation, runtime foundation, and canonical schema foundation. The package can
+As of 2026-04-27, CivicCode has a staff workbench foundation built on the
+citation-grounded Q&A foundation, citation contract foundation, search and
+permalink foundation, section/version foundation, source registry foundation,
+runtime foundation, and canonical schema foundation. The package can
 be installed, the FastAPI app can start, / plus /health are available for IT
 smoke checks, Alembic can create the canonical civiccode schema tables after
 CivicCore migrations run, staff can register official source records, staff can
 create titles, chapters, sections, and adopted or pending section versions,
 public-safe search/permalink APIs are available, deterministic citation or
 refusal objects can be built, and citation-grounded questions can be answered
-when one adopted section and active source can be cited.
+when one adopted section and active source can be cited. Staff-only
+interpretation notes, staff Q&A context, and staff workbench audit events are
+available behind the trusted staff header seam.
 
 This is not a legal-advice product and does not make live LLM calls. There is
 no source persistence, import parser, frontend workflow, public lookup UI, staff
-workbench, or legal determination behavior yet. Source, section/version, search,
-permalink, citation-contract, and citation-grounded Q&A behavior exists so
-authoritative text can be found and cited without uncited answers. Code answers
-are limited to citation_grounded responses.
+plain-language summary workflow, CivicClerk handoff, live LLM calls, or legal
+determination behavior yet. Staff notes are not public. Source,
+section/version, search, permalink, citation-contract, citation-grounded Q&A,
+and staff workbench behavior exists so authoritative text can be found, cited,
+and annotated internally without uncited public answers. Code answers are
+limited to citation_grounded responses.
 
 CivicCode is the next planning lane because CivicZone needs an authoritative
 municipal-code source before zoning runtime work begins.
@@ -48,6 +53,7 @@ Run locally
 3. python -m uvicorn civiccode.main:app --reload
 4. curl http://127.0.0.1:8000/health
 5. curl http://127.0.0.1:8000/api/v1/civiccode/sources/catalog
+6. create staff notes with X-CivicCode-Role: staff and X-CivicCode-Actor
 
 Migration smoke
 ---------------
@@ -58,4 +64,4 @@ Migration smoke
 Next work
 ---------
 
-Milestone 8: staff workbench foundation.
+Milestone 9: plain-language summaries.

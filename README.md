@@ -9,22 +9,24 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **citation-grounded Q&A foundation** layered on
-the citation contract foundation,
-the search and permalink foundation, section/version foundation, source registry
-foundation, runtime foundation, and canonical schema foundation: an installable
-Python package, a FastAPI app shell, `/` and `/health` endpoints, an exact
-`civiccore==0.2.0` dependency pin, canonical SQLAlchemy table metadata, Alembic
-migrations under the `civiccode` schema, source registry APIs, section/version
-APIs, public-safe text search, stable section permalinks, and deterministic
-citation/refusal objects, and deterministic citation-grounded answers for
-questions that resolve to one adopted section.
+As of 2026-04-27, CivicCode has a **staff workbench foundation** layered on the
+citation-grounded Q&A, citation contract, search and permalink,
+section/version, source registry, runtime foundation, and canonical schema
+foundations: an
+installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
+an exact `civiccore==0.2.0` dependency pin, canonical SQLAlchemy table
+metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
+section/version APIs, public-safe text search, stable section permalinks,
+deterministic citation/refusal objects, deterministic citation-grounded answers,
+and staff-only interpretation-note APIs with audit events and staff Q&A context.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
-There is no database source persistence, import parser, public lookup UI, staff
-workbench, live LLM call, or legal determination behavior in this repo yet.
+There is no database source persistence, import parser, public lookup UI, live
+LLM call, plain-language summary workflow, CivicClerk handoff, or legal
+determination behavior in this repo yet. Staff interpretation notes are
+staff-only and must not be published to public endpoints.
 
-The current deliverable is Milestone 7:
+The current deliverable is Milestone 8:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -49,7 +51,13 @@ The current deliverable is Milestone 7:
   source can be cited,
 - refuse legal-determination, uncited, ambiguous, missing, stale, or
   contradictory situations with a reason and fix path,
-- keep docs and CI gates green before staff workbench work begins.
+- create staff-only interpretation notes for a code section,
+- keep staff interpretation notes out of public lookup, public search, and
+  public Q&A responses,
+- let staff Q&A responses include approved staff note context with a
+  `staff_only_do_not_publish` warning,
+- append staff workbench audit events when notes are created,
+- keep docs and CI gates green before plain-language summary work begins.
 
 ## Why CivicCode before CivicZone
 
@@ -108,12 +116,13 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `citation-grounded Q&A foundation`,
+Expected truth today: the service reports `staff workbench foundation`,
 exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
 section/version and search endpoints under `/api/v1/civiccode/sections` and
 `/api/v1/civiccode/search`, exposes deterministic citation objects under
 `/api/v1/civiccode/citations/build`, exposes citation-grounded answers under
-`/api/v1/civiccode/questions/answer`, and marks successful answers with
+`/api/v1/civiccode/questions/answer`, exposes staff-only workbench endpoints
+under `/api/v1/civiccode/staff`, and marks successful answers with
 `code_answer_behavior=citation_grounded`.
 
 Migration smoke:
@@ -181,6 +190,28 @@ one citation object, set `classification=information_not_determination`, set
 determination. Code-answer behavior is limited to `citation_grounded` responses.
 Legal-advice, uncited, stale, missing, ambiguous, or
 contradictory requests return structured refusals.
+
+Staff workbench smoke:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/sections/sec_chickens/notes \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: planner@example.gov" \
+  -d '{"note_text":"Planning staff treats coop setbacks as measured from the property line.","status":"approved"}'
+
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/questions/answer \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: planner@example.gov" \
+  -d '{"question":"What does section 6.12.040 say about backyard chickens?","section_number":"6.12.040"}'
+```
+
+Expected staff-workbench truth today: staff endpoints require
+`X-CivicCode-Role: staff` and `X-CivicCode-Actor`, staff interpretation notes
+are returned only to staff endpoints, staff Q&A adds `staff_context` with
+`staff_only_do_not_publish`, and public lookup, search, and Q&A never expose
+staff notes or staff note counts.
 
 ## License
 
