@@ -10,7 +10,9 @@ registry foundation, runtime foundation, and canonical schema foundation. This m
 explains what a first-time installer can do today and what is still planned.
 
 The source registry remains the official source metadata foundation for every
-summary, citation, lookup, and Q&A response.
+summary, citation, lookup, and Q&A response. It can now persist source records
+when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
+in-memory store for lightweight local demos.
 
 ## For municipal decision-makers
 
@@ -29,6 +31,8 @@ Current truth:
   migrations run,
 - staff can register source records for official and explicitly non-official
   municipal code materials,
+- staff can persist source registry records with
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
 - public source endpoints do not expose staff-only notes,
 - staff can create titles, chapters, sections, subsections, and immutable
   section versions,
@@ -117,7 +121,9 @@ python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 ```
 
 The migration chain runs CivicCore first and stores CivicCode's revision in
-`alembic_version_civiccode`.
+`alembic_version_civiccode`. The source registry persistence slice adds
+`source_registry_records` as an optional runtime table for durable source
+metadata.
 
 Inspect source-registry vocabulary:
 
@@ -148,7 +154,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/civiccode/sources \
 The registry accepts `draft`, `active`, `stale`, `superseded`, and `failed`
 source states. `active` official sources require source owner and retrieval
 metadata. `active` non-official sources require an explicit non-official note.
-Stale and failed sources return actionable fix guidance.
+Stale and failed sources return actionable fix guidance. Set
+`CIVICCODE_SOURCE_REGISTRY_DB_URL` before persistence smoke checks.
 
 Create section structure:
 

@@ -8,7 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Nothing yet.
+- Production-depth source registry persistence slice with
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL`, durable source metadata/status/staff-note
+  records, and Alembic revision `civiccode_0002_sources`.
 
 ## [0.1.1] - 2026-04-28
 
@@ -42,7 +44,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Not Shipped
 
-- No source persistence beyond the current in-memory registry.
 - No live LLM calls.
 - No legal-determination behavior.
-- No live codifier sync, Redis/Celery worker requirement, CivicAccess runtime dependency, database source persistence beyond the current in-memory stores, or automatic ordinance codification yet; staff notes remain staff-only.
+- No live codifier sync, Redis/Celery worker requirement, CivicAccess runtime dependency, or automatic ordinance codification yet; staff notes remain staff-only.

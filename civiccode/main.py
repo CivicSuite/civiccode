@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import date, datetime
 from typing import Any
 
@@ -64,6 +65,7 @@ from civiccode.source_registry import (
     SOURCE_STATES,
     SOURCE_TRANSITIONS,
     SOURCE_TYPES,
+    SourceRegistryRepository,
     SourceRegistryError,
     SourceRegistryStore,
     compute_reference_checksum,
@@ -79,6 +81,8 @@ app = FastAPI(
 )
 
 SOURCE_STORE = SourceRegistryStore()
+_source_registry_repository: SourceRegistryRepository | None = None
+_source_registry_db_url: str | None = None
 SECTION_STORE = SectionLifecycleStore()
 STAFF_NOTE_STORE = StaffWorkbenchStore()
 SUMMARY_STORE = PlainLanguageSummaryStore()
@@ -430,7 +434,7 @@ async def create_source(request: SourceCreate) -> dict[str, Any]:
     if data["checksum"] is None and data.get("file_reference"):
         data["checksum"] = compute_reference_checksum(data["file_reference"])
     try:
-        source = SOURCE_STORE.create(data)
+        source = _get_source_store().create(data)
     except SourceRegistryError as exc:
         _raise_source_error(exc)
     return source_to_staff_dict(source)
@@ -442,7 +446,7 @@ async def list_public_sources() -> dict[str, Any]:
     return {
         "sources": [
             source_to_public_dict(source)
-            for source in SOURCE_STORE.list_sources(include_staff_only=False)
+            for source in _get_source_store().list_sources(include_staff_only=False)
         ]
     }
 
@@ -451,7 +455,7 @@ async def list_public_sources() -> dict[str, Any]:
 async def get_public_source(source_id: str) -> dict[str, Any]:
     """Read a public source record without leaking staff-only notes."""
     try:
-        source = SOURCE_STORE.get(source_id)
+        source = _get_source_store().get(source_id)
     except SourceRegistryError as exc:
         _raise_source_error(exc)
     if not source.public_visible:
@@ -471,7 +475,7 @@ async def list_staff_sources() -> dict[str, Any]:
     return {
         "sources": [
             source_to_staff_dict(source)
-            for source in SOURCE_STORE.list_sources(include_staff_only=True)
+            for source in _get_source_store().list_sources(include_staff_only=True)
         ]
     }
 
@@ -480,7 +484,7 @@ async def list_staff_sources() -> dict[str, Any]:
 async def get_staff_source(source_id: str) -> dict[str, Any]:
     """Read a staff source record including staff-only notes."""
     try:
-        source = SOURCE_STORE.get(source_id)
+        source = _get_source_store().get(source_id)
     except SourceRegistryError as exc:
         _raise_source_error(exc)
     return source_to_staff_dict(source)
@@ -493,7 +497,7 @@ async def transition_source(
 ) -> dict[str, Any]:
     """Transition a source through the official registry lifecycle."""
     try:
-        source = SOURCE_STORE.transition(
+        source = _get_source_store().transition(
             source_id,
             request.to_status,
             actor=request.actor,
@@ -550,7 +554,7 @@ async def create_section_version(
             },
         )
     try:
-        source = SOURCE_STORE.get(data["source_id"])
+        source = _get_source_store().get(data["source_id"])
     except SourceRegistryError as exc:
         raise HTTPException(
             status_code=404,
@@ -939,7 +943,7 @@ def _build_citation_for_section(section_number: str, as_of: date | None = None) 
         return refusal(exc.message, exc.fix, "section_lookup")
     source_id = context["version"]["source_id"]
     try:
-        source = SOURCE_STORE.get(source_id)
+        source = _get_source_store().get(source_id)
     except SourceRegistryError:
         return refusal(
             f"Source '{source_id}' was not found for this citation.",
@@ -983,7 +987,7 @@ def _build_export_for_section(section_ref: str, as_of: date | None = None) -> di
             },
         )
     try:
-        source = SOURCE_STORE.get(citation_payload["citation"]["source_id"])
+        source = _get_source_store().get(citation_payload["citation"]["source_id"])
     except SourceRegistryError as exc:
         _raise_source_error(exc)
     return build_records_ready_export(
@@ -991,3 +995,14 @@ def _build_export_for_section(section_ref: str, as_of: date | None = None) -> di
         citation_payload=citation_payload,
         source=source_to_public_dict(source),
     )
+
+
+def _get_source_store() -> SourceRegistryRepository | SourceRegistryStore:
+    global _source_registry_db_url, _source_registry_repository
+    db_url = os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL")
+    if db_url is None:
+        return SOURCE_STORE
+    if _source_registry_repository is None or db_url != _source_registry_db_url:
+        _source_registry_db_url = db_url
+        _source_registry_repository = SourceRegistryRepository(db_url=db_url)
+    return _source_registry_repository

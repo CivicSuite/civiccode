@@ -18,6 +18,7 @@ foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
 an exact `civiccore==0.3.0` dependency pin, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
+optional database-backed source registry persistence,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
@@ -29,8 +30,7 @@ plain-language summaries, and see pending-codification warnings when CivicClerk
 handoffs may affect a section.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
-There is no database source persistence beyond the current in-memory stores,
-live codifier sync, CivicAccess runtime dependency, live LLM call, automatic
+There is no live codifier sync, CivicAccess runtime dependency, live LLM call, automatic
 ordinance codification, or legal determination behavior in this repo yet.
 Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
@@ -43,6 +43,7 @@ The current release is CivicCode v0.1.1:
 - run CivicCore migrations before CivicCode migrations,
 - create the canonical CivicCode schema tables,
 - register official and explicitly non-official source records,
+- persist source registry records with `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
 - track source provenance, owner, retrieval method, retrieved timestamp, status,
   and staff notes,
 - keep staff-only source notes out of public endpoints,
@@ -170,7 +171,9 @@ python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 ```
 
 Expected migration truth today: CivicCore migrations run first, CivicCode uses
-`alembic_version_civiccode`, and ten canonical `civiccode.*` tables are created.
+`alembic_version_civiccode`, ten canonical `civiccode.*` tables are created,
+and `source_registry_records` is available for the optional DB-backed source
+registry runtime path.
 
 Source registry smoke:
 
@@ -181,7 +184,9 @@ curl http://127.0.0.1:8000/api/v1/civiccode/sources/catalog
 Expected source-registry truth today: source types include Municode, American
 Legal, Code Publishing, General Code, official XML/DOCX exports, official file
 drops, and official web scrape/export paths. Source states are `draft`,
-`active`, `stale`, `superseded`, and `failed`.
+`active`, `stale`, `superseded`, and `failed`. Set
+`CIVICCODE_SOURCE_REGISTRY_DB_URL` before source registry persistence smoke
+checks; without it, the runtime uses the in-memory store for local demos.
 
 Section/version smoke:
 

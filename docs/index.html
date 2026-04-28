@@ -98,7 +98,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Records-ready export and accessibility hardening foundation online on top of local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
+  <p class="status">Records-ready export and accessibility hardening foundation online on top of local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
@@ -127,7 +127,7 @@
         <li>FastAPI runtime foundation with <code>/</code> and <code>/health</code>.</li>
         <li>Exact <code>civiccore==0.3.0</code> dependency pin.</li>
         <li>Canonical SQLAlchemy metadata and Alembic migrations for ten <code>civiccode.*</code> tables.</li>
-        <li>Official source registry API for codifier/source metadata, provenance, and source-state checks.</li>
+        <li>Official source registry API for codifier/source metadata, provenance, source-state checks, and optional persistence through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code>.</li>
         <li>Section/version lifecycle APIs for adopted, historical, and pending text boundaries.</li>
         <li>Public-safe search and stable section permalink APIs.</li>
         <li>Deterministic citation/refusal objects with section, version, source, and effective-date fields.</li>
