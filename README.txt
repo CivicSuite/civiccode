@@ -11,11 +11,12 @@ hardening foundation built on the local import foundation, public code lookup
 surface, CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and permalink foundation, section/version
-foundation, source registry foundation, runtime foundation, and canonical
+foundation, database-backed source registry foundation, runtime foundation, and canonical
 schema foundation. The package can
 be installed, the FastAPI app can start, / plus /health are available for IT
 smoke checks, Alembic can create the canonical civiccode schema tables after
-CivicCore migrations run, staff can register official source records, staff can
+CivicCore migrations run, staff can register official source records, persist
+source records with CIVICCODE_SOURCE_REGISTRY_DB_URL when configured, staff can
 create titles, chapters, sections, and adopted or pending section versions,
 public-safe search/permalink APIs are available, deterministic citation or
 refusal objects can be built, and citation-grounded questions can be answered
@@ -33,7 +34,7 @@ code text, see citations, view approved summaries, and see pending
 codification warnings.
 
 This is not a legal-advice product and does not make live LLM calls. There is
-no source persistence beyond the current in-memory stores, live codifier sync,
+no live codifier sync,
 CivicAccess runtime dependency, live LLM-backed frontend workflow, live LLM
 calls, automatic ordinance codification, or legal determination behavior yet.
 Staff notes are not public. Summaries are not law. Pending ordinance language is not adopted law. Source,
@@ -94,6 +95,7 @@ Migration smoke
 
 1. set DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/civiccode
 2. python -m alembic -c civiccode/migrations/alembic.ini upgrade head
+3. set CIVICCODE_SOURCE_REGISTRY_DB_URL=sqlite:///civiccode-sources.db before source persistence smoke checks
 
 Release
 -------

@@ -8,6 +8,9 @@ from hashlib import sha256
 from typing import Any
 from uuid import uuid4
 
+import sqlalchemy as sa
+from sqlalchemy import Engine, create_engine
+
 
 SOURCE_TYPES = {
     "municode",
@@ -113,7 +116,7 @@ class SourceRegistryStore:
             source_category=data["source_category"],
             source_url=data.get("source_url"),
             file_reference=data.get("file_reference"),
-            retrieved_at=data.get("retrieved_at"),
+            retrieved_at=_coerce_datetime(data.get("retrieved_at")),
             retrieval_method=data.get("retrieval_method"),
             checksum=data.get("checksum"),
             source_owner=data.get("source_owner"),
@@ -176,6 +179,170 @@ class SourceRegistryStore:
 
     def reset(self) -> None:
         self._sources.clear()
+
+
+metadata = sa.MetaData()
+
+source_registry_records = sa.Table(
+    "source_registry_records",
+    metadata,
+    sa.Column("source_id", sa.String(255), primary_key=True),
+    sa.Column("name", sa.String(255), nullable=False),
+    sa.Column("publisher", sa.String(255), nullable=False),
+    sa.Column("source_type", sa.String(80), nullable=False),
+    sa.Column("source_category", sa.String(120), nullable=False),
+    sa.Column("source_url", sa.Text(), nullable=True),
+    sa.Column("file_reference", sa.Text(), nullable=True),
+    sa.Column("retrieved_at", sa.DateTime(timezone=True), nullable=True),
+    sa.Column("retrieval_method", sa.String(120), nullable=True),
+    sa.Column("checksum", sa.String(128), nullable=True),
+    sa.Column("source_owner", sa.String(255), nullable=True),
+    sa.Column("is_official", sa.Boolean(), nullable=False),
+    sa.Column("official_status_note", sa.Text(), nullable=True),
+    sa.Column("status", sa.String(80), nullable=False),
+    sa.Column("staff_notes", sa.Text(), nullable=True),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+
+class SourceRegistryRepository:
+    """SQLAlchemy-backed source registry records.
+
+    Configure with `CIVICCODE_SOURCE_REGISTRY_DB_URL` in the FastAPI runtime or
+    pass a SQLAlchemy URL directly in local smoke checks and tests.
+    """
+
+    def __init__(self, *, db_url: str | None = None, engine: Engine | None = None) -> None:
+        base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
+        if base_engine.dialect.name == "sqlite":
+            self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})
+        else:
+            self.engine = base_engine
+            with self.engine.begin() as connection:
+                connection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS civiccode"))
+        metadata.create_all(self.engine)
+
+    def create(self, data: dict[str, Any]) -> CodeSource:
+        source = CodeSource(
+            source_id=data.get("source_id") or f"src_{uuid4().hex}",
+            name=data["name"],
+            publisher=data["publisher"],
+            source_type=data["source_type"],
+            source_category=data["source_category"],
+            source_url=data.get("source_url"),
+            file_reference=data.get("file_reference"),
+            retrieved_at=_coerce_datetime(data.get("retrieved_at")),
+            retrieval_method=data.get("retrieval_method"),
+            checksum=data.get("checksum"),
+            source_owner=data.get("source_owner"),
+            is_official=data.get("is_official", True),
+            official_status_note=data.get("official_status_note"),
+            status=data.get("status", "draft"),
+            staff_notes=data.get("staff_notes"),
+        )
+        validate_source(source)
+        now = datetime.now(UTC)
+        with self.engine.begin() as connection:
+            if self._exists(connection, source.source_id):
+                raise SourceRegistryError(
+                    f"Source '{source.source_id}' already exists.",
+                    "Use a unique source_id or update the existing source instead.",
+                    status_code=409,
+                )
+            connection.execute(
+                source_registry_records.insert().values(
+                    source_id=source.source_id,
+                    name=source.name,
+                    publisher=source.publisher,
+                    source_type=source.source_type,
+                    source_category=source.source_category,
+                    source_url=source.source_url,
+                    file_reference=source.file_reference,
+                    retrieved_at=source.retrieved_at,
+                    retrieval_method=source.retrieval_method,
+                    checksum=source.checksum,
+                    source_owner=source.source_owner,
+                    is_official=source.is_official,
+                    official_status_note=source.official_status_note,
+                    status=source.status,
+                    staff_notes=source.staff_notes,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+        return source
+
+    def get(self, source_id: str) -> CodeSource:
+        with self.engine.begin() as connection:
+            row = connection.execute(
+                sa.select(source_registry_records).where(
+                    source_registry_records.c.source_id == source_id
+                )
+            ).mappings().first()
+        if row is None:
+            raise SourceRegistryError(
+                f"Source '{source_id}' was not found.",
+                "Create the source first or check the source_id in the request URL.",
+                status_code=404,
+            )
+        return _row_to_source(row)
+
+    def list_sources(self, *, include_staff_only: bool = False) -> list[CodeSource]:
+        with self.engine.begin() as connection:
+            rows = connection.execute(
+                sa.select(source_registry_records).order_by(source_registry_records.c.created_at)
+            ).mappings().all()
+        sources = [_row_to_source(row) for row in rows]
+        if include_staff_only:
+            return sources
+        return [source for source in sources if source.public_visible]
+
+    def transition(
+        self,
+        source_id: str,
+        to_status: str,
+        *,
+        actor: str,
+        reason: str,
+    ) -> CodeSource:
+        source = self.get(source_id)
+        if not actor.strip():
+            raise SourceRegistryError(
+                "Source transition requires an actor.",
+                "Provide the staff email or service account making the transition.",
+            )
+        if not reason.strip():
+            raise SourceRegistryError(
+                "Source transition requires a reason.",
+                "Explain why this source state is changing.",
+            )
+        validate_transition(source.status, to_status)
+        candidate = replace(source, status=to_status)
+        validate_source(candidate)
+        with self.engine.begin() as connection:
+            connection.execute(
+                source_registry_records.update()
+                .where(source_registry_records.c.source_id == source_id)
+                .values(status=to_status, updated_at=datetime.now(UTC))
+            )
+        return self.get(source_id)
+
+    def reset(self) -> None:
+        with self.engine.begin() as connection:
+            connection.execute(source_registry_records.delete())
+
+    @staticmethod
+    def _exists(connection: sa.Connection, source_id: str) -> bool:
+        return (
+            connection.execute(
+                sa.select(source_registry_records.c.source_id).where(
+                    source_registry_records.c.source_id == source_id
+                )
+            ).first()
+            is not None
+        )
 
 
 def validate_transition(from_status: str, to_status: str) -> None:
@@ -304,6 +471,40 @@ def _source_base_dict(source: CodeSource) -> dict[str, Any]:
         "created_at": source.created_at.isoformat(),
         "updated_at": source.updated_at.isoformat(),
     }
+
+
+def _row_to_source(row: Any) -> CodeSource:
+    data = dict(row)
+    return CodeSource(
+        source_id=data["source_id"],
+        name=data["name"],
+        publisher=data["publisher"],
+        source_type=data["source_type"],
+        source_category=data["source_category"],
+        source_url=data["source_url"],
+        file_reference=data["file_reference"],
+        retrieved_at=data["retrieved_at"],
+        retrieval_method=data["retrieval_method"],
+        checksum=data["checksum"],
+        source_owner=data["source_owner"],
+        is_official=data["is_official"],
+        official_status_note=data["official_status_note"],
+        status=data["status"],
+        staff_notes=data["staff_notes"],
+        created_at=data["created_at"],
+        updated_at=data["updated_at"],
+    )
+
+
+def _coerce_datetime(value: Any) -> datetime | None:
+    if value is None or isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    raise SourceRegistryError(
+        "retrieved_at must be an ISO 8601 timestamp.",
+        "Use a timestamp such as 2026-04-27T12:00:00Z or omit retrieved_at until retrieval completes.",
+    )
 
 
 def compute_reference_checksum(value: str) -> str:

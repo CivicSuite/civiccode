@@ -173,6 +173,16 @@ def migration_path() -> Path:
     return ROOT / "civiccode" / "migrations" / "versions" / "civiccode_0001_schema.py"
 
 
+def source_registry_records_migration_path() -> Path:
+    return (
+        ROOT
+        / "civiccode"
+        / "migrations"
+        / "versions"
+        / "civiccode_0002_source_registry_records.py"
+    )
+
+
 def test_canonical_table_models_exist_and_no_tables_are_missing_or_extra() -> None:
     models = model_module()
     metadata = models.Base.metadata
@@ -235,6 +245,7 @@ def test_alembic_scaffold_exists_for_civiccode_schema_chain() -> None:
         ROOT / "civiccode" / "migrations" / "alembic.ini",
         ROOT / "civiccode" / "migrations" / "env.py",
         migration_path(),
+        source_registry_records_migration_path(),
     ]
 
     for path in expected:
@@ -336,8 +347,8 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             )
 
         assert civiccore_revision == "civiccore_0002_llm"
-        assert civiccode_revision == "civiccode_0001_schema"
-        assert civiccode_tables == set(CANONICAL_TABLES)
+        assert civiccode_revision == "civiccode_0002_sources"
+        assert civiccode_tables == set(CANONICAL_TABLES) | {"source_registry_records"}
     finally:
         subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True, text=True)
 
@@ -363,6 +374,18 @@ def test_migration_table_list_matches_model_metadata() -> None:
     model_tables = {table.name for table in models.Base.metadata.tables.values()}
     for table_name in model_tables:
         assert f'"{table_name}"' in text or f"'{table_name}'" in text
+
+
+def test_source_registry_records_migration_declares_persistent_records_table() -> None:
+    text = source_registry_records_migration_path().read_text(encoding="utf-8")
+
+    assert 'revision = "civiccode_0002_sources"' in text
+    assert 'down_revision = "civiccode_0001_schema"' in text
+    assert "idempotent_create_table" in text
+    assert '"source_registry_records"' in text
+    assert '"source_id"' in text
+    assert '"official_status_note"' in text
+    assert 'schema="civiccode"' in text
 
 
 def test_docs_and_changelog_record_schema_milestone_without_claiming_code_answers() -> None:
