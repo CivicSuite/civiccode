@@ -13,7 +13,7 @@ ordinance access for CivicSuite.
 
 This repo has completed Milestone 13 accessibility and export hardening. It has an
 installable Python package, a FastAPI app shell, `/` and `/health`, an exact
-`civiccore==0.2.0` dependency pin, canonical SQLAlchemy metadata, and Alembic
+`civiccore==0.3.0` dependency pin, canonical SQLAlchemy metadata, and Alembic
 migrations for the `civiccode` schema. It also has staff/public source registry
 APIs, title/chapter/section/version lifecycle APIs, public-safe search, stable
 section permalinks, deterministic citation/refusal objects, and a deterministic
@@ -74,7 +74,7 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 14 is complete. CivicCode v0.1.0 release work is the current boundary.
+Milestone 14 is complete. CivicCode v0.1.1 dependency-alignment release work is the current boundary.
 
 ## Prohibitions
 

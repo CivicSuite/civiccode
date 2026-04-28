@@ -34,15 +34,15 @@ def test_pyproject_declares_runtime_package_and_release_version() -> None:
     data = load_pyproject()
 
     assert data["project"]["name"] == "civiccode"
-    assert data["project"]["version"] == "0.1.0"
+    assert data["project"]["version"] == "0.1.1"
     assert "CivicCode" in data["project"]["description"]
 
 
-def test_pyproject_pins_civiccore_exactly_to_released_v020() -> None:
+def test_pyproject_pins_civiccore_exactly_to_released_v030() -> None:
     data = load_pyproject()
     dependencies = data["project"]["dependencies"]
 
-    assert "civiccore==0.2.0" in dependencies
+    assert "civiccore==0.3.0" in dependencies
     assert not any("civiccore>=" in dep or "civiccore~=" in dep for dep in dependencies)
 
 
@@ -90,7 +90,9 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
-    assert payload["next_step"] == "CivicCode v0.1.0 released; next work follows the CivicSuite roadmap."
+    assert payload["next_step"] == (
+        "CivicCode v0.1.1 dependency-alignment release; next work follows the CivicSuite roadmap."
+    )
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
@@ -121,8 +123,8 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
     assert payload == {
         "status": "ok",
         "service": "civiccode",
-            "version": "0.1.0",
-        "civiccore": "0.2.0",
+                "version": "0.1.1",
+        "civiccore": "0.3.0",
     }
 
 
