@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Nothing yet.
 
+## [0.1.1] - 2026-04-28
+
+### Changed
+
+- Align CivicCode's exact CivicCore dependency, CI install wheel, documentation, health contract, and release gate with `civiccore==0.3.0`.
+
 ## [0.1.0] - 2026-04-27
 
 ### Added

@@ -16,7 +16,7 @@ plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
-an exact `civiccore==0.2.0` dependency pin, canonical SQLAlchemy table
+an exact `civiccore==0.3.0` dependency pin, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
@@ -36,7 +36,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.0:
+The current release is CivicCode v0.1.1:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -91,7 +91,7 @@ The current release is CivicCode v0.1.0:
 - render an accessible, print-friendly records-ready export page,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
-- keep docs and CI gates green for the v0.1.0 release.
+- keep docs and CI gates green for the v0.1.1 dependency-alignment release.
 
 ## Why CivicCode before CivicZone
 
@@ -138,7 +138,7 @@ Install the CivicCore release wheel first, then install CivicCode in editable
 mode:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.2.0/civiccore-0.2.0-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.3.0/civiccore-0.3.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
