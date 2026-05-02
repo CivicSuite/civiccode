@@ -52,7 +52,7 @@ def main() -> int:
             if placeholder:
                 rel = path.relative_to(ROOT)
                 failures.append(
-                    f"{rel}: civiccore.{placeholder} is a placeholder package in v0.3.0. "
+                    f"{rel}: civiccore.{placeholder} is not an approved CivicCode dependency yet. "
                     "See AGENTS.md section CivicCore placeholder warning."
                 )
     if failures:
