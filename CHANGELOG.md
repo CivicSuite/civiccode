@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-05-02
+
+### Added
+
+- Staff source registry workspace at `/staff/sources` with empty, access-required,
+  source-card, stale-source, and failed-source states for code administrators.
+
+### Changed
+
+- Staff source create, transition, list, and detail APIs now require the trusted
+  staff header seam before exposing staff-only source notes or mutating the
+  registry.
+
 ## [0.1.2] - 2026-05-02
 
 ### Added

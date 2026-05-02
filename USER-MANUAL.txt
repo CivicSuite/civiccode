@@ -1,7 +1,8 @@
 # CivicCode User Manual
 
-CivicCode currently ships a records-ready export and accessibility hardening
-foundation built on the local import foundation, public code lookup surface,
+CivicCode currently ships a staff source registry workspace built on the
+records-ready export and accessibility hardening foundation, local import
+foundation, public code lookup surface,
 CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and

@@ -8,6 +8,10 @@ from httpx import ASGITransport, AsyncClient
 
 
 ROOT = Path(__file__).resolve().parents[1]
+STAFF_HEADERS = {
+    "X-CivicCode-Role": "staff",
+    "X-CivicCode-Actor": "clerk@example.gov",
+}
 
 
 @pytest.fixture()
@@ -30,6 +34,7 @@ async def client(app_module):
 async def seed_search_fixture(client: AsyncClient) -> None:
     source = await client.post(
         "/api/v1/civiccode/sources",
+        headers=STAFF_HEADERS,
         json={
             "source_id": "municode_active",
             "name": "Example Municipal Code",

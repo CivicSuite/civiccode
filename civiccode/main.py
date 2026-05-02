@@ -54,6 +54,10 @@ from civiccode.section_lifecycle import (
     title_to_dict,
     version_to_dict,
 )
+from civiccode.staff_sources import (
+    render_staff_source_required_page,
+    render_staff_source_workspace,
+)
 from civiccode.staff_workbench import (
     StaffWorkbenchError,
     StaffWorkbenchStore,
@@ -318,13 +322,15 @@ async def root() -> dict[str, str]:
             "Local file-drop and fixture import jobs are online with provenance, "
             "retry, and no required outbound dependency. Records-ready section "
             "exports are online with citation, version, and source metadata. "
+            "The staff source registry workspace is online at /staff/sources "
+            "with staff-header protection for staff-only source notes. "
             "Live LLM calls, live codifier sync, and legal determinations are "
             "not implemented yet."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "CivicCode v0.1.2 CivicCore v0.19.0 alignment release; next work follows the CivicSuite roadmap.",
+        "next_step": "CivicCode v0.1.3 staff source registry workspace; next work follows the CivicSuite roadmap.",
     }
 
 
@@ -402,6 +408,23 @@ async def public_section_export(section_ref: str, as_of: date | None = None) -> 
     return render_records_ready_export_page(export)
 
 
+@app.get("/staff/sources", response_class=HTMLResponse)
+async def staff_source_workspace(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> HTMLResponse:
+    """Render the staff source registry workspace."""
+    try:
+        actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    except HTTPException:
+        return HTMLResponse(render_staff_source_required_page(), status_code=403)
+    sources = [
+        source_to_staff_dict(source)
+        for source in _get_source_store().list_sources(include_staff_only=True)
+    ]
+    return HTMLResponse(render_staff_source_workspace(sources, actor=actor))
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Provide a simple operational health check for IT staff."""
@@ -428,8 +451,13 @@ async def source_registry_catalog() -> dict[str, Any]:
 
 
 @app.post("/api/v1/civiccode/sources", status_code=201)
-async def create_source(request: SourceCreate) -> dict[str, Any]:
+async def create_source(
+    request: SourceCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Register a municipal code source without importing its contents yet."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     data = request.model_dump()
     if data["checksum"] is None and data.get("file_reference"):
         data["checksum"] = compute_reference_checksum(data["file_reference"])
@@ -470,8 +498,12 @@ async def get_public_source(source_id: str) -> dict[str, Any]:
 
 
 @app.get("/api/v1/civiccode/staff/sources")
-async def list_staff_sources() -> dict[str, Any]:
+async def list_staff_sources(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """List all registered sources for staff workflows."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     return {
         "sources": [
             source_to_staff_dict(source)
@@ -481,8 +513,13 @@ async def list_staff_sources() -> dict[str, Any]:
 
 
 @app.get("/api/v1/civiccode/staff/sources/{source_id}")
-async def get_staff_source(source_id: str) -> dict[str, Any]:
+async def get_staff_source(
+    source_id: str,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Read a staff source record including staff-only notes."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         source = _get_source_store().get(source_id)
     except SourceRegistryError as exc:
@@ -494,8 +531,11 @@ async def get_staff_source(source_id: str) -> dict[str, Any]:
 async def transition_source(
     source_id: str,
     request: SourceTransitionRequest,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Transition a source through the official registry lifecycle."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         source = _get_source_store().transition(
             source_id,

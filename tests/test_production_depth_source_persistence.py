@@ -7,6 +7,12 @@ from civiccode.main import app
 from civiccode.source_registry import SourceRegistryRepository
 
 
+STAFF_HEADERS = {
+    "X-CivicCode-Role": "staff",
+    "X-CivicCode-Actor": "clerk@example.gov",
+}
+
+
 def active_official_source(source_id: str = "municode_persistent") -> dict[str, object]:
     return {
         "source_id": source_id,
@@ -50,9 +56,14 @@ async def test_api_sources_use_configured_database(monkeypatch, tmp_path) -> Non
     monkeypatch.setenv("CIVICCODE_SOURCE_REGISTRY_DB_URL", db_url)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
-        created = await client.post("/api/v1/civiccode/sources", json=active_official_source())
+        created = await client.post(
+            "/api/v1/civiccode/sources",
+            headers=STAFF_HEADERS,
+            json=active_official_source(),
+        )
         transitioned = await client.post(
             "/api/v1/civiccode/sources/municode_persistent/transitions",
+            headers=STAFF_HEADERS,
             json={
                 "to_status": "stale",
                 "actor": "clerk@example.gov",

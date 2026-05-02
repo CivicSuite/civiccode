@@ -38,6 +38,7 @@ async def seed_public_lookup_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sources",
+            headers=STAFF_HEADERS,
             json={
                 "source_id": "municode_active",
                 "name": "Example Municipal Code",
@@ -220,6 +221,7 @@ async def test_public_section_detail_shows_stale_source_warning(
     assert (
         await client.post(
             "/api/v1/civiccode/sources/municode_active/transitions",
+            headers=STAFF_HEADERS,
             json={
                 "to_status": "stale",
                 "actor": "clerk@example.gov",

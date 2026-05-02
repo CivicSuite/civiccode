@@ -8,6 +8,10 @@ from httpx import ASGITransport, AsyncClient
 
 
 ROOT = Path(__file__).resolve().parents[1]
+STAFF_HEADERS = {
+    "X-CivicCode-Role": "staff",
+    "X-CivicCode-Actor": "clerk@example.gov",
+}
 
 
 @pytest.fixture()
@@ -30,6 +34,7 @@ async def client(app_module):
 async def create_section_tree(client: AsyncClient, section_id: str = "sec_chickens") -> None:
     source = await client.post(
         "/api/v1/civiccode/sources",
+        headers=STAFF_HEADERS,
         json={
             "source_id": "municode_active",
             "name": "Example Municipal Code",
@@ -227,6 +232,7 @@ async def test_pending_ordinance_language_is_not_treated_as_adopted_law(
     await create_section_tree(client)
     source = await client.post(
         "/api/v1/civiccode/sources",
+        headers=STAFF_HEADERS,
         json={
             "source_id": "clerk_ord_2026_20",
             "name": "Pending Ordinance 2026-20",
@@ -383,6 +389,7 @@ async def test_adopted_version_requires_active_public_source(client: AsyncClient
     await create_section_tree(client)
     source = await client.post(
         "/api/v1/civiccode/sources",
+        headers=STAFF_HEADERS,
         json={
             "source_id": "draft_source",
             "name": "Draft source",
