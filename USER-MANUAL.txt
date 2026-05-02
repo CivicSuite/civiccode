@@ -381,5 +381,5 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.2 is the current shared-platform alignment release. Future work moves to the next
+CivicCode v0.1.3 is the current staff source registry workspace release. Future work moves to the next
 module or release plan in the CivicSuite unified roadmap.
