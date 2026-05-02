@@ -301,6 +301,20 @@ class SectionLifecycleStore:
             "versions": [version_to_dict(version) for version in versions],
         }
 
+    def list_sections(self) -> list[CodeSection]:
+        return sorted(
+            self._sections.values(),
+            key=lambda section: (section.sort_order, section.section_number, section.section_id),
+        )
+
+    def list_versions(self, section_id: str) -> list[SectionVersion]:
+        self.get_section(section_id)
+        return sorted(
+            self._versions_for_section(section_id),
+            key=lambda version: (version.effective_start, version.created_at),
+            reverse=True,
+        )
+
     def permalink(self, section_id: str) -> dict[str, Any]:
         section = self.get_section(section_id)
         return {

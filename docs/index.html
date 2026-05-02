@@ -98,7 +98,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Staff source registry workspace online on top of records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
+  <p class="status">Staff code lifecycle workspace online on top of staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
@@ -128,6 +128,7 @@
         <li>Published <code>civiccore v0.19.0</code> release-wheel dependency.</li>
         <li>Staff-header-protected source registry mutations and staff source reads.</li>
         <li>Staff source registry workspace at <code>/staff/sources</code> with empty, active, stale, failed, and access-required states.</li>
+        <li>Staff code lifecycle workspace at <code>/staff/code</code> with access-required, empty, readiness-snapshot, section-card, draft-summary, and pending-codification states.</li>
         <li>Canonical SQLAlchemy metadata and Alembic migrations for ten <code>civiccode.*</code> tables.</li>
         <li>Official source registry API for codifier/source metadata, provenance, source-state checks, and optional persistence through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code>.</li>
         <li>Section/version lifecycle APIs for adopted, historical, and pending text boundaries.</li>
@@ -153,7 +154,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>CivicCode v0.1.4 is the current staff source registry workspace release.</p>
+      <p>CivicCode v0.1.5 is the current staff code lifecycle workspace release.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

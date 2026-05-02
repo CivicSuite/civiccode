@@ -9,7 +9,7 @@ sections.
 
 ## Current status
 
-As of 2026-05-02, CivicCode has a **staff source registry workspace**
+As of 2026-05-02, CivicCode has a **staff code lifecycle workspace**
 layered on the records-ready export and accessibility hardening foundation,
 local import foundation, public code
 lookup surface, CivicClerk handoff,
@@ -21,7 +21,7 @@ a published `civiccore v0.19.0` release-wheel dependency, canonical SQLAlchemy t
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
-workspace pages,
+workspace pages, staff code lifecycle workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
@@ -39,7 +39,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.4:
+The current release is CivicCode v0.1.5:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -51,6 +51,9 @@ The current release is CivicCode v0.1.4:
   source reads,
 - open `/staff/sources` through the trusted staff shell to review source
   readiness, stale/failed blockers, and staff-only notes,
+- open `/staff/code` through the trusted staff shell to review section readiness,
+  current adopted versions, draft summaries, pending codification warnings, and
+  next safe staff actions,
 - track source provenance, owner, retrieval method, retrieved timestamp, status,
   and staff notes,
 - keep staff-only source notes out of public endpoints,
@@ -100,7 +103,7 @@ The current release is CivicCode v0.1.4:
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
 - consume the current shared CivicCore v0.19.0 release wheel, and
-- keep docs and CI gates green for the v0.1.4 staff source registry workspace release.
+- keep docs and CI gates green for the v0.1.5 staff code lifecycle workspace release.
 
 ## Why CivicCode before CivicZone
 
