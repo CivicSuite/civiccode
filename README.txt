@@ -100,4 +100,4 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.4 is the current staff source registry workspace release.
+CivicCode v0.1.5 is the current staff code lifecycle workspace release.

@@ -58,6 +58,10 @@ from civiccode.staff_sources import (
     render_staff_source_required_page,
     render_staff_source_workspace,
 )
+from civiccode.staff_code import (
+    render_staff_code_required_page,
+    render_staff_code_workspace,
+)
 from civiccode.staff_workbench import (
     StaffWorkbenchError,
     StaffWorkbenchStore,
@@ -304,6 +308,88 @@ def _require_staff(
     return actor
 
 
+def _staff_code_payload() -> dict[str, Any]:
+    sources = [source_to_staff_dict(source) for source in _get_source_store().list_sources(include_staff_only=True)]
+    source_by_id = {source["source_id"]: source for source in sources}
+    source_status = {
+        "active": sum(1 for source in sources if source["status"] == "active"),
+        "stale": sum(1 for source in sources if source["status"] == "stale"),
+        "failed": sum(1 for source in sources if source["status"] == "failed"),
+    }
+    section_cards = []
+    current_versions = 0
+    draft_summaries = 0
+    handoff_warnings = 0
+    for section in SECTION_STORE.list_sections():
+        section_payload = section_to_dict(section)
+        versions = [version_to_dict(version) for version in SECTION_STORE.list_versions(section.section_id)]
+        current_version = next(
+            (version for version in versions if version["is_current"] and version["status"] == "adopted"),
+            None,
+        )
+        if current_version:
+            current_versions += 1
+        summaries = [
+            summary_to_staff_dict(summary)
+            for summary in SUMMARY_STORE.list_for_section(section.section_id, include_unapproved=True)
+        ]
+        draft_summaries += sum(1 for summary in summaries if summary["status"] == "draft")
+        warnings = HANDOFF_STORE.warnings_for_section(section.section_number)
+        handoff_warnings += len(warnings)
+        source_label = None
+        if current_version:
+            source = source_by_id.get(current_version["source_id"])
+            source_label = source["name"] if source else current_version["source_id"]
+        section_cards.append(
+            {
+                **section_payload,
+                "public_url": f"/civiccode/sections/{section.section_number}",
+                "current_version": current_version,
+                "source_label": source_label,
+                "summaries": summaries,
+                "handoff_warnings": warnings,
+                "staff_note_count": len(STAFF_NOTE_STORE.list_notes(section.section_id)),
+                "next_action": _staff_code_next_action(current_version, summaries, warnings),
+            }
+        )
+    blockers = []
+    if source_status["active"] == 0:
+        blockers.append("Register or reactivate an official source before staff publishes new adopted code text.")
+    if section_cards and current_versions < len(section_cards):
+        blockers.append("One or more sections do not have a current adopted version.")
+    if draft_summaries:
+        blockers.append("Draft plain-language summaries need staff approval before residents can see them.")
+    if handoff_warnings:
+        blockers.append("Pending CivicClerk handoffs require codification review before staff treats text as fully current.")
+    return {
+        "source_status": source_status,
+        "counts": {
+            "sections": len(section_cards),
+            "current_versions": current_versions,
+            "draft_summaries": draft_summaries,
+            "handoff_warnings": handoff_warnings,
+        },
+        "blockers": blockers,
+        "sections": section_cards,
+    }
+
+
+def _staff_code_next_action(
+    current_version: dict[str, Any] | None,
+    summaries: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> str:
+    if current_version is None:
+        return "Fix: add an adopted current version from an active official source before this section powers resident lookup."
+    if warnings:
+        return "Fix: review the CivicClerk handoff and update the codified text or mark the event resolved before relying on this section."
+    if not summaries:
+        return "Fix: draft and approve a non-authoritative plain-language summary if residents need a plain explanation."
+    if any(summary["status"] == "draft" for summary in summaries):
+        return "Fix: approve, revise, or retire draft summaries so public pages show only reviewed guidance."
+    return "Ready: current adopted text and approved summary state are aligned for staff review."
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
@@ -323,6 +409,7 @@ async def root() -> dict[str, str]:
             "retry, and no required outbound dependency. Records-ready section "
             "exports are online with citation, version, and source metadata. "
             "The staff source registry workspace is online at /staff/sources "
+            "and the staff code lifecycle workspace is online at /staff/code "
             "with staff-header protection for staff-only source notes. "
             "Live LLM calls, live codifier sync, and legal determinations are "
             "not implemented yet."
@@ -330,7 +417,7 @@ async def root() -> dict[str, str]:
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "CivicCode v0.1.4 staff source registry workspace; next work follows the CivicSuite roadmap.",
+        "next_step": "CivicCode v0.1.5 staff code lifecycle workspace; next work follows the CivicSuite roadmap.",
     }
 
 
@@ -423,6 +510,19 @@ async def staff_source_workspace(
         for source in _get_source_store().list_sources(include_staff_only=True)
     ]
     return HTMLResponse(render_staff_source_workspace(sources, actor=actor))
+
+
+@app.get("/staff/code", response_class=HTMLResponse)
+async def staff_code_workspace(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> HTMLResponse:
+    """Render the staff code lifecycle workspace."""
+    try:
+        actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    except HTTPException:
+        return HTMLResponse(render_staff_code_required_page(), status_code=403)
+    return HTMLResponse(render_staff_code_workspace(_staff_code_payload(), actor=actor))
 
 
 @app.get("/health")

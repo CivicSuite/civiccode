@@ -1,6 +1,6 @@
 # CivicCode User Manual
 
-CivicCode currently ships a staff source registry workspace built on the
+CivicCode currently ships a staff code lifecycle workspace built on the
 records-ready export and accessibility hardening foundation, local import
 foundation, public code lookup surface,
 CivicClerk handoff foundation,
@@ -16,7 +16,9 @@ when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
 in-memory store for lightweight local demos. Staff source mutations and
 staff-only source reads require the trusted staff header seam, and
 `/staff/sources` makes active, stale, and failed source readiness visible to
-code administrators.
+code administrators. `/staff/code` gives staff a single lifecycle review page
+for current adopted versions, source readiness, draft summaries, staff note
+counts, and pending CivicClerk codification warnings.
 
 ## For municipal decision-makers
 
@@ -38,6 +40,9 @@ Current truth:
 - source registry mutations and staff-only source reads require staff headers,
 - staff can open `/staff/sources` through the trusted staff shell to review
   source readiness, staff-only notes, and stale/failed fix paths,
+- staff can open `/staff/code` through the trusted staff shell to review
+  section readiness, current adopted versions, draft summaries, pending
+  codification warnings, and next safe actions,
 - staff can persist source registry records with
   `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
 - public source endpoints do not expose staff-only notes,
@@ -387,5 +392,5 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.4 is the current staff source registry workspace release. Future work moves to the next
+CivicCode v0.1.5 is the current staff code lifecycle workspace release. Future work moves to the next
 module or release plan in the CivicSuite unified roadmap.

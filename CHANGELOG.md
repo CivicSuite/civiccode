@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-05-02
+
+### Added
+
+- Staff code lifecycle workspace at `/staff/code` with access-required, empty,
+  readiness-snapshot, section-card, draft-summary, and pending-codification states.
+- Staff workspace payload now surfaces current adopted version counts, source
+  readiness, plain-language summary blockers, staff note counts, and CivicClerk
+  handoff warnings in one operator-facing page.
+
+### Changed
+
+- Bumped release verification and current-facing docs to CivicCode v0.1.5.
+- Added store read helpers for staff workspace aggregation without exposing
+  staff-only data on public endpoints.
+
 ## [0.1.4] - 2026-05-02
 
 ### Changed

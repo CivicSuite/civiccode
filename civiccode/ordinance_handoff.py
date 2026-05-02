@@ -149,6 +149,9 @@ class OrdinanceHandoffStore:
             )
         return warnings
 
+    def list_events(self) -> list[OrdinanceEvent]:
+        return sorted(self._events.values(), key=lambda event: event.received_at)
+
     def audit_events(self) -> list[HandoffAuditEvent]:
         return list(self._audit_events)
 

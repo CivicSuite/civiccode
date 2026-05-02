@@ -134,6 +134,14 @@ class PlainLanguageSummaryStore:
         ]
         return sorted(summaries, key=lambda summary: summary.created_at)
 
+    def list_all(self, *, include_unapproved: bool = False) -> list[PlainLanguageSummary]:
+        summaries = [
+            summary
+            for summary in self._summaries.values()
+            if include_unapproved or summary.public_visible
+        ]
+        return sorted(summaries, key=lambda summary: summary.created_at)
+
     def get_summary(self, summary_id: str) -> PlainLanguageSummary:
         try:
             return self._summaries[summary_id]
