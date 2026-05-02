@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-05-02
+
+### Changed
+
+- Corrected the current-release user manual status so the packaged documentation matches the staff source registry workspace release line.
+
 ## [0.1.3] - 2026-05-02
 
 ### Added

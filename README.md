@@ -39,7 +39,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.3:
+The current release is CivicCode v0.1.4:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -100,7 +100,7 @@ The current release is CivicCode v0.1.3:
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
 - consume the current shared CivicCore v0.19.0 release wheel, and
-- keep docs and CI gates green for the v0.1.3 staff source registry workspace release.
+- keep docs and CI gates green for the v0.1.4 staff source registry workspace release.
 
 ## Why CivicCode before CivicZone
 
