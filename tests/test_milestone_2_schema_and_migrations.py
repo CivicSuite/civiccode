@@ -235,7 +235,7 @@ def test_no_foreign_keys_target_civiccore_placeholder_packages_or_unreleased_sha
                 target = str(element.target_fullname)
                 assert not any(target.startswith(prefix) for prefix in PLACEHOLDER_TARGET_PREFIXES)
                 assert not target.startswith("civiccore."), (
-                    "CivicCode may only FK into CivicCore tables that exist in v0.3.0; "
+                    "CivicCode may only FK into released CivicCore tables; "
                     f"unexpected target: {target}"
                 )
 
