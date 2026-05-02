@@ -6,11 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-02
+
 ### Added
 
 - Production-depth source registry persistence slice with
   `CIVICCODE_SOURCE_REGISTRY_DB_URL`, durable source metadata/status/staff-note
   records, and Alembic revision `civiccode_0002_sources`.
+
+### Changed
+
+- Align CivicCode's CivicCore dependency, CI install wheel, documentation, health contract, and release gate with the published `civiccore v0.19.0` release wheel so the module can join the current CivicSuite shared-platform line before the next product-depth slice.
 
 ## [0.1.1] - 2026-04-28
 

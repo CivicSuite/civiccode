@@ -9,14 +9,14 @@ sections.
 
 ## Current status
 
-As of 2026-04-27, CivicCode has a **records-ready export and accessibility
+As of 2026-05-02, CivicCode has a **records-ready export and accessibility
 hardening foundation** layered on the local import foundation, public code
 lookup surface, CivicClerk handoff,
 plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
-an exact `civiccore==0.3.0` dependency pin, canonical SQLAlchemy table
+a published `civiccore v0.19.0` release-wheel dependency, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence,
 section/version APIs, public-safe text search, stable section permalinks,
@@ -36,7 +36,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.1:
+The current release is CivicCode v0.1.2:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -92,7 +92,8 @@ The current release is CivicCode v0.1.1:
 - render an accessible, print-friendly records-ready export page,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
-- keep docs and CI gates green for the v0.1.1 dependency-alignment release.
+- consume the current shared CivicCore v0.19.0 release wheel, and
+- keep docs and CI gates green for the v0.1.2 shared-platform alignment release.
 
 ## Why CivicCode before CivicZone
 
@@ -139,7 +140,7 @@ Install the CivicCore release wheel first, then install CivicCode in editable
 mode:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.3.0/civiccore-0.3.0-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.19.0/civiccore-0.19.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```

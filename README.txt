@@ -83,7 +83,7 @@ Documentation: CC BY 4.0 unless otherwise stated; see LICENSE-DOCS.
 Run locally
 -----------
 
-1. python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.3.0/civiccore-0.3.0-py3-none-any.whl
+1. python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.19.0/civiccore-0.19.0-py3-none-any.whl
 2. python -m pip install -e ".[dev]"
 3. python -m uvicorn civiccode.main:app --reload
 4. curl http://127.0.0.1:8000/health
@@ -100,4 +100,4 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.1 is the current dependency-alignment release.
+CivicCode v0.1.2 is the current shared-platform alignment release.
