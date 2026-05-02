@@ -10,6 +10,10 @@ from civiccode.source_registry import SOURCE_STATES, SOURCE_TRANSITIONS, validat
 
 
 ROOT = Path(__file__).resolve().parents[1]
+STAFF_HEADERS = {
+    "X-CivicCode-Role": "staff",
+    "X-CivicCode-Actor": "clerk@example.gov",
+}
 
 
 @pytest.fixture()
@@ -90,7 +94,18 @@ async def test_catalog_lists_required_codifiers_categories_and_states(client: As
 async def test_create_active_official_source_and_read_public_sanitized_copy(
     client: AsyncClient,
 ) -> None:
-    response = await client.post("/api/v1/civiccode/sources", json=active_official_source())
+    unauthenticated = await client.post(
+        "/api/v1/civiccode/sources",
+        json=active_official_source("blocked_source"),
+    )
+    assert unauthenticated.status_code == 403
+    assert "Staff role required" in unauthenticated.json()["detail"]["message"]
+
+    response = await client.post(
+        "/api/v1/civiccode/sources",
+        headers=STAFF_HEADERS,
+        json=active_official_source(),
+    )
 
     assert response.status_code == 201
     staff_payload = response.json()
@@ -111,7 +126,7 @@ async def test_active_official_source_requires_complete_provenance(client: Async
     payload = active_official_source()
     payload.pop("source_owner")
 
-    response = await client.post("/api/v1/civiccode/sources", json=payload)
+    response = await client.post("/api/v1/civiccode/sources", headers=STAFF_HEADERS, json=payload)
 
     assert response.status_code == 422
     detail = response.json()["detail"]
@@ -126,7 +141,7 @@ async def test_active_non_official_source_requires_explicit_label(client: AsyncC
     payload["is_official"] = False
     payload["source_owner"] = None
 
-    response = await client.post("/api/v1/civiccode/sources", json=payload)
+    response = await client.post("/api/v1/civiccode/sources", headers=STAFF_HEADERS, json=payload)
 
     assert response.status_code == 422
     detail = response.json()["detail"]
@@ -161,7 +176,7 @@ async def test_invalid_url_or_file_reference_returns_actionable_422(
         field: value,
     }
 
-    response = await client.post("/api/v1/civiccode/sources", json=payload)
+    response = await client.post("/api/v1/civiccode/sources", headers=STAFF_HEADERS, json=payload)
 
     assert response.status_code == 422
     assert expected_fix in response.json()["detail"]["fix"]
@@ -185,7 +200,7 @@ async def test_staff_only_sources_do_not_appear_on_public_endpoints(client: Asyn
     payload["file_reference"] = "staff/source-review.docx"
     payload["source_url"] = None
 
-    create_response = await client.post("/api/v1/civiccode/sources", json=payload)
+    create_response = await client.post("/api/v1/civiccode/sources", headers=STAFF_HEADERS, json=payload)
     assert create_response.status_code == 201
     assert create_response.json()["public_visible"] is False
     assert create_response.json()["search_eligible"] is False
@@ -198,7 +213,18 @@ async def test_staff_only_sources_do_not_appear_on_public_endpoints(client: Asyn
     assert public_get.status_code == 404
     assert "staff source endpoint" in public_get.json()["detail"]["fix"]
 
-    staff_get = await client.get("/api/v1/civiccode/staff/sources/staff_notes_source")
+    unauthenticated_staff_list = await client.get("/api/v1/civiccode/staff/sources")
+    assert unauthenticated_staff_list.status_code == 403
+    assert "Staff role required" in unauthenticated_staff_list.json()["detail"]["message"]
+
+    unauthenticated_staff_get = await client.get("/api/v1/civiccode/staff/sources/staff_notes_source")
+    assert unauthenticated_staff_get.status_code == 403
+    assert "Staff role required" in unauthenticated_staff_get.json()["detail"]["message"]
+
+    staff_get = await client.get(
+        "/api/v1/civiccode/staff/sources/staff_notes_source",
+        headers=STAFF_HEADERS,
+    )
     assert staff_get.status_code == 200
     assert staff_get.json()["staff_notes"] == "Internal source review note."
 
@@ -206,11 +232,23 @@ async def test_staff_only_sources_do_not_appear_on_public_endpoints(client: Asyn
 @pytest.mark.asyncio
 async def test_stale_and_failed_sources_return_actionable_messages(client: AsyncClient) -> None:
     payload = active_official_source("needs_refresh")
-    create_response = await client.post("/api/v1/civiccode/sources", json=payload)
+    create_response = await client.post("/api/v1/civiccode/sources", headers=STAFF_HEADERS, json=payload)
     assert create_response.status_code == 201
+
+    blocked_transition = await client.post(
+        "/api/v1/civiccode/sources/needs_refresh/transitions",
+        json={
+            "to_status": "stale",
+            "actor": "clerk@example.gov",
+            "reason": "Publisher posted a newer code snapshot.",
+        },
+    )
+    assert blocked_transition.status_code == 403
+    assert "Staff role required" in blocked_transition.json()["detail"]["message"]
 
     stale_response = await client.post(
         "/api/v1/civiccode/sources/needs_refresh/transitions",
+        headers=STAFF_HEADERS,
         json={
             "to_status": "stale",
             "actor": "clerk@example.gov",
@@ -222,6 +260,7 @@ async def test_stale_and_failed_sources_return_actionable_messages(client: Async
 
     failed_response = await client.post(
         "/api/v1/civiccode/sources/needs_refresh/transitions",
+        headers=STAFF_HEADERS,
         json={
             "to_status": "failed",
             "actor": "clerk@example.gov",
@@ -235,11 +274,12 @@ async def test_stale_and_failed_sources_return_actionable_messages(client: Async
 @pytest.mark.asyncio
 async def test_invalid_source_transition_returns_409_with_fix_path(client: AsyncClient) -> None:
     payload = active_official_source("terminal_source")
-    create_response = await client.post("/api/v1/civiccode/sources", json=payload)
+    create_response = await client.post("/api/v1/civiccode/sources", headers=STAFF_HEADERS, json=payload)
     assert create_response.status_code == 201
 
     superseded_response = await client.post(
         "/api/v1/civiccode/sources/terminal_source/transitions",
+        headers=STAFF_HEADERS,
         json={
             "to_status": "superseded",
             "actor": "clerk@example.gov",
@@ -250,6 +290,7 @@ async def test_invalid_source_transition_returns_409_with_fix_path(client: Async
 
     invalid_response = await client.post(
         "/api/v1/civiccode/sources/terminal_source/transitions",
+        headers=STAFF_HEADERS,
         json={
             "to_status": "active",
             "actor": "clerk@example.gov",

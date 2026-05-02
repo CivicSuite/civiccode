@@ -9,8 +9,9 @@ sections.
 
 ## Current status
 
-As of 2026-05-02, CivicCode has a **records-ready export and accessibility
-hardening foundation** layered on the local import foundation, public code
+As of 2026-05-02, CivicCode has a **staff source registry workspace**
+layered on the records-ready export and accessibility hardening foundation,
+local import foundation, public code
 lookup surface, CivicClerk handoff,
 plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
@@ -18,7 +19,9 @@ foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
 a published `civiccore v0.19.0` release-wheel dependency, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
-optional database-backed source registry persistence,
+optional database-backed source registry persistence, staff-header-protected
+source registry mutations and staff source reads, staff source registry
+workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
@@ -36,7 +39,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.2:
+The current release is CivicCode v0.1.3:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -44,6 +47,10 @@ The current release is CivicCode v0.1.2:
 - create the canonical CivicCode schema tables,
 - register official and explicitly non-official source records,
 - persist source registry records with `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
+- require trusted staff headers before source registry mutations and staff-only
+  source reads,
+- open `/staff/sources` through the trusted staff shell to review source
+  readiness, stale/failed blockers, and staff-only notes,
 - track source provenance, owner, retrieval method, retrieved timestamp, status,
   and staff notes,
 - keep staff-only source notes out of public endpoints,
@@ -93,7 +100,7 @@ The current release is CivicCode v0.1.2:
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
 - consume the current shared CivicCore v0.19.0 release wheel, and
-- keep docs and CI gates green for the v0.1.2 shared-platform alignment release.
+- keep docs and CI gates green for the v0.1.3 staff source registry workspace release.
 
 ## Why CivicCode before CivicZone
 

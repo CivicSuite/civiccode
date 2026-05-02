@@ -100,4 +100,4 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.2 is the current shared-platform alignment release.
+CivicCode v0.1.3 is the current staff source registry workspace release.

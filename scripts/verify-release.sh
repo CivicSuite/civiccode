@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.1.2"
+VERSION="0.1.3"
 
 find_python() {
   local candidates=()
@@ -40,7 +40,7 @@ ${PYTHON_BIN} - <<'PY'
 from pathlib import Path
 import tomllib
 
-version = "0.1.2"
+version = "0.1.3"
 root = Path(".")
 pyproject = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
 assert pyproject["project"]["version"] == version, pyproject["project"]["version"]
@@ -80,8 +80,8 @@ from pathlib import Path
 import hashlib
 
 dist = Path("dist")
-wheel = dist / "civiccode-0.1.2-py3-none-any.whl"
-sdist = dist / "civiccode-0.1.2.tar.gz"
+wheel = dist / "civiccode-0.1.3-py3-none-any.whl"
+sdist = dist / "civiccode-0.1.3.tar.gz"
 assert wheel.exists(), f"missing {wheel}"
 assert sdist.exists(), f"missing {sdist}"
 lines = []

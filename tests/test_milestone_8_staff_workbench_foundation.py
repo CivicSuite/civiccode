@@ -36,6 +36,7 @@ async def seed_staff_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sources",
+            headers=STAFF_HEADERS,
             json={
                 "source_id": "municode_active",
                 "name": "Example Municipal Code",

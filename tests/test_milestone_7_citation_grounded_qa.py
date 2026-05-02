@@ -8,6 +8,10 @@ from httpx import ASGITransport, AsyncClient
 
 
 ROOT = Path(__file__).resolve().parents[1]
+STAFF_HEADERS = {
+    "X-CivicCode-Role": "staff",
+    "X-CivicCode-Actor": "clerk@example.gov",
+}
 
 
 @pytest.fixture()
@@ -31,6 +35,7 @@ async def seed_qa_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sources",
+            headers=STAFF_HEADERS,
             json={
                 "source_id": "municode_active",
                 "name": "Example Municipal Code",
@@ -178,6 +183,7 @@ async def test_question_answer_refuses_stale_source(client: AsyncClient) -> None
     assert (
         await client.post(
             "/api/v1/civiccode/sources/municode_active/transitions",
+            headers=STAFF_HEADERS,
             json={
                 "to_status": "stale",
                 "actor": "clerk@example.gov",

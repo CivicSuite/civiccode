@@ -1,7 +1,8 @@
 # CivicCode User Manual
 
-CivicCode currently ships a records-ready export and accessibility hardening
-foundation built on the local import foundation, public code lookup surface,
+CivicCode currently ships a staff source registry workspace built on the
+records-ready export and accessibility hardening foundation, local import
+foundation, public code lookup surface,
 CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
@@ -12,7 +13,10 @@ explains what a first-time installer can do today and what is still planned.
 The source registry remains the official source metadata foundation for every
 summary, citation, lookup, and Q&A response. It can now persist source records
 when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
-in-memory store for lightweight local demos.
+in-memory store for lightweight local demos. Staff source mutations and
+staff-only source reads require the trusted staff header seam, and
+`/staff/sources` makes active, stale, and failed source readiness visible to
+code administrators.
 
 ## For municipal decision-makers
 
@@ -31,6 +35,9 @@ Current truth:
   migrations run,
 - staff can register source records for official and explicitly non-official
   municipal code materials,
+- source registry mutations and staff-only source reads require staff headers,
+- staff can open `/staff/sources` through the trusted staff shell to review
+  source readiness, staff-only notes, and stale/failed fix paths,
 - staff can persist source registry records with
   `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
 - public source endpoints do not expose staff-only notes,
