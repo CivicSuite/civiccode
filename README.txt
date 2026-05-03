@@ -6,8 +6,9 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-04-27, CivicCode has a records-ready export and accessibility
-hardening foundation built on the local import foundation, public code lookup
+As of 2026-05-03, CivicCode has a mock-city codifier contract suite layered on
+the staff code lifecycle workspace, records-ready export and accessibility
+hardening foundation, local import foundation, public code lookup
 surface, CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and permalink foundation, section/version
@@ -54,6 +55,19 @@ same bundle is idempotent. Provenance report endpoints expose source metadata,
 fixture checksums, and a no-outbound-dependency marker. Redis/Celery workers
 and live codifier sync are not required in this milestone.
 
+Mock-city codifier contract truth today
+---------------------------------------
+
+Run:
+
+python scripts/run_mock_city_environment_suite.py --output .tmp-civiccode-mock-city-report.json
+
+The suite validates secret-free Municode, American Legal Publishing, Code
+Publishing Company, and General Code source contracts through the local import
+path without outbound vendor calls. It renders planned delta URLs for future
+live sync work and reuses CivicCore municipal IdP and backup-retention
+mock-city contracts so later modules can reuse the same environment pattern.
+
 Records-ready export truth today
 --------------------------------
 
@@ -83,7 +97,7 @@ Documentation: CC BY 4.0 unless otherwise stated; see LICENSE-DOCS.
 Run locally
 -----------
 
-1. python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.19.0/civiccore-0.19.0-py3-none-any.whl
+1. python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.21.0/civiccore-0.21.0-py3-none-any.whl
 2. python -m pip install -e ".[dev]"
 3. python -m uvicorn civiccode.main:app --reload
 4. curl http://127.0.0.1:8000/health
@@ -100,4 +114,4 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.5 is the current staff code lifecycle workspace release.
+CivicCode v0.1.6 is the current mock-city codifier contract release.

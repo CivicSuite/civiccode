@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-03
+
+### Added
+
+- Reusable mock-city codifier contract suite covering Municode, American Legal
+  Publishing, Code Publishing Company, and General Code source interfaces.
+- `scripts/run_mock_city_environment_suite.py` writes a secret-free JSON report
+  and verifies CivicCode codifier imports without outbound vendor calls.
+- Mock-city environment report reuses CivicCore municipal IdP and
+  backup-retention contracts so future modules can follow the same pattern.
+
+### Changed
+
+- Bumped release verification and current-facing docs to CivicCode v0.1.6.
+- Aligned CivicCode with the published `civiccore v0.21.0` wheel so the
+  reusable mock-city contracts resolve from a published CivicCore release.
+
 ## [0.1.5] - 2026-05-02
 
 ### Added

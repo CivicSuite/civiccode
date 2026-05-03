@@ -34,17 +34,17 @@ def test_pyproject_declares_runtime_package_and_release_version() -> None:
     data = load_pyproject()
 
     assert data["project"]["name"] == "civiccode"
-    assert data["project"]["version"] == "0.1.5"
+    assert data["project"]["version"] == "0.1.6"
     assert "CivicCode" in data["project"]["description"]
 
 
-def test_pyproject_consumes_published_civiccore_v0190_wheel() -> None:
+def test_pyproject_consumes_published_civiccore_v0210_wheel() -> None:
     data = load_pyproject()
     dependencies = data["project"]["dependencies"]
 
     assert (
         "civiccore @ https://github.com/CivicSuite/civiccore/releases/download/"
-        "v0.19.0/civiccore-0.19.0-py3-none-any.whl"
+        "v0.21.0/civiccore-0.21.0-py3-none-any.whl"
     ) in dependencies
     assert not any("civiccore>=" in dep or "civiccore~=" in dep for dep in dependencies)
 
@@ -94,7 +94,7 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
     assert payload["next_step"] == (
-        "CivicCode v0.1.5 staff code lifecycle workspace; next work follows the CivicSuite roadmap."
+        "CivicCode v0.1.6 mock-city codifier contracts; next work follows the CivicSuite roadmap."
     )
     assert "not implemented yet" in payload["message"].lower()
     assert "source registry" in payload["message"]
@@ -126,8 +126,8 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
     assert payload == {
         "status": "ok",
         "service": "civiccode",
-                "version": "0.1.5",
-        "civiccore": "0.19.0",
+        "version": "0.1.6",
+        "civiccore": "0.21.0",
     }
 
 

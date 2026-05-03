@@ -9,15 +9,16 @@ sections.
 
 ## Current status
 
-As of 2026-05-02, CivicCode has a **staff code lifecycle workspace**
-layered on the records-ready export and accessibility hardening foundation,
+As of 2026-05-03, CivicCode has a **mock-city codifier contract suite**
+layered on the staff code lifecycle workspace, records-ready export and
+accessibility hardening foundation,
 local import foundation, public code
 lookup surface, CivicClerk handoff,
 plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
-a published `civiccore v0.19.0` release-wheel dependency, canonical SQLAlchemy table
+a published `civiccore v0.21.0` release-wheel dependency, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
@@ -39,7 +40,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.5:
+The current release is CivicCode v0.1.6:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -100,10 +101,16 @@ The current release is CivicCode v0.1.5:
 - export adopted section records with source, version, citation, and retrieval
   metadata,
 - render an accessible, print-friendly records-ready export page,
+- validate reusable mock-city codifier contracts for Municode, American Legal
+  Publishing, Code Publishing Company, and General Code without outbound vendor
+  calls,
+- reuse CivicCore municipal IdP and backup-retention mock-city contracts in the
+  CivicCode mock-city environment report,
+- write a secret-free mock-city environment JSON report with planned delta URLs,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
-- consume the current shared CivicCore v0.19.0 release wheel, and
-- keep docs and CI gates green for the v0.1.5 staff code lifecycle workspace release.
+- consume the current shared CivicCore v0.21.0 release wheel, and
+- keep docs and CI gates green for the v0.1.6 mock-city codifier contract release.
 
 ## Why CivicCode before CivicZone
 
@@ -150,7 +157,7 @@ Install the CivicCore release wheel first, then install CivicCode in editable
 mode:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.19.0/civiccore-0.19.0-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.21.0/civiccore-0.21.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
@@ -338,6 +345,20 @@ idempotent, failed imports remain visible through staff endpoints with a fix
 path, and provenance reports show source metadata and fixture checksums.
 Milestone 12 does not require outbound network calls, Redis/Celery workers, or
 live codifier sync.
+
+Mock-city codifier contract smoke:
+
+```bash
+python scripts/run_mock_city_environment_suite.py --output .tmp-civiccode-mock-city-report.json
+```
+
+Expected mock-city truth today: CivicCode validates secret-free Municode,
+American Legal Publishing, Code Publishing Company, and General Code source
+contracts through the same local import path used by staff file drops. The
+suite renders planned delta URLs for future live sync work but makes no
+outbound vendor calls. Municipal IdP and backup-retention checks come from
+shared CivicCore mock-city contracts so later modules can reuse the same
+environment pattern.
 
 Records-ready export smoke:
 
