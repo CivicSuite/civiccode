@@ -458,7 +458,7 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.7 codifier live-sync foundation; next work follows "
+            "CivicCode v0.1.8 codifier live-sync foundation; next work follows "
             "the CivicSuite roadmap."
         ),
     }

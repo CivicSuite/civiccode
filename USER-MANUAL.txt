@@ -105,7 +105,7 @@ documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
 - standalone module repo under `CivicSuite/`,
-- published `civiccore v0.21.0` release-wheel dependency,
+- published `civiccore v0.22.0` release-wheel dependency,
 - local LLM only through `civiccore.llm`,
 - no cloud dependency,
 - no imports from unreleased CivicCore placeholder packages.
@@ -113,7 +113,7 @@ CivicSuite pattern:
 Install and run:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.21.0/civiccore-0.21.0-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.0/civiccore-0.22.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
@@ -424,6 +424,8 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.7 is the current codifier live-sync foundation release. Future
+CivicCode v0.1.8 is the current codifier live-sync foundation release. It
+reuses the shared CivicCore source-list health projection for codifier sync
+source lists while retaining CivicCode-specific legal-boundary copy. Future
 work moves to the next module or release plan in the CivicSuite unified
 roadmap.

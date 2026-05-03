@@ -12,6 +12,7 @@ from civiccore import (
     SyncRunResult,
     apply_sync_run_result,
     build_sync_operator_status,
+    build_sync_source_status,
     compute_next_sync_at,
     validate_cron_expression,
     validate_url_host,
@@ -250,13 +251,19 @@ def plan_codifier_delta_request(
 def sync_source_to_dict(source: CodifierSyncSource) -> dict[str, Any]:
     """Return staff-safe codifier sync source state."""
 
+    source_status = build_sync_source_status(
+        source.state,
+        sync_schedule=source.sync_schedule,
+        last_sync_at=source.last_successful_sync_at,
+    ).public_dict()
+    next_sync_at = source_status["next_sync_at"]
     return {
         "source_id": source.source_id,
         "connector": source.connector,
         "source_name": source.source_name,
         "source_url": source.source_url,
         "sync_schedule": source.sync_schedule,
-        "next_sync_at": source.next_sync_at.isoformat() if source.next_sync_at else None,
+        "next_sync_at": next_sync_at.isoformat() if isinstance(next_sync_at, datetime) else None,
         "last_successful_sync_at": source.last_successful_sync_at.isoformat()
         if source.last_successful_sync_at
         else None,
@@ -264,6 +271,7 @@ def sync_source_to_dict(source: CodifierSyncSource) -> dict[str, Any]:
         if source.last_attempted_sync_at
         else None,
         "last_import_job_id": source.last_import_job_id,
+        "source_status": source_status,
         "operator_status": build_sync_operator_status(source.state).public_dict(),
     }
 

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-05-03
+
+### Changed
+
+- Aligned CivicCode with the published `civiccore v0.22.0` release wheel.
+- Reused CivicCore's shared sync source-list health projection in codifier sync
+  source responses while preserving the existing CivicCode `operator_status`
+  shape for current staff clients.
+- Bumped release verification and current-facing docs to CivicCode v0.1.8.
+
 ## [0.1.7] - 2026-05-03
 
 ### Added

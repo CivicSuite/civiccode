@@ -111,7 +111,7 @@ Documentation: CC BY 4.0 unless otherwise stated; see LICENSE-DOCS.
 Run locally
 -----------
 
-1. python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.21.0/civiccore-0.21.0-py3-none-any.whl
+1. python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.0/civiccore-0.22.0-py3-none-any.whl
 2. python -m pip install -e ".[dev]"
 3. python -m uvicorn civiccode.main:app --reload
 4. curl http://127.0.0.1:8000/health
@@ -128,4 +128,6 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.7 is the current codifier live-sync foundation release.
+CivicCode v0.1.8 is the current codifier live-sync foundation release. It
+reuses the shared CivicCore source-list health projection for codifier sync
+source lists while retaining CivicCode-specific legal-boundary copy.

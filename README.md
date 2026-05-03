@@ -18,7 +18,7 @@ plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
-a published `civiccore v0.21.0` release-wheel dependency, canonical SQLAlchemy table
+a published `civiccore v0.22.0` release-wheel dependency, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
@@ -36,7 +36,8 @@ handoffs may affect a section.
 This is deliberately not a legal-advice product and not a live-LLM product yet.
 The staff-controlled codifier sync foundation can validate schedules and
 source hosts, plan delta requests, run already-fetched local payloads through
-the import path, and show CivicCore circuit-breaker health. It does not bundle
+the import path, and show CivicCore circuit-breaker health plus the shared
+source-list health projection. It does not bundle
 vendor credentials, make legal determinations, call live LLMs, replace the
 official codifier, or automatically codify ordinances. There is no CivicAccess
 runtime dependency in this repo yet.
@@ -44,7 +45,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.7:
+The current release is CivicCode v0.1.8:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -110,8 +111,8 @@ The current release is CivicCode v0.1.7:
   outbound vendor calls,
 - plan delta request URLs for Municode, American Legal Publishing, Code
   Publishing Company, and General Code,
-- expose CivicCore circuit-breaker health and actionable operator copy for
-  repeated sync failures,
+- expose CivicCore circuit-breaker health, shared source-list health projection,
+  and actionable operator copy for repeated sync failures,
 - export adopted section records with source, version, citation, and retrieval
   metadata,
 - render an accessible, print-friendly records-ready export page,
@@ -123,8 +124,10 @@ The current release is CivicCode v0.1.7:
 - write a secret-free mock-city environment JSON report with planned delta URLs,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
-- consume the current shared CivicCore v0.21.0 release wheel, and
-- keep docs and CI gates green for the v0.1.7 codifier live-sync foundation release.
+- consume the current shared CivicCore v0.22.0 release wheel,
+- reuse the shared CivicCore source-list health projection for codifier sync
+  list responses, and
+- keep docs and CI gates green for the v0.1.8 codifier live-sync foundation release.
 
 ## Why CivicCode before CivicZone
 
@@ -171,7 +174,7 @@ Install the CivicCore release wheel first, then install CivicCode in editable
 mode:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.21.0/civiccore-0.21.0-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.0/civiccore-0.22.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
