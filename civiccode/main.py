@@ -12,6 +12,11 @@ from starlette.responses import HTMLResponse
 
 from civiccode import __version__
 from civiccode.citation_contract import build_citation_payload, refusal
+from civiccode.codifier_sync import (
+    CodifierSyncError,
+    CodifierSyncStore,
+    sync_source_to_dict,
+)
 from civiccode.import_connectors import (
     CONNECTOR_TYPES,
     CivicCodeImportError,
@@ -95,9 +100,17 @@ SECTION_STORE = SectionLifecycleStore()
 STAFF_NOTE_STORE = StaffWorkbenchStore()
 SUMMARY_STORE = PlainLanguageSummaryStore()
 HANDOFF_STORE = OrdinanceHandoffStore()
+_import_store: ImportConnectorStore | None = None
+_import_store_source_key: str | None = None
+_codifier_sync_store: CodifierSyncStore | None = None
+_codifier_sync_store_source_key: str | None = None
 IMPORT_STORE = ImportConnectorStore(
     source_store=SOURCE_STORE,
     section_store=SECTION_STORE,
+)
+CODIFIER_SYNC_STORE = CodifierSyncStore(
+    source_store=SOURCE_STORE,
+    import_store=IMPORT_STORE,
 )
 
 
@@ -260,7 +273,30 @@ class ImportBundleCreate(BaseModel):
     provenance: dict[str, str] = Field(default_factory=dict)
 
 
+class CodifierSyncConfigureRequest(BaseModel):
+    """Request body for enabling staff-controlled codifier sync readiness."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_id: str = Field(min_length=1)
+    sync_schedule: str = Field(min_length=1)
+    allowlisted_hosts: list[str] = Field(default_factory=list)
+
+
+class CodifierSyncRunRequest(BaseModel):
+    """Request body for a local codifier sync run."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    payload: ImportBundleCreate
+    changed_since: datetime | None = None
+
+
 def _raise_source_error(exc: SourceRegistryError) -> None:
+    raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
+
+
+def _raise_codifier_sync_error(exc: CodifierSyncError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
 
@@ -395,7 +431,7 @@ async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "accessibility export foundation",
+        "status": "codifier live-sync foundation",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
@@ -411,13 +447,20 @@ async def root() -> dict[str, str]:
             "The staff source registry workspace is online at /staff/sources "
             "and the staff code lifecycle workspace is online at /staff/code "
             "with staff-header protection for staff-only source notes. "
-            "Live LLM calls, live codifier sync, and legal determinations are "
-            "not implemented yet."
+            "Staff-controlled codifier sync readiness is online with schedule "
+            "validation, SSRF-safe host checks, local payload runs, delta "
+            "request planning, circuit-breaker health, and actionable operator "
+            "copy. Live LLM calls, bundled vendor credentials, automatic "
+            "ordinance codification, and legal determinations are not "
+            "implemented."
         ),
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "CivicCode v0.1.6 mock-city codifier contracts; next work follows the CivicSuite roadmap.",
+        "next_step": (
+            "CivicCode v0.1.7 codifier live-sync foundation; next work follows "
+            "the CivicSuite roadmap."
+        ),
     }
 
 
@@ -854,7 +897,7 @@ async def create_local_import_job(
 ) -> dict[str, Any]:
     """Import a local codifier/file-drop fixture without outbound network calls."""
     actor = _require_staff(x_civiccode_role, x_civiccode_actor)
-    job = IMPORT_STORE.run_import(request.model_dump(), actor=actor)
+    job = _get_import_store().run_import(request.model_dump(), actor=actor)
     return job_to_dict(job)
 
 
@@ -865,7 +908,7 @@ async def list_import_jobs(
 ) -> dict[str, Any]:
     """List local import jobs and their visible success/failure states."""
     _require_staff(x_civiccode_role, x_civiccode_actor)
-    return {"imports": [job_to_dict(job) for job in IMPORT_STORE.list_jobs()]}
+    return {"imports": [job_to_dict(job) for job in _get_import_store().list_jobs()]}
 
 
 @app.get("/api/v1/civiccode/staff/imports/{job_id}")
@@ -877,7 +920,7 @@ async def get_import_job(
     """Read a local import job, including actionable failure details."""
     _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
-        job = IMPORT_STORE.get(job_id)
+        job = _get_import_store().get(job_id)
     except CivicCodeImportError as exc:
         _raise_import_error(exc)
     return job_to_dict(job)
@@ -893,7 +936,7 @@ async def retry_import_job(
     """Retry a failed import job with a corrected local bundle."""
     actor = _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
-        job = IMPORT_STORE.retry_import(job_id, request.model_dump(), actor=actor)
+        job = _get_import_store().retry_import(job_id, request.model_dump(), actor=actor)
     except CivicCodeImportError as exc:
         _raise_import_error(exc)
     return job_to_dict(job)
@@ -908,10 +951,10 @@ async def get_import_provenance(
     """Return a provenance report for a local import job."""
     _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
-        job = IMPORT_STORE.get(job_id)
+        job = _get_import_store().get(job_id)
     except CivicCodeImportError as exc:
         _raise_import_error(exc)
-    return provenance_report(job, SOURCE_STORE)
+    return provenance_report(job, _get_source_store())
 
 
 @app.get("/api/v1/civiccode/staff/imports/{job_id}/tree")
@@ -923,7 +966,7 @@ async def get_imported_tree(
     """Show imported title/chapter/section/version tree for staff verification."""
     _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
-        job = IMPORT_STORE.get(job_id)
+        job = _get_import_store().get(job_id)
         if job.status != "completed" or not job.source_id:
             raise CivicCodeImportError(
                 f"Import job '{job_id}' does not have a completed source tree.",
@@ -935,6 +978,63 @@ async def get_imported_tree(
         _raise_import_error(exc)
     except SourceRegistryError as exc:
         _raise_source_error(exc)
+
+
+@app.post("/api/v1/civiccode/staff/sync/codifier-sources", status_code=201)
+async def configure_codifier_sync_source(
+    request: CodifierSyncConfigureRequest,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Enable staff-controlled codifier sync readiness for an official source."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        source = _get_codifier_sync_store().configure_source(
+            source_id=request.source_id,
+            sync_schedule=request.sync_schedule,
+            allowlisted_hosts=tuple(request.allowlisted_hosts),
+        )
+    except CodifierSyncError as exc:
+        _raise_codifier_sync_error(exc)
+    except SourceRegistryError as exc:
+        _raise_source_error(exc)
+    return sync_source_to_dict(source)
+
+
+@app.get("/api/v1/civiccode/staff/sync/codifier-sources")
+async def list_codifier_sync_sources(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """List codifier sync readiness and circuit health for staff."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    return {
+        "sources": [
+            sync_source_to_dict(source)
+            for source in _get_codifier_sync_store().list_sources()
+        ]
+    }
+
+
+@app.post("/api/v1/civiccode/staff/sync/codifier-sources/{source_id}/run", status_code=201)
+async def run_codifier_sync_source(
+    source_id: str,
+    request: CodifierSyncRunRequest,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Run one staff-controlled codifier sync using an already fetched local payload."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        run = _get_codifier_sync_store().run_local_payload(
+            source_id=source_id,
+            payload=request.payload.model_dump(),
+            actor=actor,
+            changed_since=request.changed_since,
+        )
+    except CodifierSyncError as exc:
+        _raise_codifier_sync_error(exc)
+    return run.public_dict()
 
 
 @app.post("/api/v1/civiccode/staff/civicclerk/ordinance-events", status_code=201)
@@ -1146,3 +1246,35 @@ def _get_source_store() -> SourceRegistryRepository | SourceRegistryStore:
         _source_registry_db_url = db_url
         _source_registry_repository = SourceRegistryRepository(db_url=db_url)
     return _source_registry_repository
+
+
+def _source_store_key() -> str:
+    return os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL") or "memory"
+
+
+def _get_import_store() -> ImportConnectorStore:
+    global _import_store, _import_store_source_key
+    source_key = _source_store_key()
+    if source_key == "memory":
+        return IMPORT_STORE
+    if _import_store is None or _import_store_source_key != source_key:
+        _import_store_source_key = source_key
+        _import_store = ImportConnectorStore(
+            source_store=_get_source_store(),
+            section_store=SECTION_STORE,
+        )
+    return _import_store
+
+
+def _get_codifier_sync_store() -> CodifierSyncStore:
+    global _codifier_sync_store, _codifier_sync_store_source_key
+    source_key = _source_store_key()
+    if source_key == "memory":
+        return CODIFIER_SYNC_STORE
+    if _codifier_sync_store is None or _codifier_sync_store_source_key != source_key:
+        _codifier_sync_store_source_key = source_key
+        _codifier_sync_store = CodifierSyncStore(
+            source_store=_get_source_store(),
+            import_store=_get_import_store(),
+        )
+    return _codifier_sync_store

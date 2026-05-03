@@ -9,9 +9,9 @@ sections.
 
 ## Current status
 
-As of 2026-05-03, CivicCode has a **mock-city codifier contract suite**
-layered on the staff code lifecycle workspace, records-ready export and
-accessibility hardening foundation,
+As of 2026-05-03, CivicCode has a **codifier live-sync foundation**
+layered on the mock-city codifier contract suite, staff code lifecycle
+workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
 lookup surface, CivicClerk handoff,
 plain-language summaries, staff workbench, citation-grounded Q&A, citation
@@ -34,13 +34,17 @@ plain-language summaries, and see pending-codification warnings when CivicClerk
 handoffs may affect a section.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
-There is no live codifier sync, CivicAccess runtime dependency, live LLM call, automatic
-ordinance codification, or legal determination behavior in this repo yet.
+The staff-controlled codifier sync foundation can validate schedules and
+source hosts, plan delta requests, run already-fetched local payloads through
+the import path, and show CivicCore circuit-breaker health. It does not bundle
+vendor credentials, make legal determinations, call live LLMs, replace the
+official codifier, or automatically codify ordinances. There is no CivicAccess
+runtime dependency in this repo yet.
 Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.6:
+The current release is CivicCode v0.1.7:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -98,6 +102,16 @@ The current release is CivicCode v0.1.6:
 - retry failed import jobs with corrected local bundles,
 - produce provenance reports with fixture checksums, source metadata, and a
   no-outbound-dependency marker,
+- configure staff-controlled codifier sync readiness for active official
+  codifier sources,
+- validate codifier sync schedules, source hosts, and supported connector types
+  before a source can be synced,
+- run already-fetched local codifier payloads through the import path without
+  outbound vendor calls,
+- plan delta request URLs for Municode, American Legal Publishing, Code
+  Publishing Company, and General Code,
+- expose CivicCore circuit-breaker health and actionable operator copy for
+  repeated sync failures,
 - export adopted section records with source, version, citation, and retrieval
   metadata,
 - render an accessible, print-friendly records-ready export page,
@@ -110,7 +124,7 @@ The current release is CivicCode v0.1.6:
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
 - consume the current shared CivicCore v0.21.0 release wheel, and
-- keep docs and CI gates green for the v0.1.6 mock-city codifier contract release.
+- keep docs and CI gates green for the v0.1.7 codifier live-sync foundation release.
 
 ## Why CivicCode before CivicZone
 
@@ -169,7 +183,7 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `accessibility export foundation`,
+Expected truth today: the service reports `codifier live-sync foundation`,
 exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
 section/version and search endpoints under `/api/v1/civiccode/sections` and
 `/api/v1/civiccode/search`, exposes deterministic citation objects under
@@ -178,8 +192,10 @@ section/version and search endpoints under `/api/v1/civiccode/sections` and
 under `/api/v1/civiccode/staff`, exposes approved public summaries under
 `/api/v1/civiccode/sections/{section_id}/summaries`, receives CivicClerk
 handoff events at `/api/v1/civiccode/staff/civicclerk/ordinance-events`, exposes
-records-ready exports at `/api/v1/civiccode/sections/{section}/export`, and marks
-successful answers with `code_answer_behavior=citation_grounded`.
+records-ready exports at `/api/v1/civiccode/sections/{section}/export`,
+exposes codifier sync readiness endpoints under
+`/api/v1/civiccode/staff/sync/codifier-sources`, and marks successful answers
+with `code_answer_behavior=citation_grounded`.
 
 Migration smoke:
 
@@ -343,8 +359,29 @@ Expected import truth today: local fixtures can populate the in-memory
 title/chapter/section/version tree, re-importing the same bundle is
 idempotent, failed imports remain visible through staff endpoints with a fix
 path, and provenance reports show source metadata and fixture checksums.
-Milestone 12 does not require outbound network calls, Redis/Celery workers, or
-live codifier sync.
+Local imports do not require outbound network calls, Redis/Celery workers, or
+vendor credentials.
+
+Codifier sync foundation smoke:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/sync/codifier-sources \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  -d '{"source_id":"municode_current","sync_schedule":"*/15 * * * *"}'
+
+curl -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  http://127.0.0.1:8000/api/v1/civiccode/staff/sync/codifier-sources
+```
+
+Expected codifier sync truth today: staff can configure active official
+codifier sources for sync readiness, validate schedules and source hosts, see
+next-run and circuit-breaker health, plan delta requests, and run already
+fetched local payloads through the import path. CivicCode does not ship vendor
+credentials, does not make outbound calls from the foundation smoke, and does
+not automatically codify ordinances.
 
 Mock-city codifier contract smoke:
 
@@ -355,7 +392,7 @@ python scripts/run_mock_city_environment_suite.py --output .tmp-civiccode-mock-c
 Expected mock-city truth today: CivicCode validates secret-free Municode,
 American Legal Publishing, Code Publishing Company, and General Code source
 contracts through the same local import path used by staff file drops. The
-suite renders planned delta URLs for future live sync work but makes no
+suite renders planned delta URLs for the codifier sync foundation but makes no
 outbound vendor calls. Municipal IdP and backup-retention checks come from
 shared CivicCore mock-city contracts so later modules can reuse the same
 environment pattern.

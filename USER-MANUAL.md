@@ -1,6 +1,7 @@
 # CivicCode User Manual
 
-CivicCode currently ships a staff code lifecycle workspace built on the
+CivicCode currently ships a codifier live-sync foundation built on the
+mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility hardening foundation, local import
 foundation, public code lookup surface,
 CivicClerk handoff foundation,
@@ -81,6 +82,13 @@ Current truth:
   corrected local bundles,
 - provenance reports show source metadata, fixture checksum, and
   no-outbound-dependency status,
+- staff can configure active official codifier sources for sync readiness,
+- codifier sync schedules and source hosts are validated before a sync source
+  can run,
+- already-fetched local codifier payloads can run through the import path with
+  delta request planning,
+- repeated sync failures surface CivicCore circuit-breaker health and an
+  actionable fix path,
 - adopted sections can be exported with source, version, citation, and
   retrieval metadata,
 - records-ready HTML exports include semantic headings, labels, focus styling,
@@ -89,7 +97,8 @@ Current truth:
   runtime dependency,
 - residents can open `/civiccode`, search by section number or phrase, and read
   adopted code text with citations and warnings,
-- no live LLM calls or legal determinations are generated yet.
+- no live LLM calls, bundled vendor credentials, automatic ordinance
+  codification, or legal determinations are generated yet.
 
 For a non-technical user, the first public "Read code" workflow is now available: open
 `/civiccode`, enter a section number or phrase, review search results, open a
@@ -359,8 +368,31 @@ curl -H "X-CivicCode-Role: staff" \
 
 Local imports are synchronous and air-gap friendly in this milestone. The
 fixture import creates or reuses source, title, chapter, section, and version
-records; failed imports are stored with a fix path and can be retried. This is
-not live codifier sync and does not require Redis/Celery workers.
+records; failed imports are stored with a fix path and can be retried. Local
+imports do not require Redis/Celery workers, vendor credentials, or outbound
+network calls.
+
+Codifier sync foundation route:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/sync/codifier-sources \
+  -H "Content-Type: application/json" \
+  -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  -d '{"source_id":"municode_current","sync_schedule":"*/15 * * * *"}'
+
+curl -H "X-CivicCode-Role: staff" \
+  -H "X-CivicCode-Actor: clerk@example.gov" \
+  http://127.0.0.1:8000/api/v1/civiccode/staff/sync/codifier-sources
+```
+
+The sync foundation is staff-controlled: it validates the active official
+source, validates the schedule, checks the source URL against CivicCore's host
+guardrails, plans delta request URLs, runs already-fetched local payloads
+through the import path, and shows operator health using CivicCore's
+circuit-breaker copy. It does not ship vendor credentials, contact vendor
+networks during the foundation smoke, make legal determinations, or
+automatically codify ordinances.
 
 Mock-city codifier contract route:
 
@@ -370,8 +402,8 @@ python scripts/run_mock_city_environment_suite.py --output .tmp-civiccode-mock-c
 
 The reusable mock-city suite validates secret-free Municode, American Legal
 Publishing, Code Publishing Company, and General Code source contracts through
-CivicCode's local import path. It renders planned delta URLs for future live
-sync work but performs no outbound vendor calls. The same report also reuses
+CivicCode's local import path. It renders planned delta URLs for the codifier
+sync foundation but performs no outbound vendor calls. The same report also reuses
 CivicCore municipal IdP and backup-retention mock-city contracts so later
 CivicSuite modules can inherit the pattern instead of rebuilding it.
 
@@ -405,5 +437,6 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.6 is the current mock-city codifier contract release. Future work moves to the next
-module or release plan in the CivicSuite unified roadmap.
+CivicCode v0.1.7 is the current codifier live-sync foundation release. Future
+work moves to the next module or release plan in the CivicSuite unified
+roadmap.

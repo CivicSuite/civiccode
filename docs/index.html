@@ -98,7 +98,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Mock-city codifier contract suite online on top of the staff code lifecycle workspace, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
+  <p class="status">Codifier live-sync foundation online on top of the mock-city codifier contract suite, staff code lifecycle workspace, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, bundled vendor credentials, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
@@ -143,7 +143,10 @@
         <li>Search, empty, legal-advice refusal, stale-source warning, and section detail states.</li>
         <li>Staff-only local import jobs for CSV/file-drop bundles and official HTML extract fixtures.</li>
         <li>Import retry, visible failure records, imported-tree verification, and provenance report endpoints.</li>
-        <li>No outbound network dependency, Redis/Celery worker, or live codifier sync required for local import.</li>
+        <li>No outbound network dependency, Redis/Celery worker, or vendor credentials required for local import.</li>
+        <li>Staff-controlled codifier sync readiness endpoints with schedule validation, SSRF-safe host checks, and supported connector validation.</li>
+        <li>Delta request planning for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
+        <li>Local codifier payload runs through the import path with CivicCore circuit-breaker health and actionable operator copy.</li>
         <li>Reusable mock-city codifier contracts for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
         <li>Mock-city report reuses CivicCore municipal IdP and backup-retention contracts and writes a secret-free JSON report.</li>
         <li>Records-ready export API and accessible HTML export page for adopted sections.</li>
@@ -156,7 +159,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>CivicCode v0.1.6 is the current mock-city codifier contract release.</p>
+      <p>CivicCode v0.1.7 is the current codifier live-sync foundation release.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>
