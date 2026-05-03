@@ -6,8 +6,9 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-05-03, CivicCode has a mock-city codifier contract suite layered on
-the staff code lifecycle workspace, records-ready export and accessibility
+As of 2026-05-03, CivicCode has a codifier live-sync foundation layered on the
+mock-city codifier contract suite, staff code lifecycle workspace,
+records-ready export and accessibility
 hardening foundation, local import foundation, public code lookup
 surface, CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
@@ -34,10 +35,13 @@ codification warnings without replacing adopted code text. Residents can open
 code text, see citations, view approved summaries, and see pending
 codification warnings.
 
-This is not a legal-advice product and does not make live LLM calls. There is
-no live codifier sync,
+This is not a legal-advice product and does not make live LLM calls. The
+staff-controlled codifier sync foundation can validate schedules and source
+hosts, plan delta requests, run already-fetched local payloads through the
+import path, and show CivicCore circuit-breaker health. There is no
 CivicAccess runtime dependency, live LLM-backed frontend workflow, live LLM
-calls, automatic ordinance codification, or legal determination behavior yet.
+calls, bundled vendor credentials, automatic ordinance codification, or legal
+determination behavior yet.
 Staff notes are not public. Summaries are not law. Pending ordinance language is not adopted law. Source,
 section/version, search, permalink, citation-contract, citation-grounded Q&A,
 staff workbench, and local import behavior exists so authoritative text can be
@@ -53,7 +57,17 @@ in-memory source/title/chapter/section/version tree. Failed imports remain
 visible through staff endpoints with an actionable fix path. Re-importing the
 same bundle is idempotent. Provenance report endpoints expose source metadata,
 fixture checksums, and a no-outbound-dependency marker. Redis/Celery workers
-and live codifier sync are not required in this milestone.
+and vendor credentials are not required for local import.
+
+Codifier sync foundation truth today
+------------------------------------
+
+Staff can configure active official codifier sources at
+/api/v1/civiccode/staff/sync/codifier-sources, validate cron schedules and
+SSRF-safe source hosts, view next-run and circuit-breaker health, plan delta
+requests, and run already-fetched local payloads through the import path.
+CivicCode does not ship vendor credentials, make outbound calls from the
+foundation smoke, or automatically codify ordinances.
 
 Mock-city codifier contract truth today
 ---------------------------------------
@@ -65,7 +79,7 @@ python scripts/run_mock_city_environment_suite.py --output .tmp-civiccode-mock-c
 The suite validates secret-free Municode, American Legal Publishing, Code
 Publishing Company, and General Code source contracts through the local import
 path without outbound vendor calls. It renders planned delta URLs for future
-live sync work and reuses CivicCore municipal IdP and backup-retention
+codifier sync foundation and reuses CivicCore municipal IdP and backup-retention
 mock-city contracts so later modules can reuse the same environment pattern.
 
 Records-ready export truth today
@@ -114,4 +128,4 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.6 is the current mock-city codifier contract release.
+CivicCode v0.1.7 is the current codifier live-sync foundation release.

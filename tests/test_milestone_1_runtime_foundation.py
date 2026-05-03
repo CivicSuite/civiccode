@@ -34,7 +34,7 @@ def test_pyproject_declares_runtime_package_and_release_version() -> None:
     data = load_pyproject()
 
     assert data["project"]["name"] == "civiccode"
-    assert data["project"]["version"] == "0.1.6"
+    assert data["project"]["version"] == "0.1.7"
     assert "CivicCode" in data["project"]["description"]
 
 
@@ -89,14 +89,14 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["name"] == "CivicCode"
-    assert payload["status"] == "accessibility export foundation"
+    assert payload["status"] == "codifier live-sync foundation"
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
     assert payload["next_step"] == (
-        "CivicCode v0.1.6 mock-city codifier contracts; next work follows the CivicSuite roadmap."
+        "CivicCode v0.1.7 codifier live-sync foundation; next work follows the CivicSuite roadmap."
     )
-    assert "not implemented yet" in payload["message"].lower()
+    assert "not implemented" in payload["message"].lower()
     assert "source registry" in payload["message"]
     assert "citations" in payload["message"]
     assert "Q&A" in payload["message"]
@@ -110,6 +110,8 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert "provenance" in payload["message"].lower()
     assert "records-ready" in payload["message"].lower()
     assert "source metadata" in payload["message"].lower()
+    assert "codifier sync readiness" in payload["message"].lower()
+    assert "circuit-breaker health" in payload["message"].lower()
 
 
 @pytest.mark.asyncio
@@ -126,7 +128,7 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
     assert payload == {
         "status": "ok",
         "service": "civiccode",
-        "version": "0.1.6",
+        "version": "0.1.7",
         "civiccore": "0.21.0",
     }
 

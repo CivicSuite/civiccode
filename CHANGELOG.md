@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-05-03
+
+### Added
+
+- Staff-controlled codifier live-sync foundation with readiness configuration,
+  schedule validation, SSRF-safe host checks, delta request planning, local
+  payload sync runs, and CivicCore circuit-breaker health copy.
+- Staff API endpoints under `/api/v1/civiccode/staff/sync/codifier-sources`
+  for configuring codifier sources, listing operator health, and running one
+  local payload through the existing import path.
+- Focused tests for cron/host validation, delta cursors, circuit breaker
+  behavior, staff authorization, and the no-automatic-codification boundary.
+
+### Changed
+
+- Bumped release verification and current-facing docs to CivicCode v0.1.7.
+- Updated product copy from "live codifier sync not available" to the current
+  truth: a sync foundation is available, but bundled vendor credentials,
+  automatic ordinance codification, live LLM calls, and legal determinations
+  remain out of scope.
+
 ## [0.1.6] - 2026-05-03
 
 ### Added
@@ -104,4 +125,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - No live LLM calls.
 - No legal-determination behavior.
-- No live codifier sync, Redis/Celery worker requirement, CivicAccess runtime dependency, or automatic ordinance codification yet; staff notes remain staff-only.
+- No bundled vendor credentials, live LLM calls, Redis/Celery worker
+  requirement, CivicAccess runtime dependency, legal determinations, or
+  automatic ordinance codification yet; staff notes remain staff-only.
