@@ -50,6 +50,9 @@ def test_codifier_sync_configuration_validates_schedule_host_and_source() -> Non
 
     assert public["source_id"] == payload["source"]["source_id"]
     assert public["next_sync_at"] is not None
+    assert public["source_status"]["health_status"] == "healthy"
+    assert public["source_status"]["next_sync_at"] is not None
+    assert public["source_status"]["message"] == public["operator_status"]["message"]
     assert public["operator_status"]["health_status"] == "healthy"
     assert "No action needed" in public["operator_status"]["fix"]
 
@@ -124,6 +127,8 @@ def test_codifier_sync_circuit_breaker_opens_after_repeated_failed_imports() -> 
     paused_source = sync_store.get_source(payload["source"]["source_id"])
     paused = sync_source_to_dict(paused_source)
     assert paused["operator_status"]["health_status"] == "circuit_open"
+    assert paused["source_status"]["health_status"] == "circuit_open"
+    assert paused["source_status"]["next_sync_at"] is None
     assert paused["operator_status"]["sync_paused"] is True
     assert "correct the vendor credentials or endpoint" in paused["operator_status"]["fix"]
 
@@ -255,6 +260,7 @@ def test_docs_describe_codifier_sync_foundation_without_overclaiming() -> None:
 
     assert "codifier live-sync foundation" in combined
     assert "circuit-breaker health" in combined
+    assert "source-list health projection" in combined
     assert "vendor credentials" in combined
     assert "automatically codify ordinances" in combined
     assert "live codifier sync is available" not in combined
