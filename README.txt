@@ -34,8 +34,10 @@ codification warnings without replacing adopted code text. Residents can open
 /civiccode, search by section number or plain-language phrase, read adopted
 code text, see citations, view approved summaries, and see pending
 codification warnings. Docker Compose can start PostgreSQL 17 with pgvector,
-run migrations, serve the FastAPI app, persist source registry records, and
-seed a City of Brookfield demo with CIVICCODE_DEMO_SEED=1.
+run migrations, serve the FastAPI app, persist source registry records, seed a
+City of Brookfield demo with CIVICCODE_DEMO_SEED=1, and rehearse a
+Docker/PostgreSQL backup-restore with pg_dump, pg_restore, restored-table
+verification, and a checksum manifest.
 
 This is not a legal-advice product and does not make live LLM calls. The
 staff-controlled codifier sync foundation can validate schedules and source
@@ -132,6 +134,20 @@ Docker demo
 The default Docker password is local-demo only. Change .env before any shared
 environment.
 
+Docker/PostgreSQL backup-restore rehearsal
+------------------------------------------
+
+1. Start the stack with docker compose up -d.
+2. On Windows, run powershell -ExecutionPolicy Bypass -File scripts/start_docker_backup_restore_rehearsal.ps1 -Strict
+3. On Bash, run bash scripts/start_docker_backup_restore_rehearsal.sh --strict
+
+The helper writes .docker-backup-restore-rehearsal/<run-id>/backup/civiccode-postgres.dump,
+restores into a temporary civiccode_restore_* database, verifies restored
+application tables, writes civiccode-docker-backup-manifest.json with a SHA-256
+checksum, and drops the temporary database by default. If it fails, confirm
+Docker Desktop is running, inspect docker compose logs postgres api, and rerun
+with a fresh run id.
+
 Migration smoke
 ---------------
 
@@ -142,6 +158,6 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.9 is the current Docker demo runtime release. It reuses the
-shared CivicCore source-list health projection for codifier sync source lists
-while retaining CivicCode-specific legal-boundary copy.
+CivicCode v0.1.10 is the current Docker backup-restore rehearsal release. It
+reuses the shared CivicCore source-list health projection for codifier sync
+source lists while retaining CivicCode-specific legal-boundary copy.

@@ -18,7 +18,9 @@ in-memory store for lightweight local demos. `/staff/code` gives staff a single
 lifecycle review page for current adopted versions, source readiness, draft
 summaries, staff note counts, and pending CivicClerk codification warnings.
 Docker Compose can start PostgreSQL 17 with pgvector, run migrations, serve the
-API, and seed a City of Brookfield demo with CIVICCODE_DEMO_SEED=1.
+API, seed a City of Brookfield demo with CIVICCODE_DEMO_SEED=1, and rehearse a
+Docker/PostgreSQL backup-restore with pg_dump, pg_restore, restored-table
+verification, and a checksum manifest.
 
 ## For municipal decision-makers
 
@@ -426,7 +428,8 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.9 is the current Docker demo runtime release. It reuses the
-shared CivicCore source-list health projection for codifier sync source lists
-while retaining CivicCode-specific legal-boundary copy. Future work moves to
-the next module or release plan in the CivicSuite unified roadmap.
+CivicCode v0.1.10 is the current Docker backup-restore rehearsal release. It
+reuses the shared CivicCore source-list health projection for codifier sync
+source lists while retaining CivicCode-specific legal-boundary copy. Future
+work moves to the next module or release plan in the CivicSuite unified
+roadmap.

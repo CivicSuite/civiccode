@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-05-03
+
+### Added
+
+- Docker/PostgreSQL backup-restore rehearsal helper for the Compose product
+  path. The helper runs `pg_dump`, restores into a temporary database, verifies
+  restored application tables, writes a manifest with checksum, and drops the
+  temporary restore database by default.
+- Windows PowerShell and Bash launchers for repeatable operator rehearsal:
+  `scripts/start_docker_backup_restore_rehearsal.ps1` and
+  `scripts/start_docker_backup_restore_rehearsal.sh`.
+
 ## [0.1.9] - 2026-05-03
 
 ### Added
