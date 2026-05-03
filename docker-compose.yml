@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-civiccode}
+      POSTGRES_USER: ${POSTGRES_USER:-civiccode}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-civiccode-local-only}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - civiccode-postgres-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://civiccode:civiccode-local-only@postgres:5432/civiccode}
+      CIVICCODE_SOURCE_REGISTRY_DB_URL: ${CIVICCODE_SOURCE_REGISTRY_DB_URL:-postgresql+psycopg2://civiccode:civiccode-local-only@postgres:5432/civiccode}
+      CIVICCODE_DEMO_SEED: ${CIVICCODE_DEMO_SEED:-1}
+      CIVICCODE_DEMO_ACTOR: ${CIVICCODE_DEMO_ACTOR:-demo-seed@brookfield.example.gov}
+    ports:
+      - "${CIVICCODE_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  civiccode-postgres-data:

@@ -1,0 +1,70 @@
+[
+  {
+    "name": "public-detail-desktop",
+    "url": "http://127.0.0.1:18009/civiccode/sections/6.12.040",
+    "viewport": "1440x1000",
+    "screenshot": "browser-qa-civiccode-019-docker-demo-public-desktop.png",
+    "title": "6.12.040 - Backyard chickens - CivicCode",
+    "focusables": 5,
+    "horizontalOverflow": false,
+    "hasFocusVisible": true,
+    "checks": {
+      "Backyard chickens": true,
+      "Plain-language summary": true,
+      "pending codification": true,
+      "not a legal determination": true
+    },
+    "consoleEvents": 0
+  },
+  {
+    "name": "public-detail-mobile",
+    "url": "http://127.0.0.1:18009/civiccode/sections/6.12.040",
+    "viewport": "390x1000",
+    "screenshot": "browser-qa-civiccode-019-docker-demo-public-mobile.png",
+    "title": "6.12.040 - Backyard chickens - CivicCode",
+    "focusables": 5,
+    "horizontalOverflow": false,
+    "hasFocusVisible": true,
+    "checks": {
+      "Backyard chickens": true,
+      "Plain-language summary": true,
+      "pending codification": true,
+      "not a legal determination": true
+    },
+    "consoleEvents": 0
+  },
+  {
+    "name": "staff-code-desktop",
+    "url": "http://127.0.0.1:18009/staff/code",
+    "viewport": "1440x1000",
+    "screenshot": "browser-qa-civiccode-019-docker-demo-staff-desktop.png",
+    "title": "Staff code lifecycle workspace - CivicCode",
+    "focusables": 5,
+    "horizontalOverflow": false,
+    "hasFocusVisible": true,
+    "checks": {
+      "Code lifecycle command center": true,
+      "Backyard chickens": true,
+      "Pending CivicClerk handoffs require codification review": true,
+      "Fix: review the CivicClerk handoff": true
+    },
+    "consoleEvents": 0
+  },
+  {
+    "name": "staff-code-mobile",
+    "url": "http://127.0.0.1:18009/staff/code",
+    "viewport": "390x1000",
+    "screenshot": "browser-qa-civiccode-019-docker-demo-staff-mobile.png",
+    "title": "Staff code lifecycle workspace - CivicCode",
+    "focusables": 5,
+    "horizontalOverflow": false,
+    "hasFocusVisible": true,
+    "checks": {
+      "Code lifecycle command center": true,
+      "Backyard chickens": true,
+      "Pending CivicClerk handoffs require codification review": true,
+      "Fix: review the CivicClerk handoff": true
+    },
+    "consoleEvents": 0
+  }
+]

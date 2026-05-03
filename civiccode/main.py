@@ -25,6 +25,7 @@ from civiccode.import_connectors import (
     job_to_dict,
     provenance_report,
 )
+from civiccode.mock_city_environment import mock_city_codifier_contracts, mock_city_import_payload
 from civiccode.ordinance_handoff import (
     OrdinanceHandoffError,
     OrdinanceHandoffStore,
@@ -112,6 +113,7 @@ CODIFIER_SYNC_STORE = CodifierSyncStore(
     source_store=SOURCE_STORE,
     import_store=IMPORT_STORE,
 )
+_demo_seed_key: str | None = None
 
 
 class SourceCreate(BaseModel):
@@ -426,12 +428,19 @@ def _staff_code_next_action(
     return "Ready: current adopted text and approved summary state are aligned for staff review."
 
 
+@app.middleware("http")
+async def _demo_seed_middleware(request: Any, call_next: Any) -> Any:
+    """Seed the opt-in demo city before the first rendered/API request."""
+    _seed_demo_city_if_enabled()
+    return await call_next(request)
+
+
 @app.get("/")
 async def root() -> dict[str, str]:
     """Describe the current shipped runtime boundary."""
     return {
         "name": "CivicCode",
-        "status": "codifier live-sync foundation",
+        "status": "docker demo codifier runtime",
         "message": (
             "CivicCode runtime, canonical schema, official source registry API, and "
             "section/version lifecycle APIs are online. Search and stable section permalink "
@@ -458,8 +467,8 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.8 codifier live-sync foundation; next work follows "
-            "the CivicSuite roadmap."
+            "CivicCode v0.1.9 Docker demo runtime; next work follows the "
+            "CivicSuite roadmap."
         ),
     }
 
@@ -1278,3 +1287,79 @@ def _get_codifier_sync_store() -> CodifierSyncStore:
             import_store=_get_import_store(),
         )
     return _codifier_sync_store
+
+
+def _seed_demo_city_if_enabled() -> None:
+    """Populate a deterministic Brookfield demo when CIVICCODE_DEMO_SEED is enabled."""
+    global _demo_seed_key
+    if os.environ.get("CIVICCODE_DEMO_SEED", "").strip().lower() not in {"1", "true", "yes"}:
+        return
+    seed_key = f"{_source_store_key()}:brookfield-v1"
+    if _demo_seed_key == seed_key:
+        return
+
+    actor = os.environ.get("CIVICCODE_DEMO_ACTOR", "demo-seed@brookfield.example.gov")
+    import_store = _get_import_store()
+    for contract in mock_city_codifier_contracts():
+        payload = mock_city_import_payload(contract)
+        for version in payload.get("versions", []):
+            if isinstance(version.get("effective_start"), str):
+                version["effective_start"] = date.fromisoformat(version["effective_start"])
+            if isinstance(version.get("effective_end"), str):
+                version["effective_end"] = date.fromisoformat(version["effective_end"])
+        import_store.run_import(payload, actor=actor)
+
+    try:
+        SUMMARY_STORE.create_summary(
+            "sec_municode_sample",
+            {
+                "summary_id": "summary_brookfield_chickens",
+                "section_version_id": "version_municode_current",
+                "summary_text": (
+                    "Residents can find the adopted Brookfield chicken-permit "
+                    "rule here, but this summary is not law."
+                ),
+            },
+            actor=actor,
+        )
+        SUMMARY_STORE.approve_summary("summary_brookfield_chickens", actor=actor)
+    except PlainLanguageSummaryError:
+        pass
+
+    try:
+        STAFF_NOTE_STORE.create_note(
+            "sec_municode_sample",
+            {
+                "note_id": "note_brookfield_staff_permit_routing",
+                "note_text": (
+                    "Route permit-processing interpretation questions to the "
+                    "Planning counter before publishing resident guidance."
+                ),
+                "status": "approved",
+            },
+            actor=actor,
+        )
+    except StaffWorkbenchError:
+        pass
+
+    try:
+        HANDOFF_STORE.create_event(
+            {
+                "event_id": "ord_brookfield_2026_041",
+                "external_event_id": "cc_event_2026_041",
+                "civicclerk_meeting_id": "meeting_2026_04_27",
+                "civicclerk_agenda_item_id": "agenda_14",
+                "ordinance_number": "2026-041",
+                "title": "Ordinance amending backyard chicken permits",
+                "status": "adopted",
+                "affected_sections": ["6.12.040"],
+                "source_document_url": "https://brookfield.example.gov/minutes/2026-041.pdf",
+                "source_document_hash": "sha256:brookfield-demo-ordinance-2026-041",
+                "ordinance_text": "An ordinance amending Section 6.12.040.",
+            },
+            actor=actor,
+        )
+    except OrdinanceHandoffError:
+        pass
+
+    _demo_seed_key = seed_key

@@ -9,7 +9,7 @@ sections.
 
 ## Current status
 
-As of 2026-05-03, CivicCode has a **codifier live-sync foundation**
+As of 2026-05-03, CivicCode has a **Docker-demo codifier runtime**
 layered on the mock-city codifier contract suite, staff code lifecycle
 workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
@@ -27,7 +27,10 @@ section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
 staff-approved plain-language summaries labeled as non-authoritative, and
-CivicClerk ordinance/adoption handoff intake with pending codification warnings.
+CivicClerk ordinance/adoption handoff intake with pending codification warnings,
+and a Docker Compose product path that starts PostgreSQL 17 with pgvector, runs
+migrations, serves the FastAPI app, and can seed a City of Brookfield demo with
+`CIVICCODE_DEMO_SEED=1`.
 Residents can open `/civiccode`, search by section number or plain-language
 phrase, read adopted code text, see deterministic citations, view approved
 plain-language summaries, and see pending-codification warnings when CivicClerk
@@ -45,7 +48,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.8:
+The current release is CivicCode v0.1.9:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -122,12 +125,16 @@ The current release is CivicCode v0.1.8:
 - reuse CivicCore municipal IdP and backup-retention mock-city contracts in the
   CivicCode mock-city environment report,
 - write a secret-free mock-city environment JSON report with planned delta URLs,
+- run `docker compose up --build` against PostgreSQL 17 with pgvector,
+  migrations, source-registry persistence, and City of Brookfield demo data
+  enabled by `CIVICCODE_DEMO_SEED=1`,
+- smoke the Docker demo with `scripts/docker-demo-smoke.sh`,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.8 codifier live-sync foundation release.
+- keep docs and CI gates green for the v0.1.9 Docker demo runtime release.
 
 ## Why CivicCode before CivicZone
 
@@ -179,6 +186,28 @@ python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
 
+Docker demo path:
+
+```bash
+cp docker.env.example .env
+docker compose up --build
+```
+
+Expected Docker truth today: Compose starts PostgreSQL 17 with pgvector and the
+CivicCode API, runs CivicCore then CivicCode migrations before serving traffic,
+persists source registry records through `CIVICCODE_SOURCE_REGISTRY_DB_URL`, and
+seeds the City of Brookfield demo when `CIVICCODE_DEMO_SEED=1`. Open
+`http://127.0.0.1:8000/civiccode`, search for `6.12.040`, or open
+`/staff/code` through the trusted staff shell headers to review the seeded
+staff workspace. The default Compose password is local-demo only; change it in
+`.env` before any shared environment.
+
+Docker demo smoke:
+
+```bash
+bash scripts/docker-demo-smoke.sh
+```
+
 Smoke checks:
 
 ```bash
@@ -186,7 +215,7 @@ curl http://127.0.0.1:8000/
 curl http://127.0.0.1:8000/health
 ```
 
-Expected truth today: the service reports `codifier live-sync foundation`,
+Expected truth today: the service reports `docker demo codifier runtime`,
 exposes source registry endpoints under `/api/v1/civiccode/sources`, exposes
 section/version and search endpoints under `/api/v1/civiccode/sections` and
 `/api/v1/civiccode/search`, exposes deterministic citation objects under
