@@ -417,7 +417,7 @@ async def root() -> dict[str, str]:
         "code_answer_behavior": "citation_grounded",
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
-        "next_step": "CivicCode v0.1.5 staff code lifecycle workspace; next work follows the CivicSuite roadmap.",
+        "next_step": "CivicCode v0.1.6 mock-city codifier contracts; next work follows the CivicSuite roadmap.",
     }
 
 

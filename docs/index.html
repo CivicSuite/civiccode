@@ -98,7 +98,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Staff code lifecycle workspace online on top of staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
+  <p class="status">Mock-city codifier contract suite online on top of the staff code lifecycle workspace, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, live codifier sync, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
@@ -125,7 +125,7 @@
       <ul>
         <li>Installable Python package.</li>
         <li>FastAPI runtime foundation with <code>/</code> and <code>/health</code>.</li>
-        <li>Published <code>civiccore v0.19.0</code> release-wheel dependency.</li>
+        <li>Published <code>civiccore v0.21.0</code> release-wheel dependency.</li>
         <li>Staff-header-protected source registry mutations and staff source reads.</li>
         <li>Staff source registry workspace at <code>/staff/sources</code> with empty, active, stale, failed, and access-required states.</li>
         <li>Staff code lifecycle workspace at <code>/staff/code</code> with access-required, empty, readiness-snapshot, section-card, draft-summary, and pending-codification states.</li>
@@ -144,6 +144,8 @@
         <li>Staff-only local import jobs for CSV/file-drop bundles and official HTML extract fixtures.</li>
         <li>Import retry, visible failure records, imported-tree verification, and provenance report endpoints.</li>
         <li>No outbound network dependency, Redis/Celery worker, or live codifier sync required for local import.</li>
+        <li>Reusable mock-city codifier contracts for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
+        <li>Mock-city report reuses CivicCore municipal IdP and backup-retention contracts and writes a secret-free JSON report.</li>
         <li>Records-ready export API and accessible HTML export page for adopted sections.</li>
         <li>Semantic headings, labels, focus styling, and print-friendly export output.</li>
         <li>CivicAccess integration notes without a shipped CivicAccess runtime dependency.</li>
@@ -154,7 +156,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>CivicCode v0.1.5 is the current staff code lifecycle workspace release.</p>
+      <p>CivicCode v0.1.6 is the current mock-city codifier contract release.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>
