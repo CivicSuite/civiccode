@@ -1,0 +1,82 @@
+[
+  {
+    "label": "home-desktop",
+    "url": "http://127.0.0.1:18111/civiccode",
+    "viewport": "1366x1000",
+    "screenshot": "browser-qa-civiccode-011-discovery-home-desktop.png",
+    "checks": {
+      "title": "Read the municipal code - CivicCode",
+      "innerWidth": 1366,
+      "scrollWidth": 1366,
+      "bodyScrollWidth": 1366,
+      "horizontalOverflow": false,
+      "activeElement": "skip-link",
+      "hasPopular": true,
+      "hasRelated": false,
+      "hasNavigationAid": true,
+      "hasLegalBoundary": true
+    },
+    "consoleEvents": [],
+    "pageErrors": []
+  },
+  {
+    "label": "home-mobile",
+    "url": "http://127.0.0.1:18111/civiccode",
+    "viewport": "390x1100",
+    "screenshot": "browser-qa-civiccode-011-discovery-home-mobile.png",
+    "checks": {
+      "title": "Read the municipal code - CivicCode",
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "horizontalOverflow": false,
+      "activeElement": "skip-link",
+      "hasPopular": true,
+      "hasRelated": false,
+      "hasNavigationAid": true,
+      "hasLegalBoundary": true
+    },
+    "consoleEvents": [],
+    "pageErrors": []
+  },
+  {
+    "label": "section-desktop",
+    "url": "http://127.0.0.1:18111/civiccode/sections/6.12.040",
+    "viewport": "1366x1000",
+    "screenshot": "browser-qa-civiccode-011-discovery-section-desktop.png",
+    "checks": {
+      "title": "6.12.040 - Backyard chickens - CivicCode",
+      "innerWidth": 1366,
+      "scrollWidth": 1366,
+      "bodyScrollWidth": 1366,
+      "horizontalOverflow": false,
+      "activeElement": "skip-link",
+      "hasPopular": false,
+      "hasRelated": true,
+      "hasNavigationAid": true,
+      "hasLegalBoundary": true
+    },
+    "consoleEvents": [],
+    "pageErrors": []
+  },
+  {
+    "label": "section-mobile",
+    "url": "http://127.0.0.1:18111/civiccode/sections/6.12.040",
+    "viewport": "390x1100",
+    "screenshot": "browser-qa-civiccode-011-discovery-section-mobile.png",
+    "checks": {
+      "title": "6.12.040 - Backyard chickens - CivicCode",
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "horizontalOverflow": false,
+      "activeElement": "skip-link",
+      "hasPopular": false,
+      "hasRelated": true,
+      "hasNavigationAid": true,
+      "hasLegalBoundary": true
+    },
+    "consoleEvents": [],
+    "pageErrors": []
+  }
+]

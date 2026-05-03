@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-05-03
+
+### Added
+
+- Staff-approved popular-question discovery aids that link only to cited adopted
+  code and publish as public navigation aids, not legal determinations.
+- Public related-material endpoint and section-page rendering for explicit
+  public cross-references without exposing staff-only notes.
+- City of Brookfield demo seed popular question and related-material references
+  so the Docker demo shows the resident discovery workflow immediately.
+
+### Changed
+
+- Public lookup home and section pages now include actionable empty states for
+  popular questions and related materials.
+
 ## [0.1.10] - 2026-05-03
 
 ### Added

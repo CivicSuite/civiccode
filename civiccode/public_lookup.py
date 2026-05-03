@@ -23,10 +23,11 @@ def is_legal_advice_query(query: str) -> bool:
     return any(marker in normalized for marker in LEGAL_ADVICE_MARKERS)
 
 
-def render_home_page() -> str:
+def render_home_page(popular_questions: list[dict[str, Any]] | None = None) -> str:
+    popular_questions = popular_questions or []
     return _page(
         "Read the municipal code",
-        """
+        f"""
         <section class="hero" aria-labelledby="lookup-title">
           <p class="eyebrow">CivicCode public lookup</p>
           <h1 id="lookup-title">Read code with citations, not guesses.</h1>
@@ -49,6 +50,7 @@ def render_home_page() -> str:
             how to fix the request.
           </div>
         </section>
+        {_popular_questions_block(popular_questions)}
         <section class="notice-grid" aria-label="Lookup boundaries">
           <article>
             <h2>What this does</h2>
@@ -105,6 +107,7 @@ def render_section_page(
     citation_payload: dict[str, Any],
     summaries: list[dict[str, Any]],
     warnings: list[dict[str, Any]],
+    related_items: list[dict[str, Any]] | None = None,
 ) -> str:
     section = lookup["section"]
     version = lookup["version"]
@@ -112,6 +115,7 @@ def render_section_page(
     citation_html = _citation_block(citation_payload)
     summary_html = _summary_block(summaries)
     warning_html = _warning_block(warnings)
+    related_html = _related_materials_block(related_items or [])
     return _page(
         heading,
         f"""
@@ -132,6 +136,7 @@ def render_section_page(
           </section>
           {summary_html}
           {citation_html}
+          {related_html}
           <section class="citation-card" aria-labelledby="export-heading">
             <h2 id="export-heading">Records-ready export</h2>
             <p><a href="/civiccode/sections/{escape(section['section_number'])}/export">
@@ -186,6 +191,7 @@ def _page(title: str, body: str) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
   <title>{escape(title)} - CivicCode</title>
   <style>
     :root {{
@@ -250,7 +256,7 @@ def _page(title: str, body: str) -> str:
       font-weight: 700;
     }}
     .lede {{ font-size: clamp(1.15rem, 2vw, 1.45rem); max-width: 62rem; }}
-    .lookup-panel, .state-card, .code-card, .contact-card, .citation-card, .summary-card, .result-list li {{
+    .lookup-panel, .state-card, .code-card, .contact-card, .citation-card, .summary-card, .discovery-card, .result-list li {{
       background: rgba(255, 250, 241, .88);
       border: 2px solid var(--line);
       border-radius: 1.2rem;
@@ -284,6 +290,13 @@ def _page(title: str, body: str) -> str:
       gap: 1rem;
     }}
     .result-list {{ padding-left: 1.2rem; }}
+    .discovery-list {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+      gap: 1rem;
+      padding: 0;
+      list-style: none;
+    }}
     .result-meta, .version-line, .code-chip {{
       font-family: "Courier New", monospace;
       font-size: .92rem;
@@ -353,6 +366,74 @@ def _search_result_item(result: dict[str, Any]) -> str:
       <h2><a href="{href}">{escape(section_number)} - {escape(result['section_heading'])}</a></h2>
       <p>{escape(result.get('snippet') or 'Open this section for authoritative adopted code text.')}</p>
       <p class="result-meta">Citation-ready - {escape(result['result_type'])}</p>
+    </li>
+    """
+
+
+def _popular_questions_block(popular_questions: list[dict[str, Any]]) -> str:
+    if not popular_questions:
+        return """
+        <section class="discovery-card" aria-labelledby="popular-heading">
+          <p class="eyebrow">Resident discovery</p>
+          <h2 id="popular-heading">Popular questions</h2>
+          <p>No staff-approved popular questions are published yet. Use search
+          above or contact the City Clerk if you need help finding the official
+          code section.</p>
+          <p class="code-chip">code_answer_behavior: navigation_aid</p>
+        </section>
+        """
+    items = "\n".join(_popular_question_item(question) for question in popular_questions)
+    return f"""
+    <section class="discovery-card" aria-labelledby="popular-heading">
+      <p class="eyebrow">Resident discovery</p>
+      <h2 id="popular-heading">Popular questions</h2>
+      <p>These are staff-approved navigation aids that link to cited adopted
+      sections. They are not legal determinations.</p>
+      <ul class="discovery-list">{items}</ul>
+    </section>
+    """
+
+
+def _popular_question_item(question: dict[str, Any]) -> str:
+    return f"""
+    <li class="state-card">
+      <h3><a href="{escape(question['section_url'])}">{escape(question['question_text'])}</a></h3>
+      <p>{escape(question['answer_excerpt'])}</p>
+      <p class="result-meta">Cites Section {escape(question['section_number'])} -
+      navigation aid, not a legal determination.</p>
+    </li>
+    """
+
+
+def _related_materials_block(related_items: list[dict[str, Any]]) -> str:
+    if not related_items:
+        return """
+        <section class="discovery-card" aria-labelledby="related-heading">
+          <h2 id="related-heading">Related materials</h2>
+          <p>No approved related materials are attached to this section yet.
+          Read the authoritative code text above or contact the City Clerk for
+          help locating related records.</p>
+          <p class="code-chip">code_answer_behavior: navigation_aid</p>
+        </section>
+        """
+    items = "\n".join(_related_material_item(item) for item in related_items)
+    return f"""
+    <section class="discovery-card" aria-labelledby="related-heading">
+      <h2 id="related-heading">Related materials</h2>
+      <p>These links are explicit cross-references for navigation only. They do
+      not include staff notes and are not legal determinations.</p>
+      <ul class="discovery-list">{items}</ul>
+    </section>
+    """
+
+
+def _related_material_item(item: dict[str, Any]) -> str:
+    return f"""
+    <li class="state-card">
+      <h3>{escape(item['label'])}</h3>
+      <p class="result-meta">{escape(item['result_type'].replace('_', ' '))} -
+      related to Section {escape(item['source_section_number'])}</p>
+      <p>{escape(item['public_label'])}</p>
     </li>
     """
 

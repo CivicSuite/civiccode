@@ -1,6 +1,7 @@
 # CivicCode User Manual
 
-CivicCode currently ships a Docker-demo codifier runtime built on the
+CivicCode currently ships a popular-questions and related-sections discovery
+runtime built on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility hardening foundation, local import
 foundation, public code lookup surface,
@@ -12,7 +13,8 @@ registry foundation, runtime foundation, and canonical schema foundation. This m
 explains what a first-time installer can do today and what is still planned.
 
 The source registry remains the official source metadata foundation for every
-summary, citation, lookup, and Q&A response. It can now persist source records
+summary, citation, lookup, popular question, related-material navigation aid,
+and Q&A response. It can now persist source records
 when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
 in-memory store for lightweight local demos. Staff source mutations and
 staff-only source reads require the trusted staff header seam, and
@@ -58,6 +60,11 @@ Current truth:
   actionable errors instead of being treated as settled law,
 - public-safe search can find adopted section text and related public material
   references,
+- staff can approve popular questions that link only to cited adopted code,
+- popular questions and related materials are labeled as navigation aids, not
+  legal determinations,
+- public related-material lists come only from explicit public cross-references
+  and do not expose staff notes,
 - stable section permalinks remain the same across text revisions,
 - deterministic citation objects can be built from adopted section text,
 - citation refusals include reasons and fix paths for missing, stale, or
@@ -107,8 +114,9 @@ Current truth:
 For a non-technical user, the first public "Read code" workflow is now available: open
 `/civiccode`, enter a section number or phrase, review search results, open a
 section detail page, and read the authoritative code text, citation,
-plain-language summary, and any pending codification warning. The page also
-routes legal-advice questions back to staff.
+plain-language summary, popular-question/related-material navigation aids, and
+any pending codification warning. The page also routes legal-advice questions
+back to staff.
 
 ## For IT and technical staff
 

@@ -100,7 +100,7 @@ Required gates for every PR:
 | 5 | Search + permalinks | Search and stable section URLs | Yes | Medium |
 | 6 | Citation contract | Deterministic citation model and refusal rules | No | High |
 | 7 | Q&A harness | Local-LLM provider wiring with no legal advice | Optional | High |
-| 8 | Popular questions + related sections | Safe resident discovery helpers | Yes | Medium |
+| 8 | Popular questions + related sections | Safe resident discovery helpers | Shipped v0.1.11 | Medium |
 | 9 | Plain-language summaries | Staff-approved non-authoritative summaries | Yes | High |
 | 10 | Staff workbench | Staff Q&A, notes, cross-references, interpretation history | Yes | High |
 | 11 | CivicClerk handoff + conflict detection | Ordinance/adoption event intake and likely-code-conflict warnings | No | High |
@@ -321,6 +321,11 @@ Acceptance tests:
 
 Goal: provide safe discovery aids without pretending popular questions are legal
 advice.
+
+Status: shipped in CivicCode v0.1.11 as staff-approved popular questions and
+explicit related-material navigation aids. These surfaces link only to cited
+adopted code or public cross-references, keep staff notes private, and label
+themselves as navigation aids rather than legal determinations.
 
 Work:
 

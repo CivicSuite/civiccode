@@ -9,7 +9,8 @@ sections.
 
 ## Current status
 
-As of 2026-05-03, CivicCode has a **Docker-demo codifier runtime**
+As of 2026-05-03, CivicCode has a **popular-questions and related-sections
+discovery runtime**
 layered on the mock-city codifier contract suite, staff code lifecycle
 workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
@@ -25,6 +26,8 @@ source registry mutations and staff source reads, staff source registry
 workspace pages, staff code lifecycle workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
+staff-approved public popular questions, explicit related-material navigation
+aids,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
 staff-approved plain-language summaries labeled as non-authoritative, and
 CivicClerk ordinance/adoption handoff intake with pending codification warnings,
@@ -35,8 +38,9 @@ with `pg_dump`, `pg_restore`, restored-table verification, and a checksum
 manifest.
 Residents can open `/civiccode`, search by section number or plain-language
 phrase, read adopted code text, see deterministic citations, view approved
-plain-language summaries, and see pending-codification warnings when CivicClerk
-handoffs may affect a section.
+plain-language summaries, follow staff-approved popular questions and related
+materials as navigation aids, and see pending-codification warnings when
+CivicClerk handoffs may affect a section.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
 The staff-controlled codifier sync foundation can validate schedules and
@@ -50,7 +54,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.10:
+The current release is CivicCode v0.1.11:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -75,6 +79,13 @@ The current release is CivicCode v0.1.10:
   actionable fix path,
 - search public-visible adopted section text and related public material
   references,
+- publish staff-approved popular questions that link only to cited adopted code,
+- reject popular-question prompts that ask for legal determinations and return a
+  concrete rewrite path,
+- show related materials from explicit public cross-references without exposing
+  staff notes,
+- label popular questions and related materials as navigation aids, not legal
+  determinations,
 - expose stable section permalinks that survive text revisions,
 - build deterministic citation objects for adopted section text,
 - return structured refusals for missing, stale, or contradictory source
@@ -139,7 +150,7 @@ The current release is CivicCode v0.1.10:
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.10 Docker backup-restore rehearsal
+- keep docs and CI gates green for the v0.1.11 resident discovery
   release.
 
 ## Why CivicCode before CivicZone
