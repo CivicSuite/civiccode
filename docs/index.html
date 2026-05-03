@@ -14,6 +14,9 @@
       --accent: #8f4d24;
       --good: #236044;
     }
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       font-family: Georgia, "Times New Roman", serif;
@@ -26,6 +29,7 @@
       max-width: 980px;
       margin: 0 auto;
       padding: 4rem 1.25rem;
+      overflow-wrap: anywhere;
     }
     .skip-link {
       position: absolute;
@@ -68,11 +72,13 @@
       display: inline-block;
       margin: 1.5rem 0;
       padding: .45rem .75rem;
+      max-width: 100%;
       border: 1px solid var(--line);
       border-radius: 999px;
       background: var(--card);
       color: var(--good);
       font-weight: 700;
+      white-space: normal;
     }
     .grid {
       display: grid;
@@ -81,6 +87,7 @@
       margin-top: 2rem;
     }
     section {
+      min-width: 0;
       background: rgba(255,255,255,.82);
       border: 1px solid var(--line);
       border-radius: 1rem;
@@ -90,6 +97,20 @@
     h2 { margin-top: 0; }
     li { margin: .45rem 0; }
     code { background: #f2e6d4; padding: .08rem .25rem; border-radius: .25rem; }
+    @media (max-width: 520px) {
+      main {
+        padding: 2.75rem 1rem;
+      }
+      .lead {
+        font-size: 1.08rem;
+      }
+      .status {
+        border-radius: 1rem;
+      }
+      ul {
+        padding-left: 1.15rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -151,6 +172,7 @@
         <li>Mock-city report reuses CivicCore municipal IdP and backup-retention contracts and writes a secret-free JSON report.</li>
         <li>Records-ready export API and accessible HTML export page for adopted sections.</li>
         <li>Docker Compose product path with PostgreSQL 17 plus pgvector, migration startup, and City of Brookfield seeded demo data enabled by <code>CIVICCODE_DEMO_SEED=1</code>.</li>
+        <li>Docker/PostgreSQL backup-restore rehearsal with <code>pg_dump</code>, <code>pg_restore</code>, restored-table verification, <code>civiccode-docker-backup-manifest.json</code>, and Windows/Bash launchers.</li>
         <li>Semantic headings, labels, focus styling, and print-friendly export output.</li>
         <li>CivicAccess integration notes without a shipped CivicAccess runtime dependency.</li>
         <li>Pending ordinance language is not adopted law and does not replace codified text.</li>
@@ -160,7 +182,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>CivicCode v0.1.9 is the current Docker demo runtime release with CivicCore v0.22.0 source-list health projection reuse.</p>
+      <p>CivicCode v0.1.10 is the current Docker backup-restore rehearsal release with CivicCore v0.22.0 source-list health projection reuse.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

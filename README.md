@@ -29,8 +29,10 @@ staff-only interpretation-note APIs with audit events and staff Q&A context,
 staff-approved plain-language summaries labeled as non-authoritative, and
 CivicClerk ordinance/adoption handoff intake with pending codification warnings,
 and a Docker Compose product path that starts PostgreSQL 17 with pgvector, runs
-migrations, serves the FastAPI app, and can seed a City of Brookfield demo with
-`CIVICCODE_DEMO_SEED=1`.
+migrations, serves the FastAPI app, can seed a City of Brookfield demo with
+`CIVICCODE_DEMO_SEED=1`, and can rehearse a Docker/PostgreSQL backup-restore
+with `pg_dump`, `pg_restore`, restored-table verification, and a checksum
+manifest.
 Residents can open `/civiccode`, search by section number or plain-language
 phrase, read adopted code text, see deterministic citations, view approved
 plain-language summaries, and see pending-codification warnings when CivicClerk
@@ -48,7 +50,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.9:
+The current release is CivicCode v0.1.10:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -129,12 +131,16 @@ The current release is CivicCode v0.1.9:
   migrations, source-registry persistence, and City of Brookfield demo data
   enabled by `CIVICCODE_DEMO_SEED=1`,
 - smoke the Docker demo with `scripts/docker-demo-smoke.sh`,
+- rehearse the Docker/PostgreSQL backup and restore path with
+  `scripts/start_docker_backup_restore_rehearsal.ps1` on Windows or
+  `scripts/start_docker_backup_restore_rehearsal.sh` on Bash,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.9 Docker demo runtime release.
+- keep docs and CI gates green for the v0.1.10 Docker backup-restore rehearsal
+  release.
 
 ## Why CivicCode before CivicZone
 
@@ -207,6 +213,29 @@ Docker demo smoke:
 ```bash
 bash scripts/docker-demo-smoke.sh
 ```
+
+Docker/PostgreSQL backup-restore rehearsal:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/start_docker_backup_restore_rehearsal.ps1 -Strict
+```
+
+```bash
+bash scripts/start_docker_backup_restore_rehearsal.sh --strict
+```
+
+The rehearsal expects the Compose stack to be running. It writes a
+`.docker-backup-restore-rehearsal/<run-id>/backup/civiccode-postgres.dump`,
+restores it into a temporary `civiccode_restore_*` database, verifies restored
+application tables, writes
+`backup/civiccode-docker-backup-manifest.json` with a SHA-256 checksum, and
+drops the temporary restore database unless `--keep-restore-database` is used.
+Both launchers call `scripts/check_docker_backup_restore_rehearsal.py`, which
+can also be run directly with `--print-only` to review the plan without touching
+Docker.
+If it fails, confirm Docker Desktop is running, start the stack with
+`docker compose up -d`, inspect `docker compose logs postgres api`, and rerun
+with a fresh run id.
 
 Smoke checks:
 

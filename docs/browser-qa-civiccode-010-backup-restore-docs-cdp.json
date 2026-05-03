@@ -1,0 +1,44 @@
+[
+  {
+    "viewport": {
+      "name": "desktop",
+      "width": 1366,
+      "height": 900
+    },
+    "screenshotPath": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-010-backup-restore-docs-desktop.png",
+    "checks": {
+      "title": "CivicCode - CivicSuite municipal code module",
+      "innerWidth": 1366,
+      "scrollWidth": 1351,
+      "bodyScrollWidth": 1351,
+      "horizontalOverflow": false,
+      "activeElement": "skip-link",
+      "hasVersion": true,
+      "hasBackup": true,
+      "hasManifest": true,
+      "hasPgDump": true
+    },
+    "consoleEvents": []
+  },
+  {
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "screenshotPath": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-010-backup-restore-docs-mobile.png",
+    "checks": {
+      "title": "CivicCode - CivicSuite municipal code module",
+      "innerWidth": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "horizontalOverflow": false,
+      "activeElement": "skip-link",
+      "hasVersion": true,
+      "hasBackup": true,
+      "hasManifest": true,
+      "hasPgDump": true
+    },
+    "consoleEvents": []
+  }
+]

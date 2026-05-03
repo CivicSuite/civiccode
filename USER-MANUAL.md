@@ -20,8 +20,10 @@ staff-only source reads require the trusted staff header seam, and
 code administrators. `/staff/code` gives staff a single lifecycle review page
 for current adopted versions, source readiness, draft summaries, staff note
 counts, and pending CivicClerk codification warnings. The Docker Compose path
-starts PostgreSQL 17 with pgvector, runs migrations, serves the API, and enables
-a City of Brookfield seeded demo with `CIVICCODE_DEMO_SEED=1`.
+starts PostgreSQL 17 with pgvector, runs migrations, serves the API, enables a
+City of Brookfield seeded demo with `CIVICCODE_DEMO_SEED=1`, and includes a
+Docker/PostgreSQL backup-restore rehearsal for IT staff to prove `pg_dump` and
+`pg_restore` before trusting a shared environment.
 
 ## For municipal decision-makers
 
@@ -146,6 +148,26 @@ before a shared environment. Smoke the running stack with:
 ```bash
 bash scripts/docker-demo-smoke.sh
 ```
+
+Rehearse Docker/PostgreSQL backup and restore after the stack is running:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/start_docker_backup_restore_rehearsal.ps1 -Strict
+```
+
+```bash
+bash scripts/start_docker_backup_restore_rehearsal.sh --strict
+```
+
+The rehearsal is intentionally non-destructive: it dumps the `civiccode`
+database from the Compose `postgres` service, restores into a temporary
+`civiccode_restore_*` database, verifies restored application tables, writes
+`.docker-backup-restore-rehearsal/<run-id>/backup/civiccode-docker-backup-manifest.json`,
+and drops the temporary restore database unless instructed otherwise. Both launchers
+call `scripts/check_docker_backup_restore_rehearsal.py`, which can also be run
+directly with `--print-only` to review the plan without touching Docker. If it
+fails, confirm Docker Desktop is running, start the stack with `docker compose
+up -d`, inspect `docker compose logs postgres api`, and rerun with a new run id.
 
 Smoke checks:
 
@@ -457,9 +479,9 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.9 is the current Docker demo runtime release. It reuses the
-shared CivicCore source-list health projection for codifier sync source lists
-while retaining CivicCode-specific legal-boundary copy, and it now provides a
-Compose/PostgreSQL seeded City of Brookfield demo path for product evaluation.
-Future work moves to the next module or release plan in the CivicSuite unified
-roadmap.
+CivicCode v0.1.10 is the current Docker backup-restore rehearsal release. It
+reuses the shared CivicCore source-list health projection for codifier sync
+source lists while retaining CivicCode-specific legal-boundary copy, and it now
+provides both a Compose/PostgreSQL seeded City of Brookfield demo path and a
+repeatable restore proof for product evaluation. Future work moves to the next
+module or release plan in the CivicSuite unified roadmap.
