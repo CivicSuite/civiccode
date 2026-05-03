@@ -147,12 +147,20 @@ def mock_city_import_payload(contract: MockCityCodifierContract) -> dict[str, An
         "code_publishing": "12.08.110",
         "general_code": "2.16.030",
     }[contract.connector]
+    section_heading = {
+        "municode": "Backyard chickens",
+        "american_legal": "Animal noise control",
+        "code_publishing": "Park shelter reservations",
+        "general_code": "Board appointment terms",
+    }[contract.connector]
     source_id = f"src_{contract.connector}_brookfield"
     section_id = f"sec_{contract.connector}_sample"
-    body = (
-        f"City of Brookfield sample section {section_number}. "
-        "This mock text is source material for contract validation only."
-    )
+    body = {
+        "municode": "Residents may keep up to six backyard chickens with a city permit.",
+        "american_legal": "Animal noise complaints may be reviewed by code enforcement staff.",
+        "code_publishing": "Park shelter reservations require a completed city reservation form.",
+        "general_code": "Board appointments use staggered terms recorded by the City Clerk.",
+    }[contract.connector]
     return {
         "job_id": f"job_{contract.connector}_brookfield",
         "connector_type": "official_html_extract",
@@ -185,7 +193,7 @@ def mock_city_import_payload(contract: MockCityCodifierContract) -> dict[str, An
                 "section_id": section_id,
                 "chapter_id": f"chapter_{prefix}",
                 "section_number": section_number,
-                "section_heading": "Sample Brookfield code section",
+                "section_heading": section_heading,
             }
         ],
         "versions": [

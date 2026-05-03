@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-05-03
+
+### Added
+
+- Docker Compose product path with PostgreSQL 17 plus pgvector, migration
+  startup, health checks, source-registry persistence, and opt-in City of
+  Brookfield demo seed data through `CIVICCODE_DEMO_SEED=1`.
+- `Dockerfile`, `docker-compose.yml`, `docker.env.example`, and
+  `scripts/docker-demo-smoke.sh` for a repeatable local product demo.
+- Runtime demo seed middleware that populates public lookup, staff code
+  workspace, approved-summary, staff-note, and CivicClerk handoff warning data
+  without outbound vendor calls.
+
+### Changed
+
+- Promoted Alembic, SQLAlchemy, and `psycopg2-binary` to runtime dependencies so
+  the packaged Docker app can run migrations and PostgreSQL-backed source
+  registry persistence outside the dev extra.
+
 ## [0.1.8] - 2026-05-03
 
 ### Changed

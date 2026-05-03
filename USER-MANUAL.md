@@ -1,6 +1,6 @@
 # CivicCode User Manual
 
-CivicCode currently ships a codifier live-sync foundation built on the
+CivicCode currently ships a Docker-demo codifier runtime built on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility hardening foundation, local import
 foundation, public code lookup surface,
@@ -19,7 +19,9 @@ staff-only source reads require the trusted staff header seam, and
 `/staff/sources` makes active, stale, and failed source readiness visible to
 code administrators. `/staff/code` gives staff a single lifecycle review page
 for current adopted versions, source readiness, draft summaries, staff note
-counts, and pending CivicClerk codification warnings.
+counts, and pending CivicClerk codification warnings. The Docker Compose path
+starts PostgreSQL 17 with pgvector, runs migrations, serves the API, and enables
+a City of Brookfield seeded demo with `CIVICCODE_DEMO_SEED=1`.
 
 ## For municipal decision-makers
 
@@ -125,6 +127,24 @@ Install and run:
 python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.0/civiccore-0.22.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
+```
+
+Run the Docker demo:
+
+```bash
+cp docker.env.example .env
+docker compose up --build
+```
+
+With the default `CIVICCODE_DEMO_SEED=1`, a first-time evaluator can open
+`http://127.0.0.1:8000/civiccode`, search for `6.12.040`, read seeded City of
+Brookfield code text, see the non-authoritative summary warning, and review the
+staff code workspace at `/staff/code` through trusted staff headers. The default
+database password in `docker.env.example` is for local demo use only; change it
+before a shared environment. Smoke the running stack with:
+
+```bash
+bash scripts/docker-demo-smoke.sh
 ```
 
 Smoke checks:
@@ -437,8 +457,9 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.8 is the current codifier live-sync foundation release. It
-reuses the shared CivicCore source-list health projection for codifier sync
-source lists while retaining CivicCode-specific legal-boundary copy. Future
-work moves to the next module or release plan in the CivicSuite unified
+CivicCode v0.1.9 is the current Docker demo runtime release. It reuses the
+shared CivicCore source-list health projection for codifier sync source lists
+while retaining CivicCode-specific legal-boundary copy, and it now provides a
+Compose/PostgreSQL seeded City of Brookfield demo path for product evaluation.
+Future work moves to the next module or release plan in the CivicSuite unified
 roadmap.

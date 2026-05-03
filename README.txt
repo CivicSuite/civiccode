@@ -6,7 +6,7 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-05-03, CivicCode has a codifier live-sync foundation layered on the
+As of 2026-05-03, CivicCode has a Docker-demo codifier runtime layered on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility
 hardening foundation, local import foundation, public code lookup
@@ -33,7 +33,9 @@ behavior. CivicClerk ordinance/adoption handoff events are accepted as pending
 codification warnings without replacing adopted code text. Residents can open
 /civiccode, search by section number or plain-language phrase, read adopted
 code text, see citations, view approved summaries, and see pending
-codification warnings.
+codification warnings. Docker Compose can start PostgreSQL 17 with pgvector,
+run migrations, serve the FastAPI app, persist source registry records, and
+seed a City of Brookfield demo with CIVICCODE_DEMO_SEED=1.
 
 This is not a legal-advice product and does not make live LLM calls. The
 staff-controlled codifier sync foundation can validate schedules and source
@@ -118,6 +120,18 @@ Run locally
 5. curl http://127.0.0.1:8000/api/v1/civiccode/sources/catalog
 6. create staff notes with X-CivicCode-Role: staff and X-CivicCode-Actor
 
+Docker demo
+-----------
+
+1. cp docker.env.example .env
+2. docker compose up --build
+3. open http://127.0.0.1:8000/civiccode
+4. search for 6.12.040 to see the seeded City of Brookfield code section
+5. bash scripts/docker-demo-smoke.sh
+
+The default Docker password is local-demo only. Change .env before any shared
+environment.
+
 Migration smoke
 ---------------
 
@@ -128,6 +142,6 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.8 is the current codifier live-sync foundation release. It
-reuses the shared CivicCore source-list health projection for codifier sync
-source lists while retaining CivicCode-specific legal-boundary copy.
+CivicCode v0.1.9 is the current Docker demo runtime release. It reuses the
+shared CivicCore source-list health projection for codifier sync source lists
+while retaining CivicCode-specific legal-boundary copy.

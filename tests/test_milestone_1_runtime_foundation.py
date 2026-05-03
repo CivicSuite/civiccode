@@ -34,7 +34,7 @@ def test_pyproject_declares_runtime_package_and_release_version() -> None:
     data = load_pyproject()
 
     assert data["project"]["name"] == "civiccode"
-    assert data["project"]["version"] == "0.1.8"
+    assert data["project"]["version"] == "0.1.9"
     assert "CivicCode" in data["project"]["description"]
 
 
@@ -55,6 +55,9 @@ def test_pyproject_declares_foundation_runtime_and_test_dependencies() -> None:
     dev_dependencies = "\n".join(data["project"]["optional-dependencies"]["dev"])
 
     assert "fastapi" in dependencies
+    assert "sqlalchemy" in dependencies
+    assert "alembic" in dependencies
+    assert "psycopg2-binary" in dependencies
     assert "uvicorn" in dependencies
     assert "pytest" in dev_dependencies
     assert "httpx" in dev_dependencies
@@ -89,12 +92,12 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["name"] == "CivicCode"
-    assert payload["status"] == "codifier live-sync foundation"
+    assert payload["status"] == "docker demo codifier runtime"
     assert payload["code_answer_behavior"] == "citation_grounded"
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
     assert payload["next_step"] == (
-        "CivicCode v0.1.8 codifier live-sync foundation; next work follows the CivicSuite roadmap."
+        "CivicCode v0.1.9 Docker demo runtime; next work follows the CivicSuite roadmap."
     )
     assert "not implemented" in payload["message"].lower()
     assert "source registry" in payload["message"]
@@ -128,7 +131,7 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
     assert payload == {
         "status": "ok",
         "service": "civiccode",
-        "version": "0.1.8",
+        "version": "0.1.9",
         "civiccore": "0.22.0",
     }
 
