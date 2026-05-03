@@ -161,6 +161,32 @@ def mock_city_import_payload(contract: MockCityCodifierContract) -> dict[str, An
         "code_publishing": "Park shelter reservations require a completed city reservation form.",
         "general_code": "Board appointments use staggered terms recorded by the City Clerk.",
     }[contract.connector]
+    related_refs = {
+        "municode": {
+            "administrative_regulation_refs": ["Animal permit application rule A-6.12"],
+            "resolution_refs": ["Resolution 2026-014 fee schedule"],
+            "policy_refs": ["Planning counter permit intake policy"],
+            "approved_summary_refs": ["summary_brookfield_chickens"],
+        },
+        "american_legal": {
+            "administrative_regulation_refs": ["Noise complaint intake rule A-8.04"],
+            "resolution_refs": [],
+            "policy_refs": ["Code enforcement response policy"],
+            "approved_summary_refs": [],
+        },
+        "code_publishing": {
+            "administrative_regulation_refs": [],
+            "resolution_refs": ["Resolution 2026-022 park shelter fees"],
+            "policy_refs": ["Parks reservation desk policy"],
+            "approved_summary_refs": [],
+        },
+        "general_code": {
+            "administrative_regulation_refs": [],
+            "resolution_refs": [],
+            "policy_refs": ["Board appointment tracking policy"],
+            "approved_summary_refs": [],
+        },
+    }[contract.connector]
     return {
         "job_id": f"job_{contract.connector}_brookfield",
         "connector_type": "official_html_extract",
@@ -194,6 +220,7 @@ def mock_city_import_payload(contract: MockCityCodifierContract) -> dict[str, An
                 "chapter_id": f"chapter_{prefix}",
                 "section_number": section_number,
                 "section_heading": section_heading,
+                **related_refs,
             }
         ],
         "versions": [

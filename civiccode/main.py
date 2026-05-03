@@ -51,7 +51,17 @@ from civiccode.public_exports import (
     build_records_ready_export,
     render_records_ready_export_page,
 )
-from civiccode.qa_harness import QuestionRequestContext, build_grounded_answer
+from civiccode.public_discovery import (
+    PopularQuestionStore,
+    PublicDiscoveryError,
+    popular_question_to_public_dict,
+    related_material_to_public_dict,
+)
+from civiccode.qa_harness import (
+    QuestionRequestContext,
+    build_grounded_answer,
+    looks_like_legal_determination,
+)
 from civiccode.section_lifecycle import (
     SectionLifecycleError,
     SectionLifecycleStore,
@@ -101,6 +111,7 @@ SECTION_STORE = SectionLifecycleStore()
 STAFF_NOTE_STORE = StaffWorkbenchStore()
 SUMMARY_STORE = PlainLanguageSummaryStore()
 HANDOFF_STORE = OrdinanceHandoffStore()
+POPULAR_QUESTION_STORE = PopularQuestionStore()
 _import_store: ImportConnectorStore | None = None
 _import_store_source_key: str | None = None
 _codifier_sync_store: CodifierSyncStore | None = None
@@ -218,6 +229,20 @@ class QuestionAnswerRequest(BaseModel):
     as_of: date | None = None
 
 
+class PopularQuestionCreate(BaseModel):
+    """Request body for a staff-approved public popular-question navigation aid."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question_id: str | None = None
+    question_text: str = Field(min_length=1)
+    section_number: str = Field(min_length=1)
+    answer_excerpt: str = Field(min_length=1)
+    audience: str = "public"
+    status: str = "approved"
+    is_popular: bool = True
+
+
 class InterpretationNoteCreate(BaseModel):
     """Request body for staff-only interpretation notes."""
 
@@ -319,6 +344,10 @@ def _raise_handoff_error(exc: OrdinanceHandoffError) -> None:
 
 
 def _raise_import_error(exc: CivicCodeImportError) -> None:
+    raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
+
+
+def _raise_public_discovery_error(exc: PublicDiscoveryError) -> None:
     raise HTTPException(status_code=exc.status_code, detail=exc.detail()) from exc
 
 
@@ -448,6 +477,8 @@ async def root() -> dict[str, str]:
             "Citation-grounded Q&A harness is online for adopted sections. Staff "
             "interpretation-note APIs and staff Q&A context are online. Staff-approved "
             "plain-language summaries are online and labeled non-authoritative. "
+            "Staff-approved popular questions and related-material navigation "
+            "aids are online with citations and no legal determinations. "
             "CivicClerk ordinance handoff intake and affected-section warnings are "
             "online. Resident-facing public lookup pages are online at /civiccode. "
             "Local file-drop and fixture import jobs are online with provenance, "
@@ -467,7 +498,7 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.10 Docker backup-restore rehearsal; next work follows "
+            "CivicCode v0.1.11 popular questions and related-sections discovery; next work follows "
             "the CivicSuite roadmap."
         ),
     }
@@ -476,7 +507,11 @@ async def root() -> dict[str, str]:
 @app.get("/civiccode", response_class=HTMLResponse)
 async def public_lookup_home() -> str:
     """Render the resident-facing public code lookup home page."""
-    return render_home_page()
+    questions = [
+        popular_question_to_public_dict(question)
+        for question in POPULAR_QUESTION_STORE.public_popular_questions()
+    ]
+    return render_home_page(questions)
 
 
 @app.get("/civiccode/search", response_class=HTMLResponse)
@@ -528,7 +563,11 @@ async def public_section_detail(section_ref: str, as_of: date | None = None) -> 
             )
         )
     warnings = HANDOFF_STORE.warnings_for_section(section_number)
-    return render_section_page(lookup, citation_payload, summaries, warnings)
+    related = [
+        related_material_to_public_dict(item)
+        for item in SECTION_STORE.related_materials(section_number)["items"]
+    ]
+    return render_section_page(lookup, citation_payload, summaries, warnings, related)
 
 
 @app.get("/civiccode/sections/{section_ref}/export", response_class=HTMLResponse)
@@ -814,6 +853,91 @@ async def search_sections(q: str) -> dict[str, Any]:
         return SECTION_STORE.search(q)
     except SectionLifecycleError as exc:
         _raise_section_error(exc)
+
+
+@app.get("/api/v1/civiccode/popular-questions")
+async def list_popular_questions() -> dict[str, Any]:
+    """List staff-approved public popular questions as navigation aids."""
+    questions = [
+        popular_question_to_public_dict(question)
+        for question in POPULAR_QUESTION_STORE.public_popular_questions()
+    ]
+    return {
+        "questions": questions,
+        "count": len(questions),
+        "classification": "navigation_aid_not_legal_determination",
+        "legal_determination": "not_provided",
+        "code_answer_behavior": "navigation_aid",
+        "empty_state": None
+        if questions
+        else {
+            "message": "No staff-approved popular questions are published yet.",
+            "fix": "Search by section number or ask the City Clerk to approve public questions.",
+        },
+    }
+
+
+@app.post("/api/v1/civiccode/staff/popular-questions", status_code=201)
+async def create_popular_question(
+    request: PopularQuestionCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Create a staff-approved public popular question tied to cited adopted code."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    question_text = request.question_text.strip()
+    if is_legal_advice_query(question_text) or looks_like_legal_determination(question_text):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Popular questions cannot ask CivicCode for a legal determination.",
+                "fix": (
+                    "Rewrite the question as a navigation prompt, such as "
+                    "'Where do I read the backyard chicken permit rule?'"
+                ),
+            },
+        )
+    citation_payload = _build_citation_for_section(request.section_number)
+    if citation_payload.get("status") != "ok":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": citation_payload.get("reason", "Citation could not be built."),
+                "fix": citation_payload.get("fix", "Attach the question to cited adopted code."),
+            },
+        )
+    try:
+        lookup = SECTION_STORE.lookup_section(request.section_number)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    citation = citation_payload["citation"]
+    try:
+        question = POPULAR_QUESTION_STORE.create(
+            {
+                **request.model_dump(),
+                "section_id": citation["section_id"],
+                "section_number": citation["section_number"],
+                "section_heading": lookup["section"]["section_heading"],
+                "citation_payload": citation_payload,
+            },
+            actor=actor,
+        )
+    except PublicDiscoveryError as exc:
+        _raise_public_discovery_error(exc)
+    return popular_question_to_public_dict(question)
+
+
+@app.get("/api/v1/civiccode/sections/{section_number}/related")
+async def related_materials(section_number: str) -> dict[str, Any]:
+    """List explicit public related materials for one adopted section."""
+    try:
+        payload = SECTION_STORE.related_materials(section_number)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    return {
+        **payload,
+        "items": [related_material_to_public_dict(item) for item in payload["items"]],
+    }
 
 
 @app.get("/api/v1/civiccode/citations/build")
@@ -1360,6 +1484,30 @@ def _seed_demo_city_if_enabled() -> None:
             actor=actor,
         )
     except OrdinanceHandoffError:
+        pass
+
+    try:
+        citation_payload = _build_citation_for_section("6.12.040")
+        if citation_payload.get("status") == "ok":
+            POPULAR_QUESTION_STORE.create(
+                {
+                    "question_id": "popular_brookfield_chickens",
+                    "question_text": "Where do I read the backyard chicken permit rule?",
+                    "section_id": "sec_municode_sample",
+                    "section_number": "6.12.040",
+                    "section_heading": "Backyard chickens",
+                    "answer_excerpt": (
+                        "Open Section 6.12.040 for the adopted chicken-permit rule "
+                        "and its official source citation."
+                    ),
+                    "citation_payload": citation_payload,
+                    "status": "approved",
+                    "audience": "public",
+                    "is_popular": True,
+                },
+                actor=actor,
+            )
+    except PublicDiscoveryError:
         pass
 
     _demo_seed_key = seed_key

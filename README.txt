@@ -158,6 +158,8 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.10 is the current Docker backup-restore rehearsal release. It
-reuses the shared CivicCore source-list health projection for codifier sync
-source lists while retaining CivicCode-specific legal-boundary copy.
+CivicCode v0.1.11 is the current popular questions and related-sections
+discovery release. It reuses the shared CivicCore source-list health projection
+for codifier sync source lists while retaining CivicCode-specific
+legal-boundary copy. Popular questions and related materials are navigation
+aids, not legal determinations.

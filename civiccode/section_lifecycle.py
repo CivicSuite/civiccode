@@ -396,6 +396,45 @@ class SectionLifecycleStore:
             },
         }
 
+    def related_materials(self, section_number: str) -> dict[str, Any]:
+        lookup = self.lookup_section(section_number)
+        section = self.get_section(lookup["section"]["section_id"])
+        related_groups = [
+            ("administrative_regulation", section.administrative_regulation_refs),
+            ("resolution", section.resolution_refs),
+            ("policy", section.policy_refs),
+            ("approved_summary", section.approved_summary_refs),
+        ]
+        items: list[dict[str, Any]] = []
+        for result_type, references in related_groups:
+            for reference in references:
+                items.append(
+                    {
+                        "id": reference,
+                        "result_type": result_type,
+                        "label": reference,
+                        "source_section_id": section.section_id,
+                        "source_section_number": section.section_number,
+                        "permalink": section_permalink(section),
+                        "public_visible": True,
+                    }
+                )
+        return {
+            "section_number": section.section_number,
+            "section_id": section.section_id,
+            "items": items,
+            "count": len(items),
+            "classification": "navigation_aid_not_legal_determination",
+            "legal_determination": "not_provided",
+            "code_answer_behavior": "navigation_aid",
+            "empty_state": None
+            if items
+            else {
+                "message": "No approved related materials are attached to this section yet.",
+                "fix": "Read the authoritative code text or contact the City Clerk for help locating related records.",
+            },
+        }
+
     def get_section(self, section_id: str) -> CodeSection:
         try:
             return self._sections[section_id]

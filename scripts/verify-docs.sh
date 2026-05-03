@@ -51,6 +51,7 @@ required=(
   "civiccode/ordinance_handoff.py"
   "civiccode/import_connectors.py"
   "civiccode/public_exports.py"
+  "civiccode/public_discovery.py"
   "civiccode/public_lookup.py"
   "civiccode/staff_workbench.py"
   "civiccode/source_registry.py"
@@ -63,6 +64,7 @@ required=(
   "tests/fixtures/milestone_12/csv_bundle.json"
   "tests/fixtures/milestone_12/official_html_extract.json"
   "tests/fixtures/milestone_12/broken_missing_section.json"
+  "tests/test_popular_questions_related_discovery.py"
 )
 
 echo "==> Required-artifact check"
