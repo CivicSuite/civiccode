@@ -119,7 +119,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Popular-questions and related-sections discovery runtime online on top of the mock-city codifier contract suite, staff code lifecycle workspace, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, bundled vendor credentials, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
+  <p class="status">Durable popular-questions discovery runtime online on the Docker/PostgreSQL path, alongside related-section navigation aids, mock-city codifier contracts, staff code lifecycle workspace, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff, plain-language summaries, staff workbench foundation, citation-grounded Q&amp;A, citation contract, search and permalink, section/version, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, bundled vendor credentials, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
@@ -155,6 +155,7 @@
         <li>Section/version lifecycle APIs for adopted, historical, and pending text boundaries.</li>
         <li>Public-safe search and stable section permalink APIs.</li>
         <li>Staff-approved popular questions that link only to cited adopted code.</li>
+        <li>Durable popular-question storage through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Related materials from explicit public cross-references, labeled as navigation aids and not legal determinations.</li>
         <li>Deterministic citation/refusal objects with section, version, source, and effective-date fields.</li>
         <li>Citation-grounded Q&amp;A harness for questions that resolve to one adopted section and active source.</li>
@@ -184,7 +185,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>CivicCode v0.1.11 is the current popular questions and related-sections discovery release with CivicCore v0.22.0 source-list health projection reuse.</p>
+      <p>CivicCode v0.1.12 is the current durable popular-questions discovery release with CivicCore v0.22.0 source-list health projection reuse.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

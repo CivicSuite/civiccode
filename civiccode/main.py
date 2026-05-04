@@ -52,6 +52,7 @@ from civiccode.public_exports import (
     render_records_ready_export_page,
 )
 from civiccode.public_discovery import (
+    PopularQuestionRepository,
     PopularQuestionStore,
     PublicDiscoveryError,
     popular_question_to_public_dict,
@@ -112,6 +113,8 @@ STAFF_NOTE_STORE = StaffWorkbenchStore()
 SUMMARY_STORE = PlainLanguageSummaryStore()
 HANDOFF_STORE = OrdinanceHandoffStore()
 POPULAR_QUESTION_STORE = PopularQuestionStore()
+_popular_question_repository: PopularQuestionRepository | None = None
+_popular_question_db_url: str | None = None
 _import_store: ImportConnectorStore | None = None
 _import_store_source_key: str | None = None
 _codifier_sync_store: CodifierSyncStore | None = None
@@ -498,8 +501,8 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.11 popular questions and related-sections discovery; next work follows "
-            "the CivicSuite roadmap."
+            "CivicCode v0.1.12 persists popular-question discovery aids in the "
+            "configured database; next work follows the CivicSuite roadmap."
         ),
     }
 
@@ -509,7 +512,7 @@ async def public_lookup_home() -> str:
     """Render the resident-facing public code lookup home page."""
     questions = [
         popular_question_to_public_dict(question)
-        for question in POPULAR_QUESTION_STORE.public_popular_questions()
+        for question in _get_popular_question_store().public_popular_questions()
     ]
     return render_home_page(questions)
 
@@ -860,7 +863,7 @@ async def list_popular_questions() -> dict[str, Any]:
     """List staff-approved public popular questions as navigation aids."""
     questions = [
         popular_question_to_public_dict(question)
-        for question in POPULAR_QUESTION_STORE.public_popular_questions()
+        for question in _get_popular_question_store().public_popular_questions()
     ]
     return {
         "questions": questions,
@@ -912,7 +915,7 @@ async def create_popular_question(
         _raise_section_error(exc)
     citation = citation_payload["citation"]
     try:
-        question = POPULAR_QUESTION_STORE.create(
+        question = _get_popular_question_store().create(
             {
                 **request.model_dump(),
                 "section_id": citation["section_id"],
@@ -1381,6 +1384,17 @@ def _get_source_store() -> SourceRegistryRepository | SourceRegistryStore:
     return _source_registry_repository
 
 
+def _get_popular_question_store() -> PopularQuestionRepository | PopularQuestionStore:
+    global _popular_question_db_url, _popular_question_repository
+    db_url = os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL")
+    if db_url is None:
+        return POPULAR_QUESTION_STORE
+    if _popular_question_repository is None or db_url != _popular_question_db_url:
+        _popular_question_db_url = db_url
+        _popular_question_repository = PopularQuestionRepository(db_url=db_url)
+    return _popular_question_repository
+
+
 def _source_store_key() -> str:
     return os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL") or "memory"
 
@@ -1489,7 +1503,7 @@ def _seed_demo_city_if_enabled() -> None:
     try:
         citation_payload = _build_citation_for_section("6.12.040")
         if citation_payload.get("status") == "ok":
-            POPULAR_QUESTION_STORE.create(
+            _get_popular_question_store().create(
                 {
                     "question_id": "popular_brookfield_chickens",
                     "question_text": "Where do I read the backyard chicken permit rule?",

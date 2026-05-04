@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-05-04
+
+### Added
+
+- Durable `popular_question_records` storage for staff-approved resident
+  discovery aids when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured.
+- Alembic revision `civiccode_0003_popular_questions` for the Docker/PostgreSQL
+  product path, with migration tests that verify the new head revision and
+  restored table set.
+
+### Changed
+
+- Popular-question creation and public listing now use the configured database
+  repository on the Docker path while preserving the in-memory store for
+  lightweight local mode.
+
 ## [0.1.11] - 2026-05-03
 
 ### Added

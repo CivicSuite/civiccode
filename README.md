@@ -9,8 +9,7 @@ sections.
 
 ## Current status
 
-As of 2026-05-03, CivicCode has a **popular-questions and related-sections
-discovery runtime**
+As of 2026-05-04, CivicCode has a **durable popular-questions discovery runtime**
 layered on the mock-city codifier contract suite, staff code lifecycle
 workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
@@ -23,7 +22,8 @@ a published `civiccore v0.22.0` release-wheel dependency, canonical SQLAlchemy t
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
-workspace pages, staff code lifecycle workspace pages,
+workspace pages, optional database-backed popular-question persistence,
+staff code lifecycle workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
 staff-approved public popular questions, explicit related-material navigation
@@ -54,7 +54,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.11:
+The current release is CivicCode v0.1.12:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -80,6 +80,9 @@ The current release is CivicCode v0.1.11:
 - search public-visible adopted section text and related public material
   references,
 - publish staff-approved popular questions that link only to cited adopted code,
+- persist staff-approved popular questions with `CIVICCODE_SOURCE_REGISTRY_DB_URL`
+  so the Docker/PostgreSQL product path keeps resident discovery aids after
+  process restarts,
 - reject popular-question prompts that ask for legal determinations and return a
   concrete rewrite path,
 - show related materials from explicit public cross-references without exposing
@@ -150,7 +153,7 @@ The current release is CivicCode v0.1.11:
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.11 resident discovery
+- keep docs and CI gates green for the v0.1.12 durable resident discovery
   release.
 
 ## Why CivicCode before CivicZone

@@ -1,0 +1,48 @@
+{
+  "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+  "capturedAt": "2026-05-04T13:27:16.030930+00:00",
+  "results": [
+    {
+      "target": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-012-durable-discovery-desktop.png",
+      "htmlPath": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-012-durable-discovery-desktop-dom.html",
+      "consoleMessages": [],
+      "pageErrors": [],
+      "metrics": {
+        "title": "CivicCode - CivicSuite municipal code module",
+        "bodyTextLength": 5263,
+        "hasVersion": true,
+        "hasDurableCopy": true,
+        "hasDbUrl": true,
+        "hasLegalBoundary": true,
+        "horizontalOverflow": false,
+        "focusedText": "Skip to CivicCode content"
+      }
+    },
+    {
+      "target": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-012-durable-discovery-mobile.png",
+      "htmlPath": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-012-durable-discovery-mobile-dom.html",
+      "consoleMessages": [],
+      "pageErrors": [],
+      "metrics": {
+        "title": "CivicCode - CivicSuite municipal code module",
+        "bodyTextLength": 5263,
+        "hasVersion": true,
+        "hasDurableCopy": true,
+        "hasDbUrl": true,
+        "hasLegalBoundary": true,
+        "horizontalOverflow": false,
+        "focusedText": "Skip to CivicCode content"
+      }
+    }
+  ]
+}
