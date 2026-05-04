@@ -9,6 +9,10 @@ import json
 from typing import Any
 from uuid import uuid4
 
+import sqlalchemy as sa
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.dialects.postgresql import JSONB
+
 from civiccode.section_lifecycle import (
     SectionLifecycleError,
     SectionLifecycleStore,
@@ -88,6 +92,7 @@ class ImportConnectorStore:
             source_id=payload.get("source", {}).get("source_id"),
         )
         self._jobs[job.job_id] = job
+        self._persist_job(job)
         try:
             self._validate_payload(payload)
             job.counts = self._apply_payload(payload)
@@ -98,6 +103,7 @@ class ImportConnectorStore:
             job.failure = _failure_detail(exc)
             job.counts = _empty_counts()
             job.completed_at = datetime.now(UTC)
+        self._persist_job(job)
         return job
 
     def retry_import(self, job_id: str, payload: dict[str, Any], *, actor: str) -> ImportJob:
@@ -125,6 +131,9 @@ class ImportConnectorStore:
 
     def reset(self) -> None:
         self._jobs.clear()
+
+    def _persist_job(self, job: ImportJob) -> None:
+        """Hook for durable stores; memory stores keep jobs in process only."""
 
     def _validate_payload(self, payload: dict[str, Any]) -> None:
         connector_type = payload.get("connector_type")
@@ -214,6 +223,66 @@ class ImportConnectorStore:
         return counts
 
 
+metadata = sa.MetaData()
+json_type = JSONB().with_variant(sa.JSON(), "sqlite")
+
+import_job_records = sa.Table(
+    "import_job_records",
+    metadata,
+    sa.Column("job_id", sa.String(255), primary_key=True),
+    sa.Column("connector_type", sa.String(120), nullable=False),
+    sa.Column("actor", sa.String(255), nullable=False),
+    sa.Column("status", sa.String(80), nullable=False),
+    sa.Column("retry_of", sa.String(255), nullable=True),
+    sa.Column("counts", json_type, nullable=False),
+    sa.Column("provenance", json_type, nullable=False),
+    sa.Column("failure", json_type, nullable=True),
+    sa.Column("source_id", sa.String(255), nullable=True),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
+    schema="civiccode",
+)
+
+
+class ImportConnectorRepository(ImportConnectorStore):
+    """Database-backed import job ledger for Docker/PostgreSQL deployments."""
+
+    def __init__(
+        self,
+        *,
+        source_store: SourceRegistryStore,
+        section_store: SectionLifecycleStore,
+        db_url: str | None = None,
+        engine: Engine | None = None,
+    ) -> None:
+        super().__init__(source_store=source_store, section_store=section_store)
+        base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
+        if base_engine.dialect.name == "sqlite":
+            self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})
+        else:
+            self.engine = base_engine
+            with self.engine.begin() as connection:
+                connection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS civiccode"))
+        metadata.create_all(self.engine)
+        self._load()
+
+    def reset(self) -> None:
+        super().reset()
+        with self.engine.begin() as connection:
+            connection.execute(import_job_records.delete())
+
+    def _persist_job(self, job: ImportJob) -> None:
+        with self.engine.begin() as connection:
+            connection.execute(import_job_records.delete().where(import_job_records.c.job_id == job.job_id))
+            connection.execute(import_job_records.insert().values(**job_to_record(job)))
+
+    def _load(self) -> None:
+        with self.engine.begin() as connection:
+            for row in connection.execute(sa.select(import_job_records)).mappings():
+                job = job_from_record(row)
+                self._jobs[job.job_id] = job
+
+
 def job_to_dict(job: ImportJob) -> dict[str, Any]:
     return {
         "job_id": job.job_id,
@@ -234,6 +303,38 @@ def job_to_dict(job: ImportJob) -> dict[str, Any]:
         "completed_at": job.completed_at.isoformat() if job.completed_at else None,
         "code_answer_behavior": "not_available",
     }
+
+
+def job_to_record(job: ImportJob) -> dict[str, Any]:
+    return {
+        "job_id": job.job_id,
+        "connector_type": job.connector_type,
+        "actor": job.actor,
+        "status": job.status,
+        "retry_of": job.retry_of,
+        "counts": job.counts,
+        "provenance": job.provenance,
+        "failure": job.failure,
+        "source_id": job.source_id,
+        "created_at": job.created_at,
+        "completed_at": job.completed_at,
+    }
+
+
+def job_from_record(row: Any) -> ImportJob:
+    return ImportJob(
+        job_id=row["job_id"],
+        connector_type=row["connector_type"],
+        actor=row["actor"],
+        status=row["status"],
+        retry_of=row["retry_of"],
+        counts=dict(row["counts"] or {}),
+        provenance=dict(row["provenance"] or {}),
+        failure=dict(row["failure"]) if row["failure"] else None,
+        source_id=row["source_id"],
+        created_at=row["created_at"],
+        completed_at=row["completed_at"],
+    )
 
 
 def provenance_report(job: ImportJob, source_store: SourceRegistryStore) -> dict[str, Any]:
