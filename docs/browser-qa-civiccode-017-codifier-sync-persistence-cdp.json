@@ -1,0 +1,49 @@
+{
+  "target": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\index.html",
+  "console_event_count": 0,
+  "console_events": [],
+  "desktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "hasHorizontalOverflow": false,
+    "title": "CivicCode - CivicSuite municipal code module",
+    "h1": "CivicCode",
+    "focusedText": "Skip to CivicCode content",
+    "containsVersion": true,
+    "containsSyncState": true,
+    "containsHostValidation": true,
+    "containsDeltaHistory": true,
+    "containsCivicCore": true
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 900
+    },
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "title": "CivicCode - CivicSuite municipal code module",
+    "h1": "CivicCode",
+    "focusedText": "Skip to CivicCode content",
+    "containsVersion": true,
+    "containsSyncState": true,
+    "containsHostValidation": true,
+    "containsDeltaHistory": true,
+    "containsCivicCore": true
+  },
+  "checks": {
+    "desktop_no_horizontal_overflow": true,
+    "mobile_no_horizontal_overflow": true,
+    "skip_link_focus_visible": true,
+    "copy_mentions_v017": true,
+    "copy_mentions_durable_sync_state": true,
+    "copy_mentions_host_validation": true,
+    "copy_mentions_delta_history": true,
+    "copy_mentions_civiccore": true
+  }
+}

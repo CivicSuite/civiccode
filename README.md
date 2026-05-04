@@ -9,7 +9,7 @@ sections.
 
 ## Current status
 
-As of 2026-05-04, CivicCode has a **durable code, discovery, staff guidance, CivicClerk handoff, and local import-job runtime**
+As of 2026-05-04, CivicCode has a **durable code, discovery, staff guidance, CivicClerk handoff, local import-job, and codifier sync-state runtime**
 layered on the mock-city codifier contract suite, staff code lifecycle
 workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
@@ -25,7 +25,7 @@ source registry mutations and staff source reads, staff source registry
 workspace pages, optional database-backed popular-question persistence,
 optional database-backed title/chapter/section/version lifecycle persistence,
 optional database-backed staff interpretation-note, plain-language summary,
-CivicClerk handoff, and import-job persistence,
+CivicClerk handoff, import-job, and codifier sync-state persistence,
 staff code lifecycle workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
@@ -35,7 +35,8 @@ staff-only interpretation-note APIs with audit events and staff Q&A context,
 staff-approved plain-language summaries labeled as non-authoritative, and
 CivicClerk ordinance/adoption handoff intake with durable pending codification
 warnings and handoff audit events, durable staff import job ledgers with
-provenance and actionable failure records,
+provenance and actionable failure records, durable codifier sync source
+configuration, run cursors, circuit state, and delta-plan history,
 and a Docker Compose product path that starts PostgreSQL 17 with pgvector, runs
 migrations, serves the FastAPI app, can seed a City of Brookfield demo with
 `CIVICCODE_DEMO_SEED=1`, and can rehearse a Docker/PostgreSQL backup-restore
@@ -49,9 +50,9 @@ CivicClerk handoffs may affect a section.
 
 This is deliberately not a legal-advice product and not a live-LLM product yet.
 The staff-controlled codifier sync foundation can validate schedules and
-source hosts, plan delta requests, run already-fetched local payloads through
-the import path, and show CivicCore circuit-breaker health plus the shared
-source-list health projection. It does not bundle
+source hosts, persist host-validation results, plan delta requests, run
+already-fetched local payloads through the import path, and show CivicCore
+circuit-breaker health plus the shared source-list health projection. It does not bundle
 vendor credentials, make legal determinations, call live LLMs, replace the
 official codifier, or automatically codify ordinances. There is no CivicAccess
 runtime dependency in this repo yet.
@@ -59,7 +60,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.16:
+The current release is CivicCode v0.1.17:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -146,6 +147,10 @@ The current release is CivicCode v0.1.16:
   codifier sources,
 - validate codifier sync schedules, source hosts, and supported connector types
   before a source can be synced,
+- persist codifier sync source configuration, host-validation result,
+  next-run cursor, last attempted/successful run, last import job,
+  circuit-breaker state, and delta-plan history with
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
 - run already-fetched local codifier payloads through the import path without
   outbound vendor calls,
 - plan delta request URLs for Municode, American Legal Publishing, Code
@@ -173,7 +178,7 @@ The current release is CivicCode v0.1.16:
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.16 durable import-job ledger
+- keep docs and CI gates green for the v0.1.17 durable codifier sync-state
   release.
 
 ## Why CivicCode before CivicZone
@@ -236,7 +241,7 @@ docker compose up --build
 Expected Docker truth today: Compose starts PostgreSQL 17 with pgvector and the
 CivicCode API, runs CivicCore then CivicCode migrations before serving traffic,
 persists source registry, section lifecycle, popular-question, staff-note,
-plain-language summary, CivicClerk handoff, handoff audit, and import job records through
+plain-language summary, CivicClerk handoff, handoff audit, import job, and codifier sync records through
 `CIVICCODE_SOURCE_REGISTRY_DB_URL`, and
 seeds the City of Brookfield demo when `CIVICCODE_DEMO_SEED=1`. Open
 `http://127.0.0.1:8000/civiccode`, search for `6.12.040`, or open
@@ -305,7 +310,7 @@ Expected migration truth today: CivicCore migrations run first, CivicCode uses
 `alembic_version_civiccode`, ten canonical `civiccode.*` tables are created,
 and runtime persistence tables are available for the optional DB-backed source
 registry, resident discovery, section lifecycle, staff note, plain-language
-summary, CivicClerk handoff, and local import-job paths.
+summary, CivicClerk handoff, local import-job, and codifier sync-state paths.
 
 Source registry smoke:
 
@@ -476,8 +481,9 @@ curl -H "X-CivicCode-Role: staff" \
 ```
 
 Expected codifier sync truth today: staff can configure active official
-codifier sources for sync readiness, validate schedules and source hosts, see
-next-run and circuit-breaker health, plan delta requests, and run already
+codifier sources for sync readiness, validate schedules and source hosts,
+persist host-validation results, see next-run and circuit-breaker health, plan
+delta requests with durable history, and run already
 fetched local payloads through the import path. CivicCode does not ship vendor
 credentials, does not make outbound calls from the foundation smoke, and does
 not automatically codify ordinances.

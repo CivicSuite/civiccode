@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.17] - 2026-05-04
+
+### Added
+
+- Durable codifier sync source storage when `CIVICCODE_SOURCE_REGISTRY_DB_URL`
+  is configured, preserving source configuration, schedule, host-validation
+  result, last attempted/successful run, next-run cursor, last import job,
+  circuit-breaker state, and delta-plan history across process restarts.
+- Alembic revision `civiccode_0008_codifier_sync` for Docker/PostgreSQL
+  codifier sync source and delta-plan records.
+- Operations runbook for the rare GitHub PR merge/close `502` path, including
+  commit-SHA, tag, and release verification steps before manual closure.
+
+### Changed
+
+- Staff codifier sync list and run endpoints now read source state from the
+  configured database on the Docker/PostgreSQL product path while preserving the
+  in-memory store for lightweight local mode.
+
 ## [0.1.16] - 2026-05-04
 
 ### Added

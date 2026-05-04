@@ -9,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 
 from civiccode.codifier_sync import (
     CodifierSyncError,
+    CodifierSyncRepository,
     CodifierSyncStore,
     plan_codifier_delta_request,
     sync_source_to_dict,
@@ -55,6 +56,8 @@ def test_codifier_sync_configuration_validates_schedule_host_and_source() -> Non
     assert public["source_status"]["message"] == public["operator_status"]["message"]
     assert public["operator_status"]["health_status"] == "healthy"
     assert "No action needed" in public["operator_status"]["fix"]
+    assert public["host_validation"]["status"] == "passed"
+    assert public["delta_plan_history"] == []
 
     with pytest.raises(CodifierSyncError) as schedule_error:
         sync_store.configure_source(
@@ -196,6 +199,7 @@ async def test_codifier_sync_api_requires_staff_and_runs_local_payload() -> None
         )
         assert run.status_code == 201
         assert run.json()["import_job"]["status"] == "completed"
+        assert run.json()["source"]["delta_plan_history"][0]["import_job_id"] == payload["job_id"]
         assert run.json()["delta_plan"]["cursor_param"] == "lastModified"
 
         listed = await client.get(
@@ -214,6 +218,14 @@ async def test_codifier_sync_api_uses_configured_source_registry_database(
     db_url = f"sqlite:///{tmp_path / 'codifier-sync-sources.db'}"
     monkeypatch.setenv("CIVICCODE_SOURCE_REGISTRY_DB_URL", db_url)
     module = importlib.import_module("civiccode.main")
+    module.SOURCE_STORE.reset()
+    module.SECTION_STORE.reset()
+    module.IMPORT_STORE.reset()
+    module.CODIFIER_SYNC_STORE.reset()
+    module._source_registry_repository = None
+    module._section_lifecycle_repository = None
+    module._import_store = None
+    module._codifier_sync_store = None
     payload = mock_city_import_payload(mock_city_codifier_contracts()[0])
 
     async with AsyncClient(
@@ -245,6 +257,22 @@ async def test_codifier_sync_api_uses_configured_source_registry_database(
         )
         assert run.status_code == 201
         assert run.json()["import_job"]["status"] == "completed"
+
+    module._codifier_sync_store = None
+    persisted = CodifierSyncRepository(
+        source_store=module._get_source_store(),
+        import_store=module._get_import_store(),
+        db_url=db_url,
+    )
+    sources = persisted.list_sources()
+    assert [source.source_id for source in sources] == [payload["source"]["source_id"]]
+    assert sources[0].last_import_job_id == payload["job_id"]
+    assert sources[0].last_attempted_sync_at is not None
+    assert sources[0].last_successful_sync_at is not None
+    assert sources[0].next_sync_at_recorded is not None
+    assert sources[0].host_validation["status"] == "passed"
+    assert sources[0].state.last_sync_status == "success"
+    assert sources[0].delta_plan_history[0]["import_job_id"] == payload["job_id"]
 
 
 def test_docs_describe_codifier_sync_foundation_without_overclaiming() -> None:

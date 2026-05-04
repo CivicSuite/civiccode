@@ -7,6 +7,10 @@ from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+import sqlalchemy as sa
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.dialects.postgresql import JSONB
+
 from civiccore import (
     SyncCircuitState,
     SyncRunResult,
@@ -80,6 +84,9 @@ class CodifierSyncSource:
     last_successful_sync_at: datetime | None = None
     last_attempted_sync_at: datetime | None = None
     last_import_job_id: str | None = None
+    next_sync_at_recorded: datetime | None = None
+    host_validation: dict[str, Any] = field(default_factory=dict)
+    delta_plan_history: list[dict[str, Any]] = field(default_factory=list)
     state: SyncCircuitState = field(default_factory=lambda: SyncCircuitState(connector="codifier"))
 
     @property
@@ -141,6 +148,7 @@ class CodifierSyncStore:
                     "source-specific allowlist before enabling sync."
                 ),
             ) from exc
+        validated_at = datetime.now(UTC)
         configured = CodifierSyncSource(
             source_id=source.source_id,
             connector=source.source_type,
@@ -148,9 +156,18 @@ class CodifierSyncStore:
             source_url=source.source_url,
             sync_schedule=sync_schedule,
             allowlisted_hosts=tuple(allowlisted_hosts),
+            host_validation={
+                "status": "passed",
+                "source_url": source.source_url,
+                "allowlisted_hosts": list(allowlisted_hosts),
+                "validated_at": validated_at.isoformat(),
+                "message": "Source URL host passed CivicCore SSRF-safe validation.",
+            },
             state=SyncCircuitState(connector=source.source_type, source_name=source.name),
         )
+        configured.next_sync_at_recorded = configured.next_sync_at
         self._sources[source_id] = configured
+        self._persist_source(configured)
         return configured
 
     def get_source(self, source_id: str) -> CodifierSyncSource:
@@ -206,6 +223,9 @@ class CodifierSyncStore:
         configured.last_attempted_sync_at = attempted_at
         configured.last_import_job_id = job.job_id
         configured.state = apply_sync_run_result(configured.state, result, now=attempted_at)
+        configured.next_sync_at_recorded = configured.next_sync_at
+        self._append_delta_plan(configured, delta_plan, planned_at=attempted_at, import_job_id=job.job_id)
+        self._persist_source(configured)
         return CodifierSyncRun(
             source=configured,
             job_payload=job_to_dict(job),
@@ -214,6 +234,130 @@ class CodifierSyncStore:
 
     def reset(self) -> None:
         self._sources.clear()
+
+    def _persist_source(self, source: CodifierSyncSource) -> None:
+        """Hook for durable stores; memory mode keeps sync state in process only."""
+
+    def _append_delta_plan(
+        self,
+        source: CodifierSyncSource,
+        delta_plan: CodifierDeltaPlan,
+        *,
+        planned_at: datetime,
+        import_job_id: str | None,
+    ) -> None:
+        source.delta_plan_history.append(delta_plan_to_record(source, delta_plan, planned_at, import_job_id))
+
+
+metadata = sa.MetaData()
+json_type = JSONB().with_variant(sa.JSON(), "sqlite")
+
+codifier_sync_source_records = sa.Table(
+    "codifier_sync_source_records",
+    metadata,
+    sa.Column("source_id", sa.String(255), primary_key=True),
+    sa.Column("connector", sa.String(120), nullable=False),
+    sa.Column("source_name", sa.String(255), nullable=False),
+    sa.Column("source_url", sa.Text(), nullable=False),
+    sa.Column("sync_schedule", sa.String(120), nullable=False),
+    sa.Column("allowlisted_hosts", json_type, nullable=False),
+    sa.Column("host_validation", json_type, nullable=False),
+    sa.Column("last_successful_sync_at", sa.DateTime(timezone=True), nullable=True),
+    sa.Column("last_attempted_sync_at", sa.DateTime(timezone=True), nullable=True),
+    sa.Column("last_import_job_id", sa.String(255), nullable=True),
+    sa.Column("next_sync_at", sa.DateTime(timezone=True), nullable=True),
+    sa.Column("consecutive_failure_count", sa.Integer(), nullable=False),
+    sa.Column("active_failure_count", sa.Integer(), nullable=False),
+    sa.Column("sync_paused", sa.Boolean(), nullable=False),
+    sa.Column("sync_paused_at", sa.DateTime(timezone=True), nullable=True),
+    sa.Column("sync_paused_reason", sa.Text(), nullable=True),
+    sa.Column("last_sync_status", sa.String(80), nullable=True),
+    sa.Column("last_error_at", sa.DateTime(timezone=True), nullable=True),
+    sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+codifier_sync_delta_plan_records = sa.Table(
+    "codifier_sync_delta_plan_records",
+    metadata,
+    sa.Column("plan_id", sa.String(255), primary_key=True),
+    sa.Column("source_id", sa.String(255), nullable=False),
+    sa.Column("connector", sa.String(120), nullable=False),
+    sa.Column("request_url", sa.Text(), nullable=False),
+    sa.Column("delta_enabled", sa.Boolean(), nullable=False),
+    sa.Column("cursor_param", sa.String(120), nullable=True),
+    sa.Column("cursor_value", sa.String(120), nullable=True),
+    sa.Column("message", sa.Text(), nullable=False),
+    sa.Column("fix", sa.Text(), nullable=False),
+    sa.Column("planned_at", sa.DateTime(timezone=True), nullable=False),
+    sa.Column("import_job_id", sa.String(255), nullable=True),
+    schema="civiccode",
+)
+
+
+class CodifierSyncRepository(CodifierSyncStore):
+    """Database-backed codifier sync source state for Docker/PostgreSQL paths."""
+
+    def __init__(
+        self,
+        *,
+        source_store: SourceRegistryStore,
+        import_store: ImportConnectorStore,
+        db_url: str | None = None,
+        engine: Engine | None = None,
+    ) -> None:
+        super().__init__(source_store=source_store, import_store=import_store)
+        base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
+        if base_engine.dialect.name == "sqlite":
+            self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})
+        else:
+            self.engine = base_engine
+            with self.engine.begin() as connection:
+                connection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS civiccode"))
+        metadata.create_all(self.engine)
+        self._load()
+
+    def reset(self) -> None:
+        super().reset()
+        with self.engine.begin() as connection:
+            connection.execute(codifier_sync_delta_plan_records.delete())
+            connection.execute(codifier_sync_source_records.delete())
+
+    def _persist_source(self, source: CodifierSyncSource) -> None:
+        with self.engine.begin() as connection:
+            connection.execute(
+                codifier_sync_source_records.delete().where(
+                    codifier_sync_source_records.c.source_id == source.source_id
+                )
+            )
+            connection.execute(codifier_sync_source_records.insert().values(**sync_source_to_record(source)))
+
+    def _append_delta_plan(
+        self,
+        source: CodifierSyncSource,
+        delta_plan: CodifierDeltaPlan,
+        *,
+        planned_at: datetime,
+        import_job_id: str | None,
+    ) -> None:
+        record = delta_plan_to_record(source, delta_plan, planned_at, import_job_id)
+        source.delta_plan_history.append(record)
+        with self.engine.begin() as connection:
+            connection.execute(codifier_sync_delta_plan_records.insert().values(**record))
+
+    def _load(self) -> None:
+        with self.engine.begin() as connection:
+            for row in connection.execute(sa.select(codifier_sync_source_records)).mappings():
+                source = sync_source_from_record(row)
+                self._sources[source.source_id] = source
+            for row in connection.execute(
+                sa.select(codifier_sync_delta_plan_records).order_by(
+                    codifier_sync_delta_plan_records.c.planned_at
+                )
+            ).mappings():
+                source = self._sources.get(row["source_id"])
+                if source:
+                    source.delta_plan_history.append(dict(row))
 
 
 def plan_codifier_delta_request(
@@ -271,8 +415,98 @@ def sync_source_to_dict(source: CodifierSyncSource) -> dict[str, Any]:
         if source.last_attempted_sync_at
         else None,
         "last_import_job_id": source.last_import_job_id,
+        "host_validation": source.host_validation,
+        "delta_plan_history": [_delta_plan_public_dict(plan) for plan in source.delta_plan_history],
         "source_status": source_status,
         "operator_status": build_sync_operator_status(source.state).public_dict(),
+    }
+
+
+def sync_source_to_record(source: CodifierSyncSource) -> dict[str, Any]:
+    return {
+        "source_id": source.source_id,
+        "connector": source.connector,
+        "source_name": source.source_name,
+        "source_url": source.source_url,
+        "sync_schedule": source.sync_schedule,
+        "allowlisted_hosts": list(source.allowlisted_hosts),
+        "host_validation": source.host_validation,
+        "last_successful_sync_at": source.last_successful_sync_at,
+        "last_attempted_sync_at": source.last_attempted_sync_at,
+        "last_import_job_id": source.last_import_job_id,
+        "next_sync_at": source.next_sync_at_recorded,
+        "consecutive_failure_count": source.state.consecutive_failure_count,
+        "active_failure_count": source.state.active_failure_count,
+        "sync_paused": source.state.sync_paused,
+        "sync_paused_at": source.state.sync_paused_at,
+        "sync_paused_reason": source.state.sync_paused_reason,
+        "last_sync_status": source.state.last_sync_status,
+        "last_error_at": source.state.last_error_at,
+        "updated_at": datetime.now(UTC),
+    }
+
+
+def sync_source_from_record(row: Any) -> CodifierSyncSource:
+    state = SyncCircuitState(
+        connector=row["connector"],
+        source_name=row["source_name"],
+        consecutive_failure_count=row["consecutive_failure_count"],
+        active_failure_count=row["active_failure_count"],
+        sync_paused=row["sync_paused"],
+        sync_paused_at=row["sync_paused_at"],
+        sync_paused_reason=row["sync_paused_reason"],
+        last_sync_status=row["last_sync_status"],
+        last_error_at=row["last_error_at"],
+    )
+    return CodifierSyncSource(
+        source_id=row["source_id"],
+        connector=row["connector"],
+        source_name=row["source_name"],
+        source_url=row["source_url"],
+        sync_schedule=row["sync_schedule"],
+        allowlisted_hosts=tuple(row["allowlisted_hosts"] or ()),
+        last_successful_sync_at=row["last_successful_sync_at"],
+        last_attempted_sync_at=row["last_attempted_sync_at"],
+        last_import_job_id=row["last_import_job_id"],
+        next_sync_at_recorded=row["next_sync_at"],
+        host_validation=dict(row["host_validation"] or {}),
+        state=state,
+    )
+
+
+def delta_plan_to_record(
+    source: CodifierSyncSource,
+    delta_plan: CodifierDeltaPlan,
+    planned_at: datetime,
+    import_job_id: str | None,
+) -> dict[str, Any]:
+    return {
+        "plan_id": f"delta_{source.source_id}_{planned_at.strftime('%Y%m%d%H%M%S%f')}",
+        "source_id": source.source_id,
+        "connector": delta_plan.connector,
+        "request_url": delta_plan.request_url,
+        "delta_enabled": delta_plan.delta_enabled,
+        "cursor_param": delta_plan.cursor_param,
+        "cursor_value": delta_plan.cursor_value,
+        "message": delta_plan.message,
+        "fix": delta_plan.fix,
+        "planned_at": planned_at,
+        "import_job_id": import_job_id,
+    }
+
+
+def _delta_plan_public_dict(plan: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "plan_id": plan["plan_id"],
+        "connector": plan["connector"],
+        "request_url": plan["request_url"],
+        "delta_enabled": plan["delta_enabled"],
+        "cursor_param": plan["cursor_param"],
+        "cursor_value": plan["cursor_value"],
+        "message": plan["message"],
+        "fix": plan["fix"],
+        "planned_at": plan["planned_at"].isoformat() if isinstance(plan["planned_at"], datetime) else plan["planned_at"],
+        "import_job_id": plan["import_job_id"],
     }
 
 
@@ -322,6 +556,7 @@ __all__ = [
     "CODIFIER_DELTA_QUERY_PARAMS",
     "CodifierDeltaPlan",
     "CodifierSyncError",
+    "CodifierSyncRepository",
     "CodifierSyncRun",
     "CodifierSyncSource",
     "CodifierSyncStore",

@@ -3,7 +3,7 @@
 CivicCode currently ships a Docker-demo codifier runtime built on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility hardening foundation, local import
-foundation, public code lookup surface,
+and codifier sync-state persistence foundation, public code lookup surface,
 CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
@@ -12,9 +12,10 @@ registry foundation, runtime foundation, and canonical schema foundation. This m
 explains what a first-time installer can do today and what is still planned.
 
 The source registry remains the official source metadata foundation for every
-summary, citation, lookup, and Q&A response. It can now persist source records
-when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
-in-memory store for lightweight local demos. `/staff/code` gives staff a single
+summary, citation, lookup, and Q&A response. It can now persist source records,
+code lifecycle records, staff guidance, handoffs, import jobs, and codifier
+sync source state when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured;
+otherwise it uses in-memory stores for lightweight local demos. `/staff/code` gives staff a single
 lifecycle review page for current adopted versions, source readiness, draft
 summaries, staff note counts, and pending CivicClerk codification warnings.
 Docker Compose can start PostgreSQL 17 with pgvector, run migrations, serve the
@@ -80,6 +81,9 @@ Current truth:
 - staff can configure active official codifier sources for sync readiness,
 - codifier sync schedules and source hosts are validated before a sync source
   can run,
+- codifier sync source state persists configuration, host-validation result,
+  next-run cursor, last attempted/successful run, circuit-breaker state, and
+  delta-plan history on the configured Docker/PostgreSQL path,
 - already-fetched local codifier payloads can run through the import path with
   delta request planning,
 - repeated sync failures surface CivicCore circuit-breaker health and an
@@ -430,9 +434,10 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.13 is the current durable section lifecycle and discovery
-release. It persists source registry records, title/chapter/section/version
-records, and staff-approved popular questions through
+CivicCode v0.1.17 is the current durable codifier sync-state release. It
+persists source registry records, title/chapter/section/version records,
+staff-approved popular questions, staff notes, plain-language summaries,
+CivicClerk handoffs, import jobs, and codifier sync source state through
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` on the Docker/PostgreSQL product path,
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular

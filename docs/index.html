@@ -119,7 +119,7 @@
   <div class="eyebrow">CivicSuite module planning lane</div>
   <h1>CivicCode</h1>
   <p class="lead">Municipal code and ordinance access, designed to answer code questions with exact citations while keeping legal interpretation with city staff.</p>
-  <p class="status">Durable code, discovery, staff-note, plain-language summary, CivicClerk handoff, and local import-job runtime online on the Docker/PostgreSQL path, alongside related-section navigation aids, mock-city codifier contracts, staff code lifecycle workspace, staff workbench foundation, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff warnings, citation-grounded Q&amp;A, citation contract, search and permalink, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, bundled vendor credentials, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
+  <p class="status">Durable code, discovery, staff-note, plain-language summary, CivicClerk handoff, local import-job, and codifier sync-state runtime online on the Docker/PostgreSQL path, alongside related-section navigation aids, mock-city codifier contracts, staff code lifecycle workspace, staff workbench foundation, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff warnings, citation-grounded Q&amp;A, citation contract, search and permalink, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, bundled vendor credentials, CivicAccess runtime dependency, and automatic ordinance codification not available</p>
 
   <div class="grid">
     <section>
@@ -174,6 +174,7 @@
         <li>Import retry, visible failure records, imported-tree verification, and provenance report endpoints.</li>
         <li>No outbound network dependency, Redis/Celery worker, or vendor credentials required for local import.</li>
         <li>Staff-controlled codifier sync readiness endpoints with schedule validation, SSRF-safe host checks, and supported connector validation.</li>
+        <li>Durable codifier sync source configuration, host-validation result, next-run cursor, last-run state, circuit-breaker state, and delta-plan history through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code>.</li>
         <li>Delta request planning for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
         <li>Local codifier payload runs through the import path with CivicCore circuit-breaker health, shared source-list health projection, and actionable operator copy.</li>
         <li>Reusable mock-city codifier contracts for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
@@ -190,7 +191,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>CivicCode v0.1.16 is the current durable import-job ledger release with CivicCore v0.22.0 source-list health projection reuse.</p>
+      <p>CivicCode v0.1.17 is the current durable codifier sync-state release with CivicCore v0.22.0 source-list health projection reuse.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>
