@@ -3,7 +3,9 @@ from __future__ import annotations
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from civiccode.import_connectors import ImportConnectorRepository
 from civiccode.main import app
+from civiccode.mock_city_environment import mock_city_codifier_contracts, mock_city_import_payload
 from civiccode.ordinance_handoff import OrdinanceHandoffRepository
 from civiccode.plain_language import PlainLanguageSummaryRepository
 from civiccode.public_discovery import PopularQuestionRepository
@@ -496,3 +498,43 @@ async def test_api_civicclerk_handoffs_use_configured_database(monkeypatch, tmp_
     assert [event.event_id for event in events] == ["ord_2026_041"]
     assert persisted.warnings_for_section("6.12.040")[0]["external_event_id"] == "cc_event_2026_041"
     assert persisted.audit_events()[0].event_type == "civicclerk_handoff_received"
+
+
+@pytest.mark.asyncio
+async def test_api_import_jobs_use_configured_database(monkeypatch, tmp_path) -> None:
+    import civiccode.main as app_module
+
+    db_url = f"sqlite:///{tmp_path / 'api-import-jobs.db'}"
+    monkeypatch.setenv("CIVICCODE_SOURCE_REGISTRY_DB_URL", db_url)
+    app_module.SOURCE_STORE.reset()
+    app_module.SECTION_STORE.reset()
+    app_module.IMPORT_STORE.reset()
+    app_module._source_registry_repository = None
+    app_module._section_lifecycle_repository = None
+    app_module._import_store = None
+    payload = mock_city_import_payload(mock_city_codifier_contracts()[0])
+    payload["job_id"] = "import_persistent_code_vendor"
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
+        created = await client.post(
+            "/api/v1/civiccode/staff/imports/local-bundle",
+            headers=STAFF_HEADERS,
+            json=payload,
+        )
+
+    app_module._import_store = None
+    source_store = SourceRegistryRepository(db_url=db_url)
+    section_store = app_module.SECTION_STORE
+    persisted = ImportConnectorRepository(
+        source_store=source_store,
+        section_store=section_store,
+        db_url=db_url,
+    )
+
+    assert created.status_code == 201
+    assert created.json()["status"] == "completed"
+    jobs = persisted.list_jobs()
+    assert [job.job_id for job in jobs] == ["import_persistent_code_vendor"]
+    assert jobs[0].counts["sources_created"] == 1
+    assert jobs[0].provenance["fixture_checksum"]
+    assert jobs[0].completed_at is not None

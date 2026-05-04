@@ -4,7 +4,7 @@ CivicCode currently ships a popular-questions and related-sections discovery
 runtime built on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility hardening foundation, local import
-foundation, public code lookup surface,
+job persistence foundation, public code lookup surface,
 CivicClerk handoff persistence foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
@@ -15,8 +15,8 @@ explains what a first-time installer can do today and what is still planned.
 The source registry remains the official source metadata foundation for every
 summary, citation, lookup, popular question, related-material navigation aid,
 and Q&A response. It can now persist source records, popular questions, code
-section lifecycle records, staff notes, plain-language summaries, and
-CivicClerk handoff records when
+section lifecycle records, staff notes, plain-language summaries,
+CivicClerk handoff records, and local import job ledgers when
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
 in-memory stores for lightweight local demos. Staff source mutations and
 staff-only source reads require the trusted staff header seam, and
@@ -99,6 +99,9 @@ Current truth:
 - staff can run local CSV/file-drop bundle and official HTML extract imports,
 - failed imports remain visible with an actionable fix and can be retried with
   corrected local bundles,
+- local import job ledgers persist status, counts, provenance, actionable
+  failure details, and completion timestamps on the configured
+  Docker/PostgreSQL path,
 - provenance reports show source metadata, fixture checksum, and
   no-outbound-dependency status,
 - staff can configure active official codifier sources for sync readiness,
@@ -205,11 +208,11 @@ The migration chain runs CivicCore first and stores CivicCode's revision in
 `code_title_records` / `code_chapter_records` / `code_section_records` /
 `section_version_records`, plus `staff_interpretation_note_records`,
 `staff_workbench_audit_event_records`, `plain_language_summary_records`, and
-`plain_language_summary_audit_event_records`, `ordinance_handoff_records`, and
-`ordinance_handoff_audit_event_records` as runtime tables for source metadata,
-resident discovery aids, adopted-code lifecycle data, staff guidance,
-non-authoritative public summaries, and CivicClerk pending-codification
-warnings.
+`plain_language_summary_audit_event_records`, `ordinance_handoff_records`,
+`ordinance_handoff_audit_event_records`, and `import_job_records` as runtime
+tables for source metadata, resident discovery aids, adopted-code lifecycle
+data, staff guidance, non-authoritative public summaries, CivicClerk
+pending-codification warnings, and staff import history.
 
 Inspect source-registry vocabulary:
 
@@ -503,9 +506,9 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.10 is the current Docker backup-restore rehearsal release. It
+CivicCode v0.1.16 is the current durable import-job ledger release. It
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists while retaining CivicCode-specific legal-boundary copy, and it now
-provides both a Compose/PostgreSQL seeded City of Brookfield demo path and a
-repeatable restore proof for product evaluation. Future work moves to the next
+keeps local import job status, counts, provenance, failure details, and
+completion timestamps in the configured database. Future work moves to the next
 module or release plan in the CivicSuite unified roadmap.

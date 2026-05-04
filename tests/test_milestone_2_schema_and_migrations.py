@@ -223,6 +223,16 @@ def ordinance_handoff_records_migration_path() -> Path:
     )
 
 
+def import_job_records_migration_path() -> Path:
+    return (
+        ROOT
+        / "civiccode"
+        / "migrations"
+        / "versions"
+        / "civiccode_0007_import_job_records.py"
+    )
+
+
 def test_canonical_table_models_exist_and_no_tables_are_missing_or_extra() -> None:
     models = model_module()
     metadata = models.Base.metadata
@@ -290,6 +300,7 @@ def test_alembic_scaffold_exists_for_civiccode_schema_chain() -> None:
         section_lifecycle_records_migration_path(),
         staff_summary_records_migration_path(),
         ordinance_handoff_records_migration_path(),
+        import_job_records_migration_path(),
     ]
 
     for path in expected:
@@ -391,7 +402,7 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             )
 
         assert civiccore_revision == "civiccore_0002_llm"
-        assert civiccode_revision == "civiccode_0006_handoffs"
+        assert civiccode_revision == "civiccode_0007_import_jobs"
         assert civiccode_tables == set(CANONICAL_TABLES) | {
             "source_registry_records",
             "popular_question_records",
@@ -405,6 +416,7 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             "plain_language_summary_audit_event_records",
             "ordinance_handoff_records",
             "ordinance_handoff_audit_event_records",
+            "import_job_records",
         }
     finally:
         subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True, text=True)
@@ -507,6 +519,19 @@ def test_ordinance_handoff_records_migration_declares_persistent_records_tables(
         assert f'"{table_name}"' in text
     assert '"civicclerk_meeting_id"' in text
     assert '"affected_sections"' in text
+    assert 'schema="civiccode"' in text
+
+
+def test_import_job_records_migration_declares_persistent_records_table() -> None:
+    text = import_job_records_migration_path().read_text(encoding="utf-8")
+
+    assert 'revision = "civiccode_0007_import_jobs"' in text
+    assert 'down_revision = "civiccode_0006_handoffs"' in text
+    assert "idempotent_create_table" in text
+    assert '"import_job_records"' in text
+    assert '"job_id"' in text
+    assert '"provenance"' in text
+    assert '"failure"' in text
     assert 'schema="civiccode"' in text
 
 

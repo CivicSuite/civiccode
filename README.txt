@@ -6,7 +6,7 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-05-04, CivicCode has a durable code, discovery, staff guidance, and CivicClerk handoff runtime layered on the
+As of 2026-05-04, CivicCode has a durable code, discovery, staff guidance, CivicClerk handoff, and local import-job runtime layered on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility
 hardening foundation, local import foundation, public code lookup
@@ -28,8 +28,9 @@ available behind the trusted staff header seam.
 Staff-approved plain-language summaries are available after review, are labeled
 non-authoritative, and keep authoritative code text visible.
 Local CSV/file-drop bundle and official HTML extract imports are available
-through staff-only endpoints, with job status, retry, and provenance report
-behavior. CivicClerk ordinance/adoption handoff events are accepted and
+through staff-only endpoints, with durable job status, retry, actionable
+failure details, counts, completion timestamps, and provenance report behavior
+when CIVICCODE_SOURCE_REGISTRY_DB_URL is configured. CivicClerk ordinance/adoption handoff events are accepted and
 persisted as pending codification warnings without replacing adopted code text.
 Residents can open
 /civiccode, search by section number or plain-language phrase, read adopted
@@ -160,10 +161,10 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.15 is the current durable CivicClerk handoff release. It
+CivicCode v0.1.16 is the current durable import-job ledger release. It
 persists source registry records, title/chapter/section/version records,
 staff-approved popular questions, staff notes, plain-language summaries,
-CivicClerk handoff records, and handoff audit events through
+CivicClerk handoff records, handoff audit events, and local import job records through
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` on the Docker/PostgreSQL product path,
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular

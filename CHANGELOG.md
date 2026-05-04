@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.16] - 2026-05-04
+
+### Added
+
+- Durable local import job storage when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is
+  configured, preserving job status, counts, provenance, failure details,
+  source IDs, and completion timestamps across process restarts.
+- Alembic revision `civiccode_0007_import_jobs` for Docker/PostgreSQL import
+  job records.
+
+### Changed
+
+- Staff import list, detail, provenance, retry, and codifier-sync paths now read
+  import jobs from the configured database on the Docker/PostgreSQL product
+  path while preserving the in-memory store for lightweight local mode.
+
 ## [0.1.15] - 2026-05-04
 
 ### Added
