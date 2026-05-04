@@ -511,7 +511,10 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.18 is the current durable operational-state release. It
+CivicCode v0.1.18 is the current durable operational-state product line. Its
+first publication is held in a release-provenance correction window because the
+annotated tag object is unsigned; check `docs/ops/release-signing.md` before
+publishing, mirroring, or relying on release artifacts. The product line
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists while retaining CivicCode-specific legal-boundary copy, and it now
 keeps local import job status, codifier sync configuration, host-validation

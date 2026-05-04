@@ -1,0 +1,16 @@
+{
+  "name": "lightweight tag is rejected",
+  "tag_name": "vfixture-lightweight",
+  "expected": "fail",
+  "expected_error": "is a lightweight tag",
+  "responses": {
+    "ref": {
+      "object": {
+        "type": "commit",
+        "sha": "commit-lightweight"
+      }
+    },
+    "tag": {},
+    "commit": {}
+  }
+}

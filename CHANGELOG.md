@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Adversarial release-provenance fixture suite covering lightweight tags,
+  unsigned annotated tag objects, unsigned target commits, non-org identities,
+  mismatched committer fields, tree mismatch, and localhost tagger identities.
+- Pre-publication release provenance workflow that runs the release gate before
+  GitHub Release assets are published.
+
+### Changed
+
+- Release provenance gate now rejects unsigned annotated tag objects and
+  requires the fixture suite to pass before live tag verification.
+- Release-signing runbook now documents the v0.1.17/v0.1.18 two-release
+  correction window and treats the failures as a class, not one-offs.
+
 ## [0.1.18] - 2026-05-04
 
 ### Added

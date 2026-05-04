@@ -1,0 +1,33 @@
+{
+  "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+  "desktop": {
+    "title": "CivicCode - CivicSuite municipal code module",
+    "innerWidth": 1440,
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "horizontalOverflow": false,
+    "activeElement": "Skip to CivicCode content",
+    "hasVersion": true,
+    "hasCorrectionWindow": true,
+    "hasUnsignedTagCopy": true,
+    "hasReleaseSigningPath": true,
+    "consoleMessages": [],
+    "consoleErrorCount": 0,
+    "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-018-release-provenance-desktop.png"
+  },
+  "mobile": {
+    "title": "CivicCode - CivicSuite municipal code module",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "horizontalOverflow": false,
+    "activeElement": "Skip to CivicCode content",
+    "hasVersion": true,
+    "hasCorrectionWindow": true,
+    "hasUnsignedTagCopy": true,
+    "hasReleaseSigningPath": true,
+    "consoleMessages": [],
+    "consoleErrorCount": 0,
+    "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-018-release-provenance-mobile.png"
+  }
+}
