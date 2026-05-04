@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.15] - 2026-05-04
+
+### Added
+
+- Durable CivicClerk ordinance handoff and handoff audit-event storage when
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured.
+- Alembic revision `civiccode_0006_handoffs` for Docker/PostgreSQL handoff
+  records and handoff audit-event records.
+
+### Changed
+
+- CivicClerk ordinance/adoption handoff intake now survives process restarts on
+  the Docker/PostgreSQL product path while preserving the in-memory store for
+  lightweight local mode.
+- Affected-section warning lists now read handoff records in created-time order
+  instead of depending on memory insertion order.
+
 ## [0.1.14] - 2026-05-04
 
 ### Added

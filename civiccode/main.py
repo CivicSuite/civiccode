@@ -28,6 +28,7 @@ from civiccode.import_connectors import (
 from civiccode.mock_city_environment import mock_city_codifier_contracts, mock_city_import_payload
 from civiccode.ordinance_handoff import (
     OrdinanceHandoffError,
+    OrdinanceHandoffRepository,
     OrdinanceHandoffStore,
     event_to_dict,
     handoff_audit_event_to_dict,
@@ -118,6 +119,8 @@ _staff_workbench_repository: StaffWorkbenchRepository | None = None
 _staff_workbench_db_url: str | None = None
 _plain_language_repository: PlainLanguageSummaryRepository | None = None
 _plain_language_db_url: str | None = None
+_ordinance_handoff_repository: OrdinanceHandoffRepository | None = None
+_ordinance_handoff_db_url: str | None = None
 
 
 class SectionLifecycleRouter:
@@ -196,7 +199,33 @@ class PlainLanguageSummaryRouter:
 
 STAFF_NOTE_STORE = StaffWorkbenchRouter(STAFF_NOTE_MEMORY_STORE)
 SUMMARY_STORE = PlainLanguageSummaryRouter(SUMMARY_MEMORY_STORE)
-HANDOFF_STORE = OrdinanceHandoffStore()
+HANDOFF_MEMORY_STORE = OrdinanceHandoffStore()
+
+
+class OrdinanceHandoffRouter:
+    """Route CivicClerk handoff calls to memory or the configured durable repository."""
+
+    def __init__(self, memory_store: OrdinanceHandoffStore) -> None:
+        self._memory_store = memory_store
+
+    def _target(self) -> OrdinanceHandoffRepository | OrdinanceHandoffStore:
+        global _ordinance_handoff_db_url, _ordinance_handoff_repository
+        db_url = os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL")
+        if db_url is None:
+            return self._memory_store
+        if _ordinance_handoff_repository is None or db_url != _ordinance_handoff_db_url:
+            _ordinance_handoff_db_url = db_url
+            _ordinance_handoff_repository = OrdinanceHandoffRepository(db_url=db_url)
+        return _ordinance_handoff_repository
+
+    def reset(self) -> None:
+        self._target().reset()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._target(), name)
+
+
+HANDOFF_STORE = OrdinanceHandoffRouter(HANDOFF_MEMORY_STORE)
 POPULAR_QUESTION_STORE = PopularQuestionStore()
 _popular_question_repository: PopularQuestionRepository | None = None
 _popular_question_db_url: str | None = None
@@ -567,8 +596,9 @@ async def root() -> dict[str, str]:
             "plain-language summaries are online and labeled non-authoritative. "
             "Staff-approved popular questions and related-material navigation "
             "aids are online with citations and no legal determinations. "
-            "CivicClerk ordinance handoff intake and affected-section warnings are "
-            "online. Resident-facing public lookup pages are online at /civiccode. "
+            "CivicClerk ordinance handoff intake, durable handoff records, audit "
+            "events, and affected-section warnings are online. Resident-facing "
+            "public lookup pages are online at /civiccode. "
             "Local file-drop and fixture import jobs are online with provenance, "
             "retry, and no required outbound dependency. Records-ready section "
             "exports are online with citation, version, and source metadata. "
@@ -586,10 +616,10 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.14 persists section/version lifecycle records, "
-            "popular-question discovery aids, staff notes, and plain-language "
-            "summaries in the configured database; next work follows the "
-            "CivicSuite roadmap."
+            "CivicCode v0.1.15 persists section/version lifecycle records, "
+            "popular-question discovery aids, staff notes, plain-language "
+            "summaries, CivicClerk handoff records, and handoff audit events "
+            "in the configured database; next work follows the CivicSuite roadmap."
         ),
     }
 

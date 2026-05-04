@@ -9,7 +9,7 @@ sections.
 
 ## Current status
 
-As of 2026-05-04, CivicCode has a **durable code, discovery, and staff guidance runtime**
+As of 2026-05-04, CivicCode has a **durable code, discovery, staff guidance, and CivicClerk handoff runtime**
 layered on the mock-city codifier contract suite, staff code lifecycle
 workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
@@ -24,8 +24,8 @@ optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
 workspace pages, optional database-backed popular-question persistence,
 optional database-backed title/chapter/section/version lifecycle persistence,
-optional database-backed staff interpretation-note and plain-language summary
-persistence,
+optional database-backed staff interpretation-note, plain-language summary, and
+CivicClerk handoff persistence,
 staff code lifecycle workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
@@ -33,7 +33,8 @@ staff-approved public popular questions, explicit related-material navigation
 aids,
 staff-only interpretation-note APIs with audit events and staff Q&A context,
 staff-approved plain-language summaries labeled as non-authoritative, and
-CivicClerk ordinance/adoption handoff intake with pending codification warnings,
+CivicClerk ordinance/adoption handoff intake with durable pending codification
+warnings and handoff audit events,
 and a Docker Compose product path that starts PostgreSQL 17 with pgvector, runs
 migrations, serves the FastAPI app, can seed a City of Brookfield demo with
 `CIVICCODE_DEMO_SEED=1`, and can rehearse a Docker/PostgreSQL backup-restore
@@ -57,7 +58,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.14:
+The current release is CivicCode v0.1.15:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -122,6 +123,9 @@ The current release is CivicCode v0.1.14:
   process restarts on the Docker/PostgreSQL path,
 - accept CivicClerk ordinance/adoption handoff events with meeting and agenda
   item provenance,
+- persist CivicClerk handoff records and handoff audit events with
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL` so pending codification warnings survive
+  process restarts on the Docker/PostgreSQL path,
 - distinguish pending codification from adopted codified law,
 - warn affected section lookups when a handoff may make the codified text stale,
 - detect likely conflicts when ordinance text references affected sections,
@@ -165,7 +169,7 @@ The current release is CivicCode v0.1.14:
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.14 durable staff guidance
+- keep docs and CI gates green for the v0.1.15 durable CivicClerk handoff
   release.
 
 ## Why CivicCode before CivicZone
@@ -227,8 +231,9 @@ docker compose up --build
 
 Expected Docker truth today: Compose starts PostgreSQL 17 with pgvector and the
 CivicCode API, runs CivicCore then CivicCode migrations before serving traffic,
-persists source registry, section lifecycle, popular-question, staff-note, and
-plain-language summary records through `CIVICCODE_SOURCE_REGISTRY_DB_URL`, and
+persists source registry, section lifecycle, popular-question, staff-note,
+plain-language summary, CivicClerk handoff, and handoff audit records through
+`CIVICCODE_SOURCE_REGISTRY_DB_URL`, and
 seeds the City of Brookfield demo when `CIVICCODE_DEMO_SEED=1`. Open
 `http://127.0.0.1:8000/civiccode`, search for `6.12.040`, or open
 `/staff/code` through the trusted staff shell headers to review the seeded
@@ -295,8 +300,8 @@ python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 Expected migration truth today: CivicCore migrations run first, CivicCode uses
 `alembic_version_civiccode`, ten canonical `civiccode.*` tables are created,
 and runtime persistence tables are available for the optional DB-backed source
-registry, resident discovery, section lifecycle, staff note, and
-plain-language summary paths.
+registry, resident discovery, section lifecycle, staff note, plain-language
+summary, and CivicClerk handoff paths.
 
 Source registry smoke:
 
@@ -412,10 +417,11 @@ curl "http://127.0.0.1:8000/api/v1/civiccode/sections/lookup?section_number=6.12
 ```
 
 Expected CivicClerk handoff truth today: the handoff is stored as pending
-codification, CivicClerk meeting/agenda provenance is preserved, affected
-lookups include `handoff_warnings`, likely conflicts cite the affected section,
-and pending ordinance language is not adopted law or automatic ordinance
-codification.
+codification, persisted with its audit event when
+`CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured, CivicClerk meeting/agenda
+provenance is preserved, affected lookups include `handoff_warnings`, likely
+conflicts cite the affected section, and pending ordinance language is not
+adopted law or automatic ordinance codification.
 
 Public lookup smoke:
 

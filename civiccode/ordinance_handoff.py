@@ -7,6 +7,10 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
+import sqlalchemy as sa
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.dialects.postgresql import JSONB
+
 
 HANDOFF_STATUSES = {"adopted", "pending", "failed"}
 CONFLICT_TERMS = ("amend", "amending", "repeal", "repealing", "supersede", "replace")
@@ -150,7 +154,7 @@ class OrdinanceHandoffStore:
         return warnings
 
     def list_events(self) -> list[OrdinanceEvent]:
-        return sorted(self._events.values(), key=lambda event: event.received_at)
+        return sorted(self._events.values(), key=lambda event: event.created_at)
 
     def audit_events(self) -> list[HandoffAuditEvent]:
         return list(self._audit_events)
@@ -168,6 +172,144 @@ class OrdinanceHandoffStore:
                 target_id=target_id,
             )
         )
+
+
+metadata = sa.MetaData()
+json_type = JSONB().with_variant(sa.JSON(), "sqlite")
+
+ordinance_handoff_records = sa.Table(
+    "ordinance_handoff_records",
+    metadata,
+    sa.Column("event_id", sa.String(255), primary_key=True),
+    sa.Column("external_event_id", sa.String(255), nullable=False),
+    sa.Column("civicclerk_meeting_id", sa.String(255), nullable=False),
+    sa.Column("civicclerk_agenda_item_id", sa.String(255), nullable=False),
+    sa.Column("ordinance_number", sa.String(120), nullable=False),
+    sa.Column("title", sa.Text(), nullable=False),
+    sa.Column("status", sa.String(80), nullable=False),
+    sa.Column("affected_sections", json_type, nullable=False),
+    sa.Column("source_document_url", sa.Text(), nullable=False),
+    sa.Column("source_document_hash", sa.String(255), nullable=False),
+    sa.Column("ordinance_text", sa.Text(), nullable=False),
+    sa.Column("adopted_at", sa.DateTime(timezone=True), nullable=True),
+    sa.Column("failure_reason", sa.Text(), nullable=True),
+    sa.Column("created_by", sa.String(255), nullable=False),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+ordinance_handoff_audit_event_records = sa.Table(
+    "ordinance_handoff_audit_event_records",
+    metadata,
+    sa.Column("event_id", sa.String(255), primary_key=True),
+    sa.Column("event_type", sa.String(120), nullable=False),
+    sa.Column("actor", sa.String(255), nullable=False),
+    sa.Column("target_id", sa.String(255), nullable=False),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+
+class OrdinanceHandoffRepository(OrdinanceHandoffStore):
+    """Database-backed CivicClerk handoff store for Docker/PostgreSQL paths."""
+
+    def __init__(self, *, db_url: str | None = None, engine: Engine | None = None) -> None:
+        super().__init__()
+        base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
+        if base_engine.dialect.name == "sqlite":
+            self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})
+        else:
+            self.engine = base_engine
+            with self.engine.begin() as connection:
+                connection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS civiccode"))
+        metadata.create_all(self.engine)
+        self._load()
+
+    def create_event(self, data: dict[str, Any], *, actor: str) -> OrdinanceEvent:
+        event = super().create_event(data, actor=actor)
+        with self.engine.begin() as connection:
+            connection.execute(ordinance_handoff_records.insert().values(**event_to_record(event)))
+        return event
+
+    def reset(self) -> None:
+        super().reset()
+        with self.engine.begin() as connection:
+            connection.execute(ordinance_handoff_audit_event_records.delete())
+            connection.execute(ordinance_handoff_records.delete())
+
+    def _append_event(self, event_type: str, *, actor: str, target_id: str) -> None:
+        super()._append_event(event_type, actor=actor, target_id=target_id)
+        event = self._audit_events[-1]
+        with self.engine.begin() as connection:
+            connection.execute(ordinance_handoff_audit_event_records.insert().values(**audit_event_to_record(event)))
+
+    def _load(self) -> None:
+        with self.engine.begin() as connection:
+            for row in connection.execute(sa.select(ordinance_handoff_records)).mappings():
+                event = event_from_record(row)
+                self._events[event.event_id] = event
+            for row in connection.execute(sa.select(ordinance_handoff_audit_event_records)).mappings():
+                self._audit_events.append(audit_event_from_record(row))
+
+
+def event_to_record(event: OrdinanceEvent) -> dict[str, Any]:
+    return {
+        "event_id": event.event_id,
+        "external_event_id": event.external_event_id,
+        "civicclerk_meeting_id": event.civicclerk_meeting_id,
+        "civicclerk_agenda_item_id": event.civicclerk_agenda_item_id,
+        "ordinance_number": event.ordinance_number,
+        "title": event.title,
+        "status": event.status,
+        "affected_sections": event.affected_sections,
+        "source_document_url": event.source_document_url,
+        "source_document_hash": event.source_document_hash,
+        "ordinance_text": event.ordinance_text,
+        "adopted_at": event.adopted_at,
+        "failure_reason": event.failure_reason,
+        "created_by": event.created_by,
+        "created_at": event.created_at,
+    }
+
+
+def event_from_record(row: Any) -> OrdinanceEvent:
+    return OrdinanceEvent(
+        event_id=row["event_id"],
+        external_event_id=row["external_event_id"],
+        civicclerk_meeting_id=row["civicclerk_meeting_id"],
+        civicclerk_agenda_item_id=row["civicclerk_agenda_item_id"],
+        ordinance_number=row["ordinance_number"],
+        title=row["title"],
+        status=row["status"],
+        affected_sections=list(row["affected_sections"]),
+        source_document_url=row["source_document_url"],
+        source_document_hash=row["source_document_hash"],
+        ordinance_text=row["ordinance_text"],
+        adopted_at=row["adopted_at"],
+        failure_reason=row["failure_reason"],
+        created_by=row["created_by"],
+        created_at=row["created_at"],
+    )
+
+
+def audit_event_to_record(event: HandoffAuditEvent) -> dict[str, Any]:
+    return {
+        "event_id": event.event_id,
+        "event_type": event.event_type,
+        "actor": event.actor,
+        "target_id": event.target_id,
+        "created_at": event.created_at,
+    }
+
+
+def audit_event_from_record(row: Any) -> HandoffAuditEvent:
+    return HandoffAuditEvent(
+        event_id=row["event_id"],
+        event_type=row["event_type"],
+        actor=row["actor"],
+        target_id=row["target_id"],
+        created_at=row["created_at"],
+    )
 
 
 def event_to_dict(event: OrdinanceEvent) -> dict[str, Any]:
