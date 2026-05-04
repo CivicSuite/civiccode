@@ -20,6 +20,7 @@ from civiccode.codifier_sync import (
 from civiccode.import_connectors import (
     CONNECTOR_TYPES,
     CivicCodeImportError,
+    ImportConnectorRepository,
     ImportConnectorStore,
     imported_tree_snapshot,
     job_to_dict,
@@ -616,9 +617,10 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.15 persists section/version lifecycle records, "
+            "CivicCode v0.1.16 persists section/version lifecycle records, "
             "popular-question discovery aids, staff notes, plain-language "
-            "summaries, CivicClerk handoff records, and handoff audit events "
+            "summaries, CivicClerk handoff records, handoff audit events, and "
+            "local import job ledgers "
             "in the configured database; next work follows the CivicSuite roadmap."
         ),
     }
@@ -1534,9 +1536,10 @@ def _get_import_store() -> ImportConnectorStore:
         return IMPORT_STORE
     if _import_store is None or _import_store_source_key != source_key:
         _import_store_source_key = source_key
-        _import_store = ImportConnectorStore(
+        _import_store = ImportConnectorRepository(
             source_store=_get_source_store(),
             section_store=SECTION_STORE,
+            db_url=source_key,
         )
     return _import_store
 
