@@ -243,6 +243,16 @@ def codifier_sync_records_migration_path() -> Path:
     )
 
 
+def operational_state_records_migration_path() -> Path:
+    return (
+        ROOT
+        / "civiccode"
+        / "migrations"
+        / "versions"
+        / "civiccode_0009_operational_state.py"
+    )
+
+
 def test_canonical_table_models_exist_and_no_tables_are_missing_or_extra() -> None:
     models = model_module()
     metadata = models.Base.metadata
@@ -312,6 +322,7 @@ def test_alembic_scaffold_exists_for_civiccode_schema_chain() -> None:
         ordinance_handoff_records_migration_path(),
         import_job_records_migration_path(),
         codifier_sync_records_migration_path(),
+        operational_state_records_migration_path(),
     ]
 
     for path in expected:
@@ -413,7 +424,7 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             )
 
         assert civiccore_revision == "civiccore_0002_llm"
-        assert civiccode_revision == "civiccode_0008_codifier_sync"
+        assert civiccode_revision == "civiccode_0009_operational_state"
         assert civiccode_tables == set(CANONICAL_TABLES) | {
             "source_registry_records",
             "popular_question_records",
@@ -430,6 +441,7 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             "import_job_records",
             "codifier_sync_source_records",
             "codifier_sync_delta_plan_records",
+            "operational_state_records",
         }
     finally:
         subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True, text=True)
@@ -562,6 +574,25 @@ def test_codifier_sync_records_migration_declares_persistent_records_tables() ->
     assert '"host_validation"' in text
     assert '"next_sync_at"' in text
     assert '"sync_paused"' in text
+
+
+def test_operational_state_records_migration_declares_persistent_records_table() -> None:
+    text = operational_state_records_migration_path().read_text(encoding="utf-8")
+
+    assert 'revision = "civiccode_0009_operational_state"' in text
+    assert 'down_revision = "civiccode_0008_codifier_sync"' in text
+    assert "idempotent_create_table" in text
+    assert '"operational_state_records"' in text
+    for column_name in [
+        "record_type",
+        "subject_id",
+        "next_attempt_at",
+        "cursor_key",
+        "cursor_value",
+        "replay_of",
+        "payload_hash",
+    ]:
+        assert f'"{column_name}"' in text
 
 
 def test_docs_and_changelog_record_schema_milestone_without_claiming_code_answers() -> None:

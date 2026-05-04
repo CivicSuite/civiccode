@@ -618,10 +618,11 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.17 persists section/version lifecycle records, "
+            "CivicCode v0.1.18 persists section/version lifecycle records, "
             "popular-question discovery aids, staff notes, plain-language "
             "summaries, CivicClerk handoff records, handoff audit events, and "
-            "local import job ledgers plus codifier sync source state "
+            "local import job ledgers, codifier sync source state, and "
+            "operational retry, replay, and cursor state "
             "in the configured database; next work follows the CivicSuite roadmap."
         ),
     }

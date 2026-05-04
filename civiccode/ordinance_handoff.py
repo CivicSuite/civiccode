@@ -11,6 +11,12 @@ import sqlalchemy as sa
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.dialects.postgresql import JSONB
 
+from civiccode.operational_state import (
+    OperationalStateRepository,
+    OperationalStateStore,
+    operational_record_to_dict,
+)
+
 
 HANDOFF_STATUSES = {"adopted", "pending", "failed"}
 CONFLICT_TERMS = ("amend", "amending", "repeal", "repealing", "supersede", "replace")
@@ -66,9 +72,10 @@ class HandoffAuditEvent:
 class OrdinanceHandoffStore:
     """In-memory CivicClerk handoff store for Milestone 10 API behavior."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, operational_store: OperationalStateStore | None = None) -> None:
         self._events: dict[str, OrdinanceEvent] = {}
         self._audit_events: list[HandoffAuditEvent] = []
+        self._operational_store = operational_store or OperationalStateStore()
 
     def create_event(self, data: dict[str, Any], *, actor: str) -> OrdinanceEvent:
         status = data.get("status", "pending")
@@ -127,6 +134,23 @@ class OrdinanceHandoffStore:
             )
         self._events[event.event_id] = event
         self._append_event("civicclerk_handoff_received", actor=actor, target_id=event.event_id)
+        if event.status == "failed":
+            self._operational_store.record_retry(
+                lane="handoff",
+                subject_id=event.event_id,
+                actor=actor,
+                reason=event.failure_reason or "CivicClerk handoff failed.",
+                failure={"message": event.failure_reason or "CivicClerk handoff failed."},
+            )
+        self._operational_store.record_replay(
+            lane="handoff",
+            subject_id=event.event_id,
+            actor=actor,
+            status=event.handoff_state,
+            payload_hash=event.source_document_hash,
+            details={"external_event_id": event.external_event_id, "ordinance_number": event.ordinance_number},
+            failure={"message": event.failure_reason} if event.failure_reason else None,
+        )
         return event
 
     def warnings_for_section(self, section_number: str) -> list[dict[str, Any]]:
@@ -162,6 +186,10 @@ class OrdinanceHandoffStore:
     def reset(self) -> None:
         self._events.clear()
         self._audit_events.clear()
+        self._operational_store.reset()
+
+    def operational_records(self) -> tuple[dict[str, Any], ...]:
+        return tuple(operational_record_to_dict(record) for record in self._operational_store.list_records())
 
     def _append_event(self, event_type: str, *, actor: str, target_id: str) -> None:
         self._audit_events.append(
@@ -213,8 +241,14 @@ ordinance_handoff_audit_event_records = sa.Table(
 class OrdinanceHandoffRepository(OrdinanceHandoffStore):
     """Database-backed CivicClerk handoff store for Docker/PostgreSQL paths."""
 
-    def __init__(self, *, db_url: str | None = None, engine: Engine | None = None) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        *,
+        operational_store: OperationalStateStore | None = None,
+        db_url: str | None = None,
+        engine: Engine | None = None,
+    ) -> None:
+        super().__init__(operational_store=operational_store or OperationalStateRepository(db_url=db_url, engine=engine))
         base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
         if base_engine.dialect.name == "sqlite":
             self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})

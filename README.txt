@@ -6,7 +6,7 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-05-04, CivicCode has a durable code, discovery, staff guidance, CivicClerk handoff, local import-job, and codifier sync-state runtime layered on the
+As of 2026-05-04, CivicCode has a durable code, discovery, staff guidance, CivicClerk handoff, local import-job, codifier sync-state, and operational retry/replay/cursor runtime layered on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility
 hardening foundation, local import foundation, public code lookup
@@ -161,7 +161,7 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.17 is the current durable codifier sync-state release. It
+CivicCode v0.1.18 is the current durable operational-state release. It
 persists source registry records, title/chapter/section/version records,
 staff-approved popular questions, staff notes, plain-language summaries,
 CivicClerk handoff records, handoff audit events, local import job records, and codifier sync source records through

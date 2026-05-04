@@ -3,7 +3,7 @@
 CivicCode currently ships a Docker-demo codifier runtime built on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility hardening foundation, local import
-and codifier sync-state persistence foundation, public code lookup surface,
+codifier sync-state, and operational retry/replay/cursor persistence foundation, public code lookup surface,
 CivicClerk handoff foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
@@ -434,7 +434,7 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.17 is the current durable codifier sync-state release. It
+CivicCode v0.1.18 is the current durable operational-state release. It
 persists source registry records, title/chapter/section/version records,
 staff-approved popular questions, staff notes, plain-language summaries,
 CivicClerk handoffs, import jobs, and codifier sync source state through

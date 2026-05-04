@@ -1,0 +1,36 @@
+{
+  "target": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\index.html",
+  "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+  "console_event_count": 0,
+  "console_events": [],
+  "results": {
+    "desktop": {
+      "width": 1440,
+      "height": 1100,
+      "title": "CivicCode - CivicSuite municipal code module",
+      "horizontal_overflow": false,
+      "focused_text": "Skip to CivicCode content",
+      "shows_civiccode_018": true,
+      "shows_operational_state": true,
+      "shows_retry_queue": true,
+      "shows_replay": true,
+      "shows_delta_cursor": true,
+      "shows_civiccore_022": true,
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-018-operational-state-desktop.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 1200,
+      "title": "CivicCode - CivicSuite municipal code module",
+      "horizontal_overflow": false,
+      "focused_text": "Skip to CivicCode content",
+      "shows_civiccode_018": true,
+      "shows_operational_state": true,
+      "shows_retry_queue": true,
+      "shows_replay": true,
+      "shows_delta_cursor": true,
+      "shows_civiccore_022": true,
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-018-operational-state-mobile.png"
+    }
+  }
+}

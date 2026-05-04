@@ -21,6 +21,11 @@ from civiccode.section_lifecycle import (
     title_to_dict,
     version_to_dict,
 )
+from civiccode.operational_state import (
+    OperationalStateRepository,
+    OperationalStateStore,
+    operational_record_to_dict,
+)
 from civiccode.source_registry import (
     SourceRegistryError,
     SourceRegistryStore,
@@ -70,10 +75,12 @@ class ImportConnectorStore:
         *,
         source_store: SourceRegistryStore,
         section_store: SectionLifecycleStore,
+        operational_store: OperationalStateStore | None = None,
     ) -> None:
         self._jobs: dict[str, ImportJob] = {}
         self._source_store = source_store
         self._section_store = section_store
+        self._operational_store = operational_store or OperationalStateStore()
 
     def run_import(
         self,
@@ -103,7 +110,24 @@ class ImportConnectorStore:
             job.failure = _failure_detail(exc)
             job.counts = _empty_counts()
             job.completed_at = datetime.now(UTC)
+            self._operational_store.record_retry(
+                lane="import",
+                subject_id=job.job_id,
+                actor=actor,
+                reason=job.failure["message"],
+                failure=job.failure,
+            )
         self._persist_job(job)
+        self._operational_store.record_replay(
+            lane="import",
+            subject_id=job.job_id,
+            actor=actor,
+            status=job.status,
+            replay_of=job.retry_of,
+            payload_hash=job.provenance.get("fixture_checksum"),
+            details={"connector_type": job.connector_type, "source_id": job.source_id},
+            failure=job.failure,
+        )
         return job
 
     def retry_import(self, job_id: str, payload: dict[str, Any], *, actor: str) -> ImportJob:
@@ -131,6 +155,10 @@ class ImportConnectorStore:
 
     def reset(self) -> None:
         self._jobs.clear()
+        self._operational_store.reset()
+
+    def operational_records(self) -> tuple[dict[str, Any], ...]:
+        return tuple(operational_record_to_dict(record) for record in self._operational_store.list_records())
 
     def _persist_job(self, job: ImportJob) -> None:
         """Hook for durable stores; memory stores keep jobs in process only."""
@@ -252,10 +280,15 @@ class ImportConnectorRepository(ImportConnectorStore):
         *,
         source_store: SourceRegistryStore,
         section_store: SectionLifecycleStore,
+        operational_store: OperationalStateStore | None = None,
         db_url: str | None = None,
         engine: Engine | None = None,
     ) -> None:
-        super().__init__(source_store=source_store, section_store=section_store)
+        super().__init__(
+            source_store=source_store,
+            section_store=section_store,
+            operational_store=operational_store or OperationalStateRepository(db_url=db_url, engine=engine),
+        )
         base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
         if base_engine.dialect.name == "sqlite":
             self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})

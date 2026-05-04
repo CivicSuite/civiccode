@@ -23,6 +23,11 @@ from civiccore import (
 )
 
 from civiccode.import_connectors import ImportConnectorStore, job_to_dict
+from civiccode.operational_state import (
+    OperationalStateRepository,
+    OperationalStateStore,
+    operational_record_to_dict,
+)
 from civiccode.source_registry import CodeSource, SourceRegistryStore
 
 
@@ -122,10 +127,12 @@ class CodifierSyncStore:
         *,
         source_store: SourceRegistryStore,
         import_store: ImportConnectorStore,
+        operational_store: OperationalStateStore | None = None,
     ) -> None:
         self._source_store = source_store
         self._import_store = import_store
         self._sources: dict[str, CodifierSyncSource] = {}
+        self._operational_store = operational_store or OperationalStateStore()
 
     def configure_source(
         self,
@@ -213,6 +220,15 @@ class CodifierSyncStore:
                 records_failed=0,
             )
             configured.last_successful_sync_at = attempted_at
+            if delta_plan.cursor_param:
+                self._operational_store.record_cursor(
+                    lane="sync",
+                    subject_id=configured.source_id,
+                    cursor_key=delta_plan.cursor_param,
+                    cursor_value=_format_cursor(attempted_at),
+                    actor=actor,
+                    details={"connector": configured.connector, "import_job_id": job.job_id},
+                )
         else:
             result = SyncRunResult(
                 records_discovered=1,
@@ -220,12 +236,29 @@ class CodifierSyncStore:
                 records_failed=1,
                 error_summary=(job.failure or {}).get("message"),
             )
+            self._operational_store.record_retry(
+                lane="sync",
+                subject_id=configured.source_id,
+                actor=actor,
+                reason=(job.failure or {}).get("message") or "Codifier sync import failed.",
+                failure=job.failure,
+            )
         configured.last_attempted_sync_at = attempted_at
         configured.last_import_job_id = job.job_id
         configured.state = apply_sync_run_result(configured.state, result, now=attempted_at)
         configured.next_sync_at_recorded = configured.next_sync_at
         self._append_delta_plan(configured, delta_plan, planned_at=attempted_at, import_job_id=job.job_id)
         self._persist_source(configured)
+        self._operational_store.record_replay(
+            lane="sync",
+            subject_id=configured.source_id,
+            actor=actor,
+            status=job.status,
+            replay_of=job.retry_of,
+            payload_hash=job.provenance.get("fixture_checksum"),
+            details={"connector": configured.connector, "import_job_id": job.job_id},
+            failure=job.failure,
+        )
         return CodifierSyncRun(
             source=configured,
             job_payload=job_to_dict(job),
@@ -234,6 +267,10 @@ class CodifierSyncStore:
 
     def reset(self) -> None:
         self._sources.clear()
+        self._operational_store.reset()
+
+    def operational_records(self) -> tuple[dict[str, Any], ...]:
+        return tuple(operational_record_to_dict(record) for record in self._operational_store.list_records())
 
     def _persist_source(self, source: CodifierSyncSource) -> None:
         """Hook for durable stores; memory mode keeps sync state in process only."""
@@ -303,10 +340,15 @@ class CodifierSyncRepository(CodifierSyncStore):
         *,
         source_store: SourceRegistryStore,
         import_store: ImportConnectorStore,
+        operational_store: OperationalStateStore | None = None,
         db_url: str | None = None,
         engine: Engine | None = None,
     ) -> None:
-        super().__init__(source_store=source_store, import_store=import_store)
+        super().__init__(
+            source_store=source_store,
+            import_store=import_store,
+            operational_store=operational_store or OperationalStateRepository(db_url=db_url, engine=engine),
+        )
         base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
         if base_engine.dialect.name == "sqlite":
             self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})

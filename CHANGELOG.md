@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-05-04
+
+### Added
+
+- Durable operational state storage for CivicClerk handoffs, local imports, and
+  codifier sync runs when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured,
+  preserving retry queue records, replay records, and delta cursor records on
+  the Docker/PostgreSQL product path.
+- Alembic revision `civiccode_0009_operational_state` for shared operational
+  state records.
+
+### Changed
+
+- Failed handoffs/imports/syncs now leave durable operator recovery records, and
+  every import/sync/handoff run leaves replay evidence without adding vendor
+  credentials, outbound calls, live LLM calls, or auto-codification.
+
 ## [0.1.17] - 2026-05-04
 
 ### Added
