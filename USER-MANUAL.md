@@ -5,7 +5,7 @@ runtime built on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility hardening foundation, local import
 foundation, public code lookup surface,
-CivicClerk handoff foundation,
+CivicClerk handoff persistence foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and
 permalink foundation, section/version foundation, source
@@ -15,7 +15,8 @@ explains what a first-time installer can do today and what is still planned.
 The source registry remains the official source metadata foundation for every
 summary, citation, lookup, popular question, related-material navigation aid,
 and Q&A response. It can now persist source records, popular questions, code
-section lifecycle records, staff notes, and plain-language summaries when
+section lifecycle records, staff notes, plain-language summaries, and
+CivicClerk handoff records when
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
 in-memory stores for lightweight local demos. Staff source mutations and
 staff-only source reads require the trusted staff header seam, and
@@ -90,6 +91,8 @@ Current truth:
 - summary drafts, approvals, and summary audit events persist on the configured
   Docker/PostgreSQL path,
 - staff can receive CivicClerk ordinance/adoption handoff events,
+- CivicClerk handoff records and handoff audit events persist on the configured
+  Docker/PostgreSQL path,
 - affected section lookups include pending codification warnings,
 - pending ordinance language is not adopted law and does not replace codified
   text,
@@ -202,9 +205,11 @@ The migration chain runs CivicCore first and stores CivicCode's revision in
 `code_title_records` / `code_chapter_records` / `code_section_records` /
 `section_version_records`, plus `staff_interpretation_note_records`,
 `staff_workbench_audit_event_records`, `plain_language_summary_records`, and
-`plain_language_summary_audit_event_records` as runtime tables for source
-metadata, resident discovery aids, adopted-code lifecycle data, staff guidance,
-and non-authoritative public summaries.
+`plain_language_summary_audit_event_records`, `ordinance_handoff_records`, and
+`ordinance_handoff_audit_event_records` as runtime tables for source metadata,
+resident discovery aids, adopted-code lifecycle data, staff guidance,
+non-authoritative public summaries, and CivicClerk pending-codification
+warnings.
 
 Inspect source-registry vocabulary:
 
@@ -407,10 +412,11 @@ curl "http://127.0.0.1:8000/civiccode/sections/6.12.040"
 ```
 
 CivicClerk handoff events preserve meeting and agenda item provenance. They
-surface pending codification warnings on affected lookups and likely conflict
-signals when ordinance text references existing sections. They do not perform
-automatic ordinance codification and pending ordinance language is not adopted
-law.
+persist with handoff audit events when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is
+configured, surface pending codification warnings on affected lookups, and show
+likely conflict signals when ordinance text references existing sections. They
+do not perform automatic ordinance codification and pending ordinance language
+is not adopted law.
 
 Local import route:
 

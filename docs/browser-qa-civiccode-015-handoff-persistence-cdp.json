@@ -1,0 +1,57 @@
+{
+  "qa_id": "browser-qa-civiccode-015-handoff-persistence",
+  "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+  "checks": [
+    {
+      "viewport": "desktop",
+      "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-015-handoff-persistence-desktop.png",
+      "focused_text_after_tab": "Skip to CivicCode content",
+      "metrics": {
+        "title": "CivicCode - CivicSuite municipal code module",
+        "h1": "CivicCode",
+        "status": "Durable code, discovery, staff-note, plain-language summary, and CivicClerk handoff runtime online on the Docker/PostgreSQL path, alongside related-section navigation aids, mock-city codifier contracts, staff code lifecycle workspace, staff workbench foundation, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff warnings, citation-grounded Q&A, citation contract, search and permalink, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, bundled vendor credentials, CivicAccess runtime dependency, and automatic ordinance codification not available",
+        "activeText": "Skip to CivicCode content",
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "bodyScrollWidth": 1440,
+        "bodyClientWidth": 1440,
+        "sectionCount": 4,
+        "durableHandoffMentioned": true,
+        "versionMentioned": true,
+        "linkCount": 1
+      },
+      "horizontal_overflow": false
+    },
+    {
+      "viewport": "mobile",
+      "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-015-handoff-persistence-mobile.png",
+      "focused_text_after_tab": "Skip to CivicCode content",
+      "metrics": {
+        "title": "CivicCode - CivicSuite municipal code module",
+        "h1": "CivicCode",
+        "status": "Durable code, discovery, staff-note, plain-language summary, and CivicClerk handoff runtime online on the Docker/PostgreSQL path, alongside related-section navigation aids, mock-city codifier contracts, staff code lifecycle workspace, staff workbench foundation, staff source registry, records-ready export and accessibility hardening, local import, public lookup, CivicClerk handoff warnings, citation-grounded Q&A, citation contract, search and permalink, database-backed source registry, runtime foundation, and canonical schema foundations - legal determinations, live LLM calls, bundled vendor credentials, CivicAccess runtime dependency, and automatic ordinance codification not available",
+        "activeText": "Skip to CivicCode content",
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "bodyScrollWidth": 390,
+        "bodyClientWidth": 390,
+        "sectionCount": 4,
+        "durableHandoffMentioned": true,
+        "versionMentioned": true,
+        "linkCount": 1
+      },
+      "horizontal_overflow": false
+    }
+  ],
+  "console_events": [],
+  "summary": {
+    "console_event_count": 0,
+    "desktop_overflow": false,
+    "mobile_overflow": false,
+    "skip_link_focus_ok": true,
+    "version_visible": true,
+    "durable_handoff_visible": true
+  }
+}

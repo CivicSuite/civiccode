@@ -6,11 +6,11 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-05-03, CivicCode has a Docker-demo codifier runtime layered on the
+As of 2026-05-04, CivicCode has a durable code, discovery, staff guidance, and CivicClerk handoff runtime layered on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility
 hardening foundation, local import foundation, public code lookup
-surface, CivicClerk handoff foundation,
+surface, CivicClerk handoff persistence foundation,
 plain-language summaries foundation, staff workbench foundation,
 citation-grounded Q&A foundation, citation contract foundation, search and permalink foundation, section/version
 foundation, database-backed source registry foundation, runtime foundation, and canonical
@@ -29,12 +29,14 @@ Staff-approved plain-language summaries are available after review, are labeled
 non-authoritative, and keep authoritative code text visible.
 Local CSV/file-drop bundle and official HTML extract imports are available
 through staff-only endpoints, with job status, retry, and provenance report
-behavior. CivicClerk ordinance/adoption handoff events are accepted as pending
-codification warnings without replacing adopted code text. Residents can open
+behavior. CivicClerk ordinance/adoption handoff events are accepted and
+persisted as pending codification warnings without replacing adopted code text.
+Residents can open
 /civiccode, search by section number or plain-language phrase, read adopted
 code text, see citations, view approved summaries, and see pending
 codification warnings. Docker Compose can start PostgreSQL 17 with pgvector,
-run migrations, serve the FastAPI app, persist source registry records, seed a
+run migrations, serve the FastAPI app, persist source registry, staff guidance,
+plain-language summary, and CivicClerk handoff records, seed a
 City of Brookfield demo with CIVICCODE_DEMO_SEED=1, and rehearse a
 Docker/PostgreSQL backup-restore with pg_dump, pg_restore, restored-table
 verification, and a checksum manifest.
@@ -158,9 +160,10 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.13 is the current durable section lifecycle and discovery
-release. It persists source registry records, title/chapter/section/version
-records, and staff-approved popular questions through
+CivicCode v0.1.15 is the current durable CivicClerk handoff release. It
+persists source registry records, title/chapter/section/version records,
+staff-approved popular questions, staff notes, plain-language summaries,
+CivicClerk handoff records, and handoff audit events through
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` on the Docker/PostgreSQL product path,
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular

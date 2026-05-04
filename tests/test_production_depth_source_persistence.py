@@ -4,6 +4,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from civiccode.main import app
+from civiccode.ordinance_handoff import OrdinanceHandoffRepository
 from civiccode.plain_language import PlainLanguageSummaryRepository
 from civiccode.public_discovery import PopularQuestionRepository
 from civiccode.staff_workbench import StaffWorkbenchRepository
@@ -403,3 +404,95 @@ async def test_api_plain_language_summaries_use_configured_database(monkeypatch,
         "plain_language_summary_created",
         "plain_language_summary_approved",
     ]
+
+
+@pytest.mark.asyncio
+async def test_api_civicclerk_handoffs_use_configured_database(monkeypatch, tmp_path) -> None:
+    import civiccode.main as app_module
+
+    db_url = f"sqlite:///{tmp_path / 'api-handoffs.db'}"
+    monkeypatch.setenv("CIVICCODE_SOURCE_REGISTRY_DB_URL", db_url)
+    app_module.SOURCE_STORE.reset()
+    app_module.SECTION_STORE.reset()
+    app_module.HANDOFF_STORE.reset()
+    app_module._source_registry_repository = None
+    app_module._section_lifecycle_repository = None
+    app_module._ordinance_handoff_repository = None
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
+        assert (
+            await client.post(
+                "/api/v1/civiccode/sources",
+                headers=STAFF_HEADERS,
+                json=active_official_source("municode_handoffs"),
+            )
+        ).status_code == 201
+        assert (
+            await client.post(
+                "/api/v1/civiccode/titles",
+                json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
+            )
+        ).status_code == 201
+        assert (
+            await client.post(
+                "/api/v1/civiccode/chapters",
+                json={
+                    "chapter_id": "chapter_6_12",
+                    "title_id": "title_6",
+                    "chapter_number": "6.12",
+                    "chapter_name": "Urban Livestock",
+                },
+            )
+        ).status_code == 201
+        assert (
+            await client.post(
+                "/api/v1/civiccode/sections",
+                json={
+                    "section_id": "sec_chickens",
+                    "chapter_id": "chapter_6_12",
+                    "section_number": "6.12.040",
+                    "section_heading": "Backyard chickens",
+                },
+            )
+        ).status_code == 201
+        assert (
+            await client.post(
+                "/api/v1/civiccode/sections/sec_chickens/versions",
+                json={
+                    "version_id": "v_chickens_current",
+                    "section_id": "sec_chickens",
+                    "source_id": "municode_handoffs",
+                    "version_label": "Current",
+                    "body": "Residents may keep up to six backyard chickens with a city permit.",
+                    "effective_start": "2026-01-01",
+                    "status": "adopted",
+                    "is_current": True,
+                },
+            )
+        ).status_code == 201
+        created = await client.post(
+            "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+            headers=STAFF_HEADERS,
+            json={
+                "event_id": "ord_2026_041",
+                "external_event_id": "cc_event_2026_041",
+                "civicclerk_meeting_id": "meeting_2026_04_27",
+                "civicclerk_agenda_item_id": "agenda_14",
+                "ordinance_number": "2026-041",
+                "title": "Ordinance amending backyard chicken permits",
+                "status": "adopted",
+                "affected_sections": ["6.12.040"],
+                "source_document_url": "https://example.gov/minutes/2026-041.pdf",
+                "source_document_hash": "sha256:abc123",
+                "ordinance_text": "An ordinance amending Section 6.12.040.",
+            },
+        )
+
+    app_module._ordinance_handoff_repository = None
+    persisted = OrdinanceHandoffRepository(db_url=db_url)
+
+    assert created.status_code == 201
+    events = persisted.list_events()
+    assert [event.event_id for event in events] == ["ord_2026_041"]
+    assert persisted.warnings_for_section("6.12.040")[0]["external_event_id"] == "cc_event_2026_041"
+    assert persisted.audit_events()[0].event_type == "civicclerk_handoff_received"
