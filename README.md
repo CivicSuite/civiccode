@@ -9,7 +9,7 @@ sections.
 
 ## Current status
 
-As of 2026-05-04, CivicCode has a **durable popular-questions discovery runtime**
+As of 2026-05-04, CivicCode has a **durable section/version and discovery runtime**
 layered on the mock-city codifier contract suite, staff code lifecycle
 workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
@@ -23,6 +23,7 @@ metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
 workspace pages, optional database-backed popular-question persistence,
+optional database-backed title/chapter/section/version lifecycle persistence,
 staff code lifecycle workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
@@ -54,7 +55,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.12:
+The current release is CivicCode v0.1.13:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -73,6 +74,9 @@ The current release is CivicCode v0.1.12:
   and staff notes,
 - keep staff-only source notes out of public endpoints,
 - create titles, chapters, sections, subsections, and immutable section versions,
+- persist title, chapter, section, and section-version lifecycle records with
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL` so adopted code structure survives process
+  restarts on the Docker/PostgreSQL path,
 - look up current or historical adopted text by section number and effective
   date,
 - refuse ambiguous overlapping dates and pending ordinance language with an
@@ -153,7 +157,7 @@ The current release is CivicCode v0.1.12:
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.12 durable resident discovery
+- keep docs and CI gates green for the v0.1.13 durable section lifecycle
   release.
 
 ## Why CivicCode before CivicZone

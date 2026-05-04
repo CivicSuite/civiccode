@@ -158,8 +158,9 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.12 is the current durable popular-questions discovery release.
-It persists staff-approved popular questions through
+CivicCode v0.1.13 is the current durable section lifecycle and discovery
+release. It persists source registry records, title/chapter/section/version
+records, and staff-approved popular questions through
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` on the Docker/PostgreSQL product path,
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular

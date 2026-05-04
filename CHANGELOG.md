@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-05-04
+
+### Added
+
+- Durable section/version lifecycle storage for title, chapter, section, and
+  section-version records when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured.
+- Alembic revision `civiccode_0004_section_lifecycle` for the Docker/PostgreSQL
+  product path.
+
+### Changed
+
+- CivicCode's Docker/PostgreSQL path now keeps adopted code structure and
+  current version flags after process restarts instead of relying only on demo
+  reseeding.
+
 ## [0.1.12] - 2026-05-04
 
 ### Added
