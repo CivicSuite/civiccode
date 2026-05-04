@@ -34,6 +34,7 @@ from civiccode.ordinance_handoff import (
 )
 from civiccode.plain_language import (
     PlainLanguageSummaryError,
+    PlainLanguageSummaryRepository,
     PlainLanguageSummaryStore,
     summary_audit_event_to_dict,
     summary_to_public_dict,
@@ -82,6 +83,7 @@ from civiccode.staff_code import (
 )
 from civiccode.staff_workbench import (
     StaffWorkbenchError,
+    StaffWorkbenchRepository,
     StaffWorkbenchStore,
     audit_event_to_dict,
     note_to_staff_dict,
@@ -112,6 +114,10 @@ _source_registry_db_url: str | None = None
 SECTION_MEMORY_STORE = SectionLifecycleStore()
 _section_lifecycle_repository: SectionLifecycleRepository | None = None
 _section_lifecycle_db_url: str | None = None
+_staff_workbench_repository: StaffWorkbenchRepository | None = None
+_staff_workbench_db_url: str | None = None
+_plain_language_repository: PlainLanguageSummaryRepository | None = None
+_plain_language_db_url: str | None = None
 
 
 class SectionLifecycleRouter:
@@ -138,8 +144,58 @@ class SectionLifecycleRouter:
 
 
 SECTION_STORE = SectionLifecycleRouter(SECTION_MEMORY_STORE)
-STAFF_NOTE_STORE = StaffWorkbenchStore()
-SUMMARY_STORE = PlainLanguageSummaryStore()
+STAFF_NOTE_MEMORY_STORE = StaffWorkbenchStore()
+SUMMARY_MEMORY_STORE = PlainLanguageSummaryStore()
+
+
+class StaffWorkbenchRouter:
+    """Route staff note calls to memory or the configured durable repository."""
+
+    def __init__(self, memory_store: StaffWorkbenchStore) -> None:
+        self._memory_store = memory_store
+
+    def _target(self) -> StaffWorkbenchRepository | StaffWorkbenchStore:
+        global _staff_workbench_db_url, _staff_workbench_repository
+        db_url = os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL")
+        if db_url is None:
+            return self._memory_store
+        if _staff_workbench_repository is None or db_url != _staff_workbench_db_url:
+            _staff_workbench_db_url = db_url
+            _staff_workbench_repository = StaffWorkbenchRepository(db_url=db_url)
+        return _staff_workbench_repository
+
+    def reset(self) -> None:
+        self._target().reset()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._target(), name)
+
+
+class PlainLanguageSummaryRouter:
+    """Route summary calls to memory or the configured durable repository."""
+
+    def __init__(self, memory_store: PlainLanguageSummaryStore) -> None:
+        self._memory_store = memory_store
+
+    def _target(self) -> PlainLanguageSummaryRepository | PlainLanguageSummaryStore:
+        global _plain_language_db_url, _plain_language_repository
+        db_url = os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL")
+        if db_url is None:
+            return self._memory_store
+        if _plain_language_repository is None or db_url != _plain_language_db_url:
+            _plain_language_db_url = db_url
+            _plain_language_repository = PlainLanguageSummaryRepository(db_url=db_url)
+        return _plain_language_repository
+
+    def reset(self) -> None:
+        self._target().reset()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._target(), name)
+
+
+STAFF_NOTE_STORE = StaffWorkbenchRouter(STAFF_NOTE_MEMORY_STORE)
+SUMMARY_STORE = PlainLanguageSummaryRouter(SUMMARY_MEMORY_STORE)
 HANDOFF_STORE = OrdinanceHandoffStore()
 POPULAR_QUESTION_STORE = PopularQuestionStore()
 _popular_question_repository: PopularQuestionRepository | None = None
@@ -530,9 +586,10 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.13 persists section/version lifecycle records and "
-            "popular-question discovery aids in the configured database; next "
-            "work follows the CivicSuite roadmap."
+            "CivicCode v0.1.14 persists section/version lifecycle records, "
+            "popular-question discovery aids, staff notes, and plain-language "
+            "summaries in the configured database; next work follows the "
+            "CivicSuite roadmap."
         ),
     }
 

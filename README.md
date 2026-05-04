@@ -9,7 +9,7 @@ sections.
 
 ## Current status
 
-As of 2026-05-04, CivicCode has a **durable section/version and discovery runtime**
+As of 2026-05-04, CivicCode has a **durable code, discovery, and staff guidance runtime**
 layered on the mock-city codifier contract suite, staff code lifecycle
 workspace, records-ready export and accessibility hardening foundation,
 local import foundation, public code
@@ -24,6 +24,8 @@ optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
 workspace pages, optional database-backed popular-question persistence,
 optional database-backed title/chapter/section/version lifecycle persistence,
+optional database-backed staff interpretation-note and plain-language summary
+persistence,
 staff code lifecycle workspace pages,
 section/version APIs, public-safe text search, stable section permalinks,
 deterministic citation/refusal objects, deterministic citation-grounded answers,
@@ -55,7 +57,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current release is CivicCode v0.1.13:
+The current release is CivicCode v0.1.14:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -102,6 +104,9 @@ The current release is CivicCode v0.1.13:
 - refuse legal-determination, uncited, ambiguous, missing, stale, or
   contradictory situations with a reason and fix path,
 - create staff-only interpretation notes for a code section,
+- persist staff interpretation notes and staff workbench audit events with
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL` so staff guidance survives process
+  restarts on the Docker/PostgreSQL path,
 - keep staff interpretation notes out of public lookup, public search, and
   public Q&A responses,
 - let staff Q&A responses include approved staff note context with a
@@ -112,6 +117,9 @@ The current release is CivicCode v0.1.13:
 - label public summaries as `non_authoritative_explanation`,
 - keep authoritative code text visible beside approved summaries,
 - append audit events when summaries are created and approved,
+- persist draft/approved plain-language summaries and their audit events with
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL` so public approved summaries survive
+  process restarts on the Docker/PostgreSQL path,
 - accept CivicClerk ordinance/adoption handoff events with meeting and agenda
   item provenance,
 - distinguish pending codification from adopted codified law,
@@ -157,7 +165,7 @@ The current release is CivicCode v0.1.13:
 - consume the current shared CivicCore v0.22.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.13 durable section lifecycle
+- keep docs and CI gates green for the v0.1.14 durable staff guidance
   release.
 
 ## Why CivicCode before CivicZone
@@ -219,7 +227,8 @@ docker compose up --build
 
 Expected Docker truth today: Compose starts PostgreSQL 17 with pgvector and the
 CivicCode API, runs CivicCore then CivicCode migrations before serving traffic,
-persists source registry records through `CIVICCODE_SOURCE_REGISTRY_DB_URL`, and
+persists source registry, section lifecycle, popular-question, staff-note, and
+plain-language summary records through `CIVICCODE_SOURCE_REGISTRY_DB_URL`, and
 seeds the City of Brookfield demo when `CIVICCODE_DEMO_SEED=1`. Open
 `http://127.0.0.1:8000/civiccode`, search for `6.12.040`, or open
 `/staff/code` through the trusted staff shell headers to review the seeded
@@ -285,8 +294,9 @@ python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 
 Expected migration truth today: CivicCore migrations run first, CivicCode uses
 `alembic_version_civiccode`, ten canonical `civiccode.*` tables are created,
-and `source_registry_records` is available for the optional DB-backed source
-registry runtime path.
+and runtime persistence tables are available for the optional DB-backed source
+registry, resident discovery, section lifecycle, staff note, and
+plain-language summary paths.
 
 Source registry smoke:
 
