@@ -1,0 +1,30 @@
+{
+  "name": "annotated unsigned tag object is rejected",
+  "tag_name": "vfixture-unsigned-tag",
+  "expected": "fail",
+  "expected_error": "tag object tag-unsigned is not GitHub-verified",
+  "responses": {
+    "ref": {
+      "object": {
+        "type": "tag",
+        "sha": "tag-unsigned"
+      }
+    },
+    "tag": {
+      "tag": "vfixture-unsigned-tag",
+      "tagger": {
+        "name": "Scott Converse",
+        "email": "scott.converse@gmail.com"
+      },
+      "object": {
+        "type": "commit",
+        "sha": "commit-good"
+      },
+      "verification": {
+        "verified": false,
+        "reason": "unsigned"
+      }
+    },
+    "commit": {}
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "signed tag pointing at unsigned commit is rejected",
+  "tag_name": "vfixture-unsigned-commit",
+  "expected": "fail",
+  "expected_error": "target commit commit-unsigned is not GitHub-verified",
+  "responses": {
+    "ref": {
+      "object": {
+        "type": "tag",
+        "sha": "tag-signed"
+      }
+    },
+    "tag": {
+      "tag": "vfixture-unsigned-commit",
+      "tagger": {
+        "name": "GitHub",
+        "email": "noreply@github.com"
+      },
+      "object": {
+        "type": "commit",
+        "sha": "commit-unsigned"
+      },
+      "verification": {
+        "verified": true,
+        "reason": "valid"
+      }
+    },
+    "commit": {
+      "sha": "commit-unsigned",
+      "commit": {
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@github.com"
+        },
+        "tree": {
+          "sha": "tree-good"
+        },
+        "verification": {
+          "verified": false,
+          "reason": "unsigned"
+        }
+      }
+    }
+  }
+}
