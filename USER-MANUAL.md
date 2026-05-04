@@ -511,7 +511,7 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.17 is the current durable codifier sync-state release. It
+CivicCode v0.1.18 is the current durable operational-state release. It
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists while retaining CivicCode-specific legal-boundary copy, and it now
 keeps local import job status, codifier sync configuration, host-validation
