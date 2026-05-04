@@ -7,6 +7,10 @@ from datetime import UTC, date, datetime
 from typing import Any
 from uuid import uuid4
 
+import sqlalchemy as sa
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.dialects.postgresql import JSONB
+
 
 VERSION_STATUSES = {"draft", "pending", "adopted", "superseded", "retired"}
 
@@ -522,6 +526,251 @@ class SectionLifecycleStore:
                         }
                     )
         return results
+
+
+metadata = sa.MetaData()
+json_type = JSONB().with_variant(sa.JSON(), "sqlite")
+
+code_title_records = sa.Table(
+    "code_title_records",
+    metadata,
+    sa.Column("title_id", sa.String(255), primary_key=True),
+    sa.Column("title_number", sa.String(80), nullable=False),
+    sa.Column("title_name", sa.String(500), nullable=False),
+    sa.Column("sort_order", sa.Integer(), nullable=False),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+code_chapter_records = sa.Table(
+    "code_chapter_records",
+    metadata,
+    sa.Column("chapter_id", sa.String(255), primary_key=True),
+    sa.Column("title_id", sa.String(255), nullable=False),
+    sa.Column("chapter_number", sa.String(80), nullable=False),
+    sa.Column("chapter_name", sa.String(500), nullable=False),
+    sa.Column("sort_order", sa.Integer(), nullable=False),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+code_section_records = sa.Table(
+    "code_section_records",
+    metadata,
+    sa.Column("section_id", sa.String(255), primary_key=True),
+    sa.Column("chapter_id", sa.String(255), nullable=False),
+    sa.Column("section_number", sa.String(120), nullable=False),
+    sa.Column("section_heading", sa.String(500), nullable=False),
+    sa.Column("parent_section_id", sa.String(255), nullable=True),
+    sa.Column("sort_order", sa.Integer(), nullable=False),
+    sa.Column("administrative_regulation_refs", json_type, nullable=False),
+    sa.Column("resolution_refs", json_type, nullable=False),
+    sa.Column("policy_refs", json_type, nullable=False),
+    sa.Column("approved_summary_refs", json_type, nullable=False),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+section_version_records = sa.Table(
+    "section_version_records",
+    metadata,
+    sa.Column("version_id", sa.String(255), primary_key=True),
+    sa.Column("section_id", sa.String(255), nullable=False),
+    sa.Column("source_id", sa.String(255), nullable=False),
+    sa.Column("version_label", sa.String(255), nullable=False),
+    sa.Column("body", sa.Text(), nullable=False),
+    sa.Column("effective_start", sa.Date(), nullable=False),
+    sa.Column("effective_end", sa.Date(), nullable=True),
+    sa.Column("status", sa.String(80), nullable=False),
+    sa.Column("is_current", sa.Boolean(), nullable=False),
+    sa.Column("adoption_event_id", sa.String(255), nullable=True),
+    sa.Column("amendment_event_id", sa.String(255), nullable=True),
+    sa.Column("amendment_summary", sa.Text(), nullable=True),
+    sa.Column("prior_version_id", sa.String(255), nullable=True),
+    sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    schema="civiccode",
+)
+
+
+class SectionLifecycleRepository(SectionLifecycleStore):
+    """Database-backed section lifecycle store for Docker/PostgreSQL product paths."""
+
+    def __init__(self, *, db_url: str | None = None, engine: Engine | None = None) -> None:
+        super().__init__()
+        base_engine = engine or create_engine(db_url or "sqlite+pysqlite:///:memory:", future=True)
+        if base_engine.dialect.name == "sqlite":
+            self.engine = base_engine.execution_options(schema_translate_map={"civiccode": None})
+        else:
+            self.engine = base_engine
+            with self.engine.begin() as connection:
+                connection.execute(sa.text("CREATE SCHEMA IF NOT EXISTS civiccode"))
+        metadata.create_all(self.engine)
+        self._load()
+
+    def create_title(self, data: dict[str, Any]) -> CodeTitle:
+        title = super().create_title(data)
+        with self.engine.begin() as connection:
+            connection.execute(code_title_records.insert().values(**title_to_record(title)))
+        return title
+
+    def create_chapter(self, data: dict[str, Any]) -> CodeChapter:
+        chapter = super().create_chapter(data)
+        with self.engine.begin() as connection:
+            connection.execute(code_chapter_records.insert().values(**chapter_to_record(chapter)))
+        return chapter
+
+    def create_section(self, data: dict[str, Any]) -> CodeSection:
+        section = super().create_section(data)
+        with self.engine.begin() as connection:
+            connection.execute(code_section_records.insert().values(**section_to_record(section)))
+        return section
+
+    def create_version(self, data: dict[str, Any]) -> SectionVersion:
+        version = super().create_version(data)
+        with self.engine.begin() as connection:
+            if version.is_current:
+                connection.execute(
+                    section_version_records.update()
+                    .where(section_version_records.c.section_id == version.section_id)
+                    .values(is_current=False)
+                )
+            connection.execute(section_version_records.insert().values(**version_to_record(version)))
+        return version
+
+    def reset(self) -> None:
+        super().reset()
+        with self.engine.begin() as connection:
+            connection.execute(section_version_records.delete())
+            connection.execute(code_section_records.delete())
+            connection.execute(code_chapter_records.delete())
+            connection.execute(code_title_records.delete())
+
+    def _load(self) -> None:
+        with self.engine.begin() as connection:
+            for row in connection.execute(sa.select(code_title_records)).mappings():
+                title = title_from_record(row)
+                self._titles[title.title_id] = title
+            for row in connection.execute(sa.select(code_chapter_records)).mappings():
+                chapter = chapter_from_record(row)
+                self._chapters[chapter.chapter_id] = chapter
+            for row in connection.execute(sa.select(code_section_records)).mappings():
+                section = section_from_record(row)
+                self._sections[section.section_id] = section
+            for row in connection.execute(sa.select(section_version_records)).mappings():
+                version = version_from_record(row)
+                self._versions[version.version_id] = version
+
+
+def title_to_record(title: CodeTitle) -> dict[str, Any]:
+    return {
+        "title_id": title.title_id,
+        "title_number": title.title_number,
+        "title_name": title.title_name,
+        "sort_order": title.sort_order,
+        "created_at": title.created_at,
+    }
+
+
+def chapter_to_record(chapter: CodeChapter) -> dict[str, Any]:
+    return {
+        "chapter_id": chapter.chapter_id,
+        "title_id": chapter.title_id,
+        "chapter_number": chapter.chapter_number,
+        "chapter_name": chapter.chapter_name,
+        "sort_order": chapter.sort_order,
+        "created_at": chapter.created_at,
+    }
+
+
+def section_to_record(section: CodeSection) -> dict[str, Any]:
+    return {
+        "section_id": section.section_id,
+        "chapter_id": section.chapter_id,
+        "section_number": section.section_number,
+        "section_heading": section.section_heading,
+        "parent_section_id": section.parent_section_id,
+        "sort_order": section.sort_order,
+        "administrative_regulation_refs": section.administrative_regulation_refs,
+        "resolution_refs": section.resolution_refs,
+        "policy_refs": section.policy_refs,
+        "approved_summary_refs": section.approved_summary_refs,
+        "created_at": section.created_at,
+    }
+
+
+def version_to_record(version: SectionVersion) -> dict[str, Any]:
+    return {
+        "version_id": version.version_id,
+        "section_id": version.section_id,
+        "source_id": version.source_id,
+        "version_label": version.version_label,
+        "body": version.body,
+        "effective_start": version.effective_start,
+        "effective_end": version.effective_end,
+        "status": version.status,
+        "is_current": version.is_current,
+        "adoption_event_id": version.adoption_event_id,
+        "amendment_event_id": version.amendment_event_id,
+        "amendment_summary": version.amendment_summary,
+        "prior_version_id": version.prior_version_id,
+        "created_at": version.created_at,
+    }
+
+
+def title_from_record(row: Any) -> CodeTitle:
+    return CodeTitle(
+        title_id=row["title_id"],
+        title_number=row["title_number"],
+        title_name=row["title_name"],
+        sort_order=row["sort_order"],
+        created_at=row["created_at"],
+    )
+
+
+def chapter_from_record(row: Any) -> CodeChapter:
+    return CodeChapter(
+        chapter_id=row["chapter_id"],
+        title_id=row["title_id"],
+        chapter_number=row["chapter_number"],
+        chapter_name=row["chapter_name"],
+        sort_order=row["sort_order"],
+        created_at=row["created_at"],
+    )
+
+
+def section_from_record(row: Any) -> CodeSection:
+    return CodeSection(
+        section_id=row["section_id"],
+        chapter_id=row["chapter_id"],
+        section_number=row["section_number"],
+        section_heading=row["section_heading"],
+        parent_section_id=row["parent_section_id"],
+        sort_order=row["sort_order"],
+        administrative_regulation_refs=list(row["administrative_regulation_refs"]),
+        resolution_refs=list(row["resolution_refs"]),
+        policy_refs=list(row["policy_refs"]),
+        approved_summary_refs=list(row["approved_summary_refs"]),
+        created_at=row["created_at"],
+    )
+
+
+def version_from_record(row: Any) -> SectionVersion:
+    return SectionVersion(
+        version_id=row["version_id"],
+        section_id=row["section_id"],
+        source_id=row["source_id"],
+        version_label=row["version_label"],
+        body=row["body"],
+        effective_start=row["effective_start"],
+        effective_end=row["effective_end"],
+        status=row["status"],
+        is_current=row["is_current"],
+        adoption_event_id=row["adoption_event_id"],
+        amendment_event_id=row["amendment_event_id"],
+        amendment_summary=row["amendment_summary"],
+        prior_version_id=row["prior_version_id"],
+        created_at=row["created_at"],
+    )
 
 
 def title_to_dict(title: CodeTitle) -> dict[str, Any]:

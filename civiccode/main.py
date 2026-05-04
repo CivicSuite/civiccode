@@ -65,6 +65,7 @@ from civiccode.qa_harness import (
 )
 from civiccode.section_lifecycle import (
     SectionLifecycleError,
+    SectionLifecycleRepository,
     SectionLifecycleStore,
     chapter_to_dict,
     section_to_dict,
@@ -108,7 +109,35 @@ app = FastAPI(
 SOURCE_STORE = SourceRegistryStore()
 _source_registry_repository: SourceRegistryRepository | None = None
 _source_registry_db_url: str | None = None
-SECTION_STORE = SectionLifecycleStore()
+SECTION_MEMORY_STORE = SectionLifecycleStore()
+_section_lifecycle_repository: SectionLifecycleRepository | None = None
+_section_lifecycle_db_url: str | None = None
+
+
+class SectionLifecycleRouter:
+    """Route lifecycle calls to memory or the configured durable repository."""
+
+    def __init__(self, memory_store: SectionLifecycleStore) -> None:
+        self._memory_store = memory_store
+
+    def _target(self) -> SectionLifecycleRepository | SectionLifecycleStore:
+        global _section_lifecycle_db_url, _section_lifecycle_repository
+        db_url = os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL")
+        if db_url is None:
+            return self._memory_store
+        if _section_lifecycle_repository is None or db_url != _section_lifecycle_db_url:
+            _section_lifecycle_db_url = db_url
+            _section_lifecycle_repository = SectionLifecycleRepository(db_url=db_url)
+        return _section_lifecycle_repository
+
+    def reset(self) -> None:
+        self._target().reset()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._target(), name)
+
+
+SECTION_STORE = SectionLifecycleRouter(SECTION_MEMORY_STORE)
 STAFF_NOTE_STORE = StaffWorkbenchStore()
 SUMMARY_STORE = PlainLanguageSummaryStore()
 HANDOFF_STORE = OrdinanceHandoffStore()
@@ -501,8 +530,9 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.12 persists popular-question discovery aids in the "
-            "configured database; next work follows the CivicSuite roadmap."
+            "CivicCode v0.1.13 persists section/version lifecycle records and "
+            "popular-question discovery aids in the configured database; next "
+            "work follows the CivicSuite roadmap."
         ),
     }
 
@@ -1393,6 +1423,17 @@ def _get_popular_question_store() -> PopularQuestionRepository | PopularQuestion
         _popular_question_db_url = db_url
         _popular_question_repository = PopularQuestionRepository(db_url=db_url)
     return _popular_question_repository
+
+
+def _get_section_store() -> SectionLifecycleRepository | SectionLifecycleStore:
+    global _section_lifecycle_db_url, _section_lifecycle_repository
+    db_url = os.environ.get("CIVICCODE_SOURCE_REGISTRY_DB_URL")
+    if db_url is None:
+        return SECTION_STORE
+    if _section_lifecycle_repository is None or db_url != _section_lifecycle_db_url:
+        _section_lifecycle_db_url = db_url
+        _section_lifecycle_repository = SectionLifecycleRepository(db_url=db_url)
+    return _section_lifecycle_repository
 
 
 def _source_store_key() -> str:

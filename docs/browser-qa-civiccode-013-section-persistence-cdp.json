@@ -1,0 +1,46 @@
+{
+  "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+  "capturedAt": "2026-05-04T13:48:07.038074+00:00",
+  "results": [
+    {
+      "target": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-013-section-persistence-desktop.png",
+      "htmlPath": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-013-section-persistence-desktop-dom.html",
+      "consoleMessages": [],
+      "pageErrors": [],
+      "metrics": {
+        "title": "CivicCode - CivicSuite municipal code module",
+        "hasVersion": true,
+        "hasSectionDurable": true,
+        "hasDbUrl": true,
+        "hasLegalBoundary": true,
+        "horizontalOverflow": false,
+        "focusedText": "Skip to CivicCode content"
+      }
+    },
+    {
+      "target": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-013-section-persistence-mobile.png",
+      "htmlPath": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-013-section-persistence-mobile-dom.html",
+      "consoleMessages": [],
+      "pageErrors": [],
+      "metrics": {
+        "title": "CivicCode - CivicSuite municipal code module",
+        "hasVersion": true,
+        "hasSectionDurable": true,
+        "hasDbUrl": true,
+        "hasLegalBoundary": true,
+        "horizontalOverflow": false,
+        "focusedText": "Skip to CivicCode content"
+      }
+    }
+  ]
+}

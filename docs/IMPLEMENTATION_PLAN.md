@@ -96,7 +96,7 @@ Required gates for every PR:
 | 1 | Runtime foundation | Installable package + FastAPI shell | No | Low |
 | 2 | Database foundation | CivicCode schema + Alembic | No | High |
 | 3 | Source registry | Official source metadata API | Optional | Medium |
-| 4 | Section/version model | Titles, chapters, sections, versions | No | High |
+| 4 | Section/version model | Titles, chapters, sections, versions | Durable v0.1.13 | High |
 | 5 | Search + permalinks | Search and stable section URLs | Yes | Medium |
 | 6 | Citation contract | Deterministic citation model and refusal rules | No | High |
 | 7 | Q&A harness | Local-LLM provider wiring with no legal advice | Optional | High |

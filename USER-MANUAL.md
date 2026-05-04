@@ -192,9 +192,11 @@ python -m alembic -c civiccode/migrations/alembic.ini upgrade head
 ```
 
 The migration chain runs CivicCore first and stores CivicCode's revision in
-`alembic_version_civiccode`. The source registry persistence slice adds
-`source_registry_records` as an optional runtime table for durable source
-metadata.
+`alembic_version_civiccode`. The durable product path adds
+`source_registry_records`, `popular_question_records`, and
+`code_title_records` / `code_chapter_records` / `code_section_records` /
+`section_version_records` as runtime tables for source metadata, resident
+discovery aids, and adopted-code lifecycle data.
 
 Inspect source-registry vocabulary:
 
