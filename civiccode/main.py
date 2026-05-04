@@ -14,6 +14,7 @@ from civiccode import __version__
 from civiccode.citation_contract import build_citation_payload, refusal
 from civiccode.codifier_sync import (
     CodifierSyncError,
+    CodifierSyncRepository,
     CodifierSyncStore,
     sync_source_to_dict,
 )
@@ -617,10 +618,10 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.16 persists section/version lifecycle records, "
+            "CivicCode v0.1.17 persists section/version lifecycle records, "
             "popular-question discovery aids, staff notes, plain-language "
             "summaries, CivicClerk handoff records, handoff audit events, and "
-            "local import job ledgers "
+            "local import job ledgers plus codifier sync source state "
             "in the configured database; next work follows the CivicSuite roadmap."
         ),
     }
@@ -1551,9 +1552,10 @@ def _get_codifier_sync_store() -> CodifierSyncStore:
         return CODIFIER_SYNC_STORE
     if _codifier_sync_store is None or _codifier_sync_store_source_key != source_key:
         _codifier_sync_store_source_key = source_key
-        _codifier_sync_store = CodifierSyncStore(
+        _codifier_sync_store = CodifierSyncRepository(
             source_store=_get_source_store(),
             import_store=_get_import_store(),
+            db_url=source_key,
         )
     return _codifier_sync_store
 

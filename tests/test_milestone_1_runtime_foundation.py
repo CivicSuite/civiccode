@@ -34,7 +34,7 @@ def test_pyproject_declares_runtime_package_and_release_version() -> None:
     data = load_pyproject()
 
     assert data["project"]["name"] == "civiccode"
-    assert data["project"]["version"] == "0.1.16"
+    assert data["project"]["version"] == "0.1.17"
     assert "CivicCode" in data["project"]["description"]
 
 
@@ -97,10 +97,10 @@ async def test_root_endpoint_explains_current_user_experience() -> None:
     assert payload["api_base"] == "/api/v1/civiccode"
     assert payload["future_public_path"] == "/civiccode"
     assert payload["next_step"] == (
-        "CivicCode v0.1.16 persists section/version lifecycle records, "
+        "CivicCode v0.1.17 persists section/version lifecycle records, "
         "popular-question discovery aids, staff notes, plain-language "
         "summaries, CivicClerk handoff records, handoff audit events, and "
-        "local import job ledgers "
+        "local import job ledgers plus codifier sync source state "
         "in the configured database; next work follows the CivicSuite roadmap."
     )
     assert "not implemented" in payload["message"].lower()
@@ -135,7 +135,7 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
     assert payload == {
         "status": "ok",
         "service": "civiccode",
-            "version": "0.1.16",
+            "version": "0.1.17",
         "civiccore": "0.22.0",
     }
 

@@ -16,7 +16,8 @@ The source registry remains the official source metadata foundation for every
 summary, citation, lookup, popular question, related-material navigation aid,
 and Q&A response. It can now persist source records, popular questions, code
 section lifecycle records, staff notes, plain-language summaries,
-CivicClerk handoff records, and local import job ledgers when
+CivicClerk handoff records, local import job ledgers, and codifier sync source
+state when
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
 in-memory stores for lightweight local demos. Staff source mutations and
 staff-only source reads require the trusted staff header seam, and
@@ -102,6 +103,9 @@ Current truth:
 - local import job ledgers persist status, counts, provenance, actionable
   failure details, and completion timestamps on the configured
   Docker/PostgreSQL path,
+- codifier sync source state persists configuration, host-validation result,
+  next-run cursor, last attempted/successful run, circuit-breaker state, and
+  delta-plan history on the configured Docker/PostgreSQL path,
 - provenance reports show source metadata, fixture checksum, and
   no-outbound-dependency status,
 - staff can configure active official codifier sources for sync readiness,
@@ -209,7 +213,8 @@ The migration chain runs CivicCore first and stores CivicCode's revision in
 `section_version_records`, plus `staff_interpretation_note_records`,
 `staff_workbench_audit_event_records`, `plain_language_summary_records`, and
 `plain_language_summary_audit_event_records`, `ordinance_handoff_records`,
-`ordinance_handoff_audit_event_records`, and `import_job_records` as runtime
+`ordinance_handoff_audit_event_records`, `import_job_records`,
+`codifier_sync_source_records`, and `codifier_sync_delta_plan_records` as runtime
 tables for source metadata, resident discovery aids, adopted-code lifecycle
 data, staff guidance, non-authoritative public summaries, CivicClerk
 pending-codification warnings, and staff import history.
@@ -506,9 +511,10 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.16 is the current durable import-job ledger release. It
+CivicCode v0.1.17 is the current durable codifier sync-state release. It
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists while retaining CivicCode-specific legal-boundary copy, and it now
-keeps local import job status, counts, provenance, failure details, and
-completion timestamps in the configured database. Future work moves to the next
+keeps local import job status, codifier sync configuration, host-validation
+results, circuit-breaker state, delta-plan history, and completion timestamps
+in the configured database. Future work moves to the next
 module or release plan in the CivicSuite unified roadmap.

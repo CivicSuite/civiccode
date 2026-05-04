@@ -6,7 +6,7 @@ Municipal code and ordinance access for the CivicSuite product family.
 Current status
 --------------
 
-As of 2026-05-04, CivicCode has a durable code, discovery, staff guidance, CivicClerk handoff, and local import-job runtime layered on the
+As of 2026-05-04, CivicCode has a durable code, discovery, staff guidance, CivicClerk handoff, local import-job, and codifier sync-state runtime layered on the
 mock-city codifier contract suite, staff code lifecycle workspace,
 records-ready export and accessibility
 hardening foundation, local import foundation, public code lookup
@@ -44,7 +44,7 @@ verification, and a checksum manifest.
 
 This is not a legal-advice product and does not make live LLM calls. The
 staff-controlled codifier sync foundation can validate schedules and source
-hosts, plan delta requests, run already-fetched local payloads through the
+hosts, persist host-validation results, plan delta requests, run already-fetched local payloads through the
 import path, and show CivicCore circuit-breaker health. There is no
 CivicAccess runtime dependency, live LLM-backed frontend workflow, live LLM
 calls, bundled vendor credentials, automatic ordinance codification, or legal
@@ -161,10 +161,10 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.16 is the current durable import-job ledger release. It
+CivicCode v0.1.17 is the current durable codifier sync-state release. It
 persists source registry records, title/chapter/section/version records,
 staff-approved popular questions, staff notes, plain-language summaries,
-CivicClerk handoff records, handoff audit events, and local import job records through
+CivicClerk handoff records, handoff audit events, local import job records, and codifier sync source records through
 `CIVICCODE_SOURCE_REGISTRY_DB_URL` on the Docker/PostgreSQL product path,
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular
