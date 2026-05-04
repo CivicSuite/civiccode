@@ -183,6 +183,16 @@ def source_registry_records_migration_path() -> Path:
     )
 
 
+def popular_question_records_migration_path() -> Path:
+    return (
+        ROOT
+        / "civiccode"
+        / "migrations"
+        / "versions"
+        / "civiccode_0003_popular_question_records.py"
+    )
+
+
 def test_canonical_table_models_exist_and_no_tables_are_missing_or_extra() -> None:
     models = model_module()
     metadata = models.Base.metadata
@@ -246,6 +256,7 @@ def test_alembic_scaffold_exists_for_civiccode_schema_chain() -> None:
         ROOT / "civiccode" / "migrations" / "env.py",
         migration_path(),
         source_registry_records_migration_path(),
+        popular_question_records_migration_path(),
     ]
 
     for path in expected:
@@ -347,8 +358,11 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             )
 
         assert civiccore_revision == "civiccore_0002_llm"
-        assert civiccode_revision == "civiccode_0002_sources"
-        assert civiccode_tables == set(CANONICAL_TABLES) | {"source_registry_records"}
+        assert civiccode_revision == "civiccode_0003_popular_questions"
+        assert civiccode_tables == set(CANONICAL_TABLES) | {
+            "source_registry_records",
+            "popular_question_records",
+        }
     finally:
         subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True, text=True)
 
@@ -385,6 +399,19 @@ def test_source_registry_records_migration_declares_persistent_records_table() -
     assert '"source_registry_records"' in text
     assert '"source_id"' in text
     assert '"official_status_note"' in text
+    assert 'schema="civiccode"' in text
+
+
+def test_popular_question_records_migration_declares_persistent_records_table() -> None:
+    text = popular_question_records_migration_path().read_text(encoding="utf-8")
+
+    assert 'revision = "civiccode_0003_popular_questions"' in text
+    assert 'down_revision = "civiccode_0002_sources"' in text
+    assert "idempotent_create_table" in text
+    assert '"popular_question_records"' in text
+    assert '"question_id"' in text
+    assert '"section_number"' in text
+    assert '"citation_payload"' in text
     assert 'schema="civiccode"' in text
 
 

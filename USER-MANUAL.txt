@@ -428,9 +428,11 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.11 is the current popular questions and related-sections
-discovery release. It reuses the shared CivicCore source-list health projection
-for codifier sync source lists while retaining CivicCode-specific
-legal-boundary copy. Popular questions and related materials are navigation
-aids, not legal determinations. Future work moves to the next module or release
-plan in the CivicSuite unified roadmap.
+CivicCode v0.1.12 is the current durable popular-questions discovery release.
+It persists staff-approved popular questions through
+`CIVICCODE_SOURCE_REGISTRY_DB_URL` on the Docker/PostgreSQL product path,
+reuses the shared CivicCore source-list health projection for codifier sync
+source lists, and retains CivicCode-specific legal-boundary copy. Popular
+questions and related materials are navigation aids, not legal determinations.
+Future work moves to the next module or release plan in the CivicSuite unified
+roadmap.

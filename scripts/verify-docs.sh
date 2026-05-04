@@ -61,6 +61,8 @@ required=(
   "civiccode/migrations/env.py"
   "civiccode/migrations/guards.py"
   "civiccode/migrations/versions/civiccode_0001_schema.py"
+  "civiccode/migrations/versions/civiccode_0002_source_registry_records.py"
+  "civiccode/migrations/versions/civiccode_0003_popular_question_records.py"
   "tests/fixtures/milestone_12/csv_bundle.json"
   "tests/fixtures/milestone_12/official_html_extract.json"
   "tests/fixtures/milestone_12/broken_missing_section.json"
