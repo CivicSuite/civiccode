@@ -1,0 +1,35 @@
+{
+  "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+  "desktop": {
+    "viewport": "1440x1200",
+    "metrics": {
+      "title": "CivicCode - CivicSuite municipal code module",
+      "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+      "bodyOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "activeText": "Skip to CivicCode content",
+      "versionVisible": true,
+      "durableStaffVisible": true,
+      "statusVisible": true
+    },
+    "logEventCount": 0,
+    "logEvents": []
+  },
+  "mobile": {
+    "viewport": "390x1000",
+    "metrics": {
+      "title": "CivicCode - CivicSuite municipal code module",
+      "url": "file:///C:/Users/scott/OneDrive/Desktop/Claude/civiccode/docs/index.html",
+      "bodyOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "activeText": "Skip to CivicCode content",
+      "versionVisible": true,
+      "durableStaffVisible": true,
+      "statusVisible": true
+    },
+    "logEventCount": 0,
+    "logEvents": []
+  }
+}

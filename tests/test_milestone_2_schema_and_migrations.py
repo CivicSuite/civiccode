@@ -203,6 +203,16 @@ def section_lifecycle_records_migration_path() -> Path:
     )
 
 
+def staff_summary_records_migration_path() -> Path:
+    return (
+        ROOT
+        / "civiccode"
+        / "migrations"
+        / "versions"
+        / "civiccode_0005_staff_summary_records.py"
+    )
+
+
 def test_canonical_table_models_exist_and_no_tables_are_missing_or_extra() -> None:
     models = model_module()
     metadata = models.Base.metadata
@@ -268,6 +278,7 @@ def test_alembic_scaffold_exists_for_civiccode_schema_chain() -> None:
         source_registry_records_migration_path(),
         popular_question_records_migration_path(),
         section_lifecycle_records_migration_path(),
+        staff_summary_records_migration_path(),
     ]
 
     for path in expected:
@@ -369,7 +380,7 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             )
 
         assert civiccore_revision == "civiccore_0002_llm"
-        assert civiccode_revision == "civiccode_0004_section_lifecycle"
+        assert civiccode_revision == "civiccode_0005_staff_summaries"
         assert civiccode_tables == set(CANONICAL_TABLES) | {
             "source_registry_records",
             "popular_question_records",
@@ -377,6 +388,10 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             "code_chapter_records",
             "code_section_records",
             "section_version_records",
+            "staff_interpretation_note_records",
+            "staff_workbench_audit_event_records",
+            "plain_language_summary_records",
+            "plain_language_summary_audit_event_records",
         }
     finally:
         subprocess.run(["docker", "rm", "-f", name], check=False, capture_output=True, text=True)
@@ -445,6 +460,24 @@ def test_section_lifecycle_records_migration_declares_persistent_records_tables(
         assert f'"{table_name}"' in text
     assert '"section_number"' in text
     assert '"effective_start"' in text
+    assert 'schema="civiccode"' in text
+
+
+def test_staff_summary_records_migration_declares_persistent_records_tables() -> None:
+    text = staff_summary_records_migration_path().read_text(encoding="utf-8")
+
+    assert 'revision = "civiccode_0005_staff_summaries"' in text
+    assert 'down_revision = "civiccode_0004_section_lifecycle"' in text
+    assert "idempotent_create_table" in text
+    for table_name in [
+        "staff_interpretation_note_records",
+        "staff_workbench_audit_event_records",
+        "plain_language_summary_records",
+        "plain_language_summary_audit_event_records",
+    ]:
+        assert f'"{table_name}"' in text
+    assert '"summary_text"' in text
+    assert '"approved_by"' in text
     assert 'schema="civiccode"' in text
 
 

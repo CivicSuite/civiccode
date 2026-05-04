@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.14] - 2026-05-04
+
+### Added
+
+- Durable staff interpretation-note and plain-language summary storage when
+  `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured.
+- Alembic revision `civiccode_0005_staff_summaries` for staff notes, staff
+  workbench audit events, summary records, and summary audit events.
+
+### Changed
+
+- Staff note creation, summary draft creation, summary approval, and their audit
+  event listings now survive process restarts on the Docker/PostgreSQL product
+  path while preserving the in-memory store for lightweight local mode.
+
 ## [0.1.13] - 2026-05-04
 
 ### Added

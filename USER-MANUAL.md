@@ -14,9 +14,10 @@ explains what a first-time installer can do today and what is still planned.
 
 The source registry remains the official source metadata foundation for every
 summary, citation, lookup, popular question, related-material navigation aid,
-and Q&A response. It can now persist source records
-when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
-in-memory store for lightweight local demos. Staff source mutations and
+and Q&A response. It can now persist source records, popular questions, code
+section lifecycle records, staff notes, and plain-language summaries when
+`CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured; otherwise it uses the
+in-memory stores for lightweight local demos. Staff source mutations and
 staff-only source reads require the trusted staff header seam, and
 `/staff/sources` makes active, stale, and failed source readiness visible to
 code administrators. `/staff/code` gives staff a single lifecycle review page
@@ -79,11 +80,15 @@ Current truth:
 - public lookup, public search, and public Q&A responses do not expose staff
   notes or staff note counts,
 - staff note writes append audit events,
+- staff notes and staff workbench audit events persist on the configured
+  Docker/PostgreSQL path,
 - staff can draft and approve plain-language summaries tied to adopted section
   versions,
 - public summaries are visible only after staff approval,
 - approved public summaries are labeled `non_authoritative_explanation` and
   displayed with authoritative section text,
+- summary drafts, approvals, and summary audit events persist on the configured
+  Docker/PostgreSQL path,
 - staff can receive CivicClerk ordinance/adoption handoff events,
 - affected section lookups include pending codification warnings,
 - pending ordinance language is not adopted law and does not replace codified
@@ -195,8 +200,11 @@ The migration chain runs CivicCore first and stores CivicCode's revision in
 `alembic_version_civiccode`. The durable product path adds
 `source_registry_records`, `popular_question_records`, and
 `code_title_records` / `code_chapter_records` / `code_section_records` /
-`section_version_records` as runtime tables for source metadata, resident
-discovery aids, and adopted-code lifecycle data.
+`section_version_records`, plus `staff_interpretation_note_records`,
+`staff_workbench_audit_event_records`, `plain_language_summary_records`, and
+`plain_language_summary_audit_event_records` as runtime tables for source
+metadata, resident discovery aids, adopted-code lifecycle data, staff guidance,
+and non-authoritative public summaries.
 
 Inspect source-registry vocabulary:
 
