@@ -8,18 +8,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Adversarial release-provenance fixture suite covering lightweight tags,
-  unsigned annotated tag objects, unsigned target commits, non-org identities,
-  mismatched committer fields, tree mismatch, and localhost tagger identities.
-- Pre-publication release provenance workflow that runs the release gate before
-  GitHub Release assets are published.
+- Sigstore attestation release workflow for future `v*` tags. The workflow
+  builds wheel/sdist artifacts, writes schema-v1 `release-attestation.json`,
+  signs it with GitHub Actions OIDC through cosign, verifies it before
+  publication, and publishes the attestation bundle beside the release assets.
+- CivicCore-backed release-provenance wrapper and attestation builder scripts so
+  CivicCode consumes the shared suite provenance gate instead of maintaining a
+  local tag-object verifier.
+- Adversarial Sigstore release-provenance fixture suite covering missing schema,
+  wrong workflow identity, artifact-hash mismatch, unexpected OIDC issuer,
+  transparency-log outage, tag-target mismatch, workflow identity drift, and
+  trust-root rotation.
 
 ### Changed
 
-- Release provenance gate now rejects unsigned annotated tag objects and
-  requires the fixture suite to pass before live tag verification.
-- Release-signing runbook now documents the v0.1.17/v0.1.18 two-release
-  correction window and treats the failures as a class, not one-offs.
+- Release provenance gate now treats Git tags as pointers and verifies the
+  Sigstore attestation, bundle, exact workflow identity, artifact hashes, target
+  commit, and target tree before publication.
+- Release-signing runbook now documents the unachievable GitHub tag-signature
+  target, the v0.1.17/v0.1.18 historical state, exact clean-machine
+  verification commands, and the no-destructive-correction boundary.
 
 ## [0.1.18] - 2026-05-04
 
