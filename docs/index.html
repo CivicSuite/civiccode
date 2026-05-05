@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -146,7 +146,7 @@
       <ul>
         <li>Installable Python package.</li>
         <li>FastAPI runtime foundation with <code>/</code> and <code>/health</code>.</li>
-        <li>Published <code>civiccore v0.22.0</code> release-wheel dependency.</li>
+        <li>Published <code>civiccore v0.22.1</code> release-wheel dependency.</li>
         <li>Staff-header-protected source registry mutations and staff source reads.</li>
         <li>Staff source registry workspace at <code>/staff/sources</code> with empty, active, stale, failed, and access-required states.</li>
         <li>Staff code lifecycle workspace at <code>/staff/code</code> with access-required, empty, readiness-snapshot, section-card, draft-summary, and pending-codification states.</li>
@@ -192,7 +192,7 @@
     </section>
     <section>
       <h2>Current next step</h2>
-      <p>CivicCode v0.1.18 is the current durable operational-state product line with CivicCore v0.22.0 source-list health projection reuse. Release provenance is moving to the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and remain in place until additive attestation retrofit is explicitly authorized; review <code>docs/ops/release-signing.md</code> before publishing, mirroring, or relying on release artifacts.</p>
+      <p>CivicCode v0.1.18 is the current durable operational-state product line with CivicCore v0.22.1 source-list health projection reuse. Release provenance is moving to the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and CO-4 records both as historical pre-gate/no-attestation releases; review <code>docs/ops/tier1-retrofit-ledger.md</code> before publishing, mirroring, or relying on release artifacts.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

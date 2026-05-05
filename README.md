@@ -1,4 +1,4 @@
-# CivicCode
+﻿# CivicCode
 
 **Municipal code and ordinance access for the CivicSuite product family.**
 
@@ -18,7 +18,7 @@ plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
-a published `civiccore v0.22.0` release-wheel dependency, canonical SQLAlchemy table
+a published `civiccore v0.22.1` release-wheel dependency, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
@@ -66,10 +66,11 @@ the suite-wide Sigstore attestation model: the Git tag is a pointer, and the
 trust artifact is `release-attestation.json` plus
 `release-attestation.json.bundle`, verified against the exact
 `CivicSuite/civiccode` release workflow identity. The existing v0.1.17 and
-v0.1.18 releases predate that model and remain in place until additive
-attestation retrofit is explicitly authorized; see
-[docs/ops/release-signing.md](docs/ops/release-signing.md) before publishing,
-mirroring, or relying on release artifacts:
+v0.1.18 releases predate that model and CO-4 records both as historical
+pre-gate/no-attestation releases in
+[docs/ops/tier1-retrofit-ledger.md](docs/ops/tier1-retrofit-ledger.md). Do not
+publish, mirror, or rely on those release artifacts as attested provenance
+baselines:
 
 - install and import the package,
 - expose health/root endpoints for IT smoke checks,
@@ -187,7 +188,7 @@ mirroring, or relying on release artifacts:
   `scripts/start_docker_backup_restore_rehearsal.sh` on Bash,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
-- consume the current shared CivicCore v0.22.0 release wheel,
+- consume the current shared CivicCore v0.22.1 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
 - keep docs and CI gates green for the v0.1.18 durable operational-state
@@ -238,7 +239,7 @@ Install the CivicCore release wheel first, then install CivicCode in editable
 mode:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.0/civiccore-0.22.0-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.1/civiccore-0.22.1-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```

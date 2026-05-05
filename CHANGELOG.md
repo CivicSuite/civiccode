@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- CO-4 Tier 1 retrofit ledger for `v0.1.17` and `v0.1.18`, marking both
+  releases as historical pre-gate/no-attestation/do-not-promote without
+  changing public release notes, tags, or assets.
 - Sigstore attestation release workflow for future `v*` tags. The workflow
   builds wheel/sdist artifacts, writes schema-v1 `release-attestation.json`,
   signs it with GitHub Actions OIDC through cosign, verifies it before
@@ -22,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Updated the active CivicCore dependency and current install/provenance docs to
+  the first attested CivicCore baseline, `v0.22.1`.
 - Release provenance gate now treats Git tags as pointers and verifies the
   Sigstore attestation, bundle, exact workflow identity, artifact hashes, target
   commit, and target tree before publication.
