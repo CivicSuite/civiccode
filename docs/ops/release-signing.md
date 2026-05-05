@@ -1,4 +1,4 @@
-# Release Signing and Provenance
+﻿# Release Signing and Provenance
 
 CivicCode releases do not rely on a secret signing key on one maintainer's
 workstation. The release trust artifact is a versioned
@@ -53,11 +53,9 @@ auditor-facing justification.
 ## Attestation Contract
 
 CivicCode consumes the canonical CivicCore release-provenance helper and
-schema-v1 attestation contract. During the transition window, the workflow
-installs the helper from `CivicSuite/civiccore@main` because the helper is not
-yet available in a published CivicCore release. Product runtime tests continue
-to run against the published `civiccore v0.22.0` dependency before the
-provenance tooling phase installs CivicCore main.
+schema-v1 attestation contract. Product runtime tests run against the published,
+Sigstore-attested `civiccore v0.22.1` dependency before the provenance tooling
+phase installs CivicCore main for the latest shared fixture set.
 
 The attestation schema is versioned and canonicalized before signing. A valid
 attestation must name:
@@ -140,9 +138,10 @@ or checksum manifest changes after signing, the gate rejects the release.
 ## Historical v0.1.17 and v0.1.18 State
 
 The v0.1.17 and v0.1.18 releases predate the Sigstore attestation model and are
-not corrected by deleting or recreating tags. They remain in place as historical
-artifacts until additive attestation retrofit is explicitly authorized per
-release.
+not corrected by deleting or recreating tags. CO-4 records both releases as
+historical pre-gate artifacts in
+[`docs/ops/tier1-retrofit-ledger.md`](tier1-retrofit-ledger.md). They must not
+be promoted as attested provenance baselines.
 
 ### v0.1.17 First Correction Framing
 
@@ -153,9 +152,9 @@ confirming feasibility; the swarm executed in good faith against the available
 target; the corrected model now uses an achievable Sigstore attestation target.
 This is not recorded as a swarm execution failure.
 
-### Current v0.1.18 Defect Statement
+### Current v0.1.18 Ledger Statement
 
-Current public artifact: `v0.1.18`.
+Historical pre-gate artifact: `v0.1.18`.
 
 Auditor-verifiable facts:
 
@@ -177,6 +176,9 @@ python scripts/verify-release-provenance.py v0.1.18 --repo CivicSuite/civiccode
 
 The command fails closed because live release verification now requires an
 attestation and bundle.
+
+The same CO-4 rule applies to `v0.1.17`: the release remains available only as
+historical pre-gate material and is not an attested provenance baseline.
 
 ## Post-Publication Verification
 

@@ -1,4 +1,4 @@
-# CivicCode User Manual
+﻿# CivicCode User Manual
 
 CivicCode currently ships a popular-questions and related-sections discovery
 runtime built on the
@@ -141,7 +141,7 @@ documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
 - standalone module repo under `CivicSuite/`,
-- published `civiccore v0.22.0` release-wheel dependency,
+- published `civiccore v0.22.1` release-wheel dependency,
 - local LLM only through `civiccore.llm`,
 - no cloud dependency,
 - no imports from unreleased CivicCore placeholder packages.
@@ -149,7 +149,7 @@ CivicSuite pattern:
 Install and run:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.0/civiccore-0.22.0-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.1/civiccore-0.22.1-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
@@ -512,9 +512,10 @@ future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
 CivicCode v0.1.18 is the current durable operational-state product line. Its
-first publication is held in a release-provenance correction window because the
-annotated tag object is unsigned; check `docs/ops/release-signing.md` before
-publishing, mirroring, or relying on release artifacts. The product line
+first publication is a historical pre-gate release because the annotated tag
+object is unsigned and no Sigstore attestation assets were published; check
+`docs/ops/tier1-retrofit-ledger.md` before publishing, mirroring, or relying on
+release artifacts. The product line
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists while retaining CivicCode-specific legal-boundary copy, and it now
 keeps local import job status, codifier sync configuration, host-validation
