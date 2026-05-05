@@ -1,0 +1,38 @@
+[
+  {
+    "viewport": {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1100
+    },
+    "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-019-sigstore-provenance-desktop.png",
+    "dom": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-019-sigstore-provenance-desktop-dom.html",
+    "title": "CivicCode - CivicSuite municipal code module",
+    "h1": "CivicCode",
+    "hasSigstoreCopy": true,
+    "hasBundleCopy": true,
+    "hasActionableRunbookCopy": true,
+    "noHorizontalOverflow": true,
+    "focusedAfterTab": "Skip to CivicCode content",
+    "consoleErrors": [],
+    "pageErrors": []
+  },
+  {
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 1000
+    },
+    "screenshot": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-019-sigstore-provenance-mobile.png",
+    "dom": "C:\\Users\\scott\\OneDrive\\Desktop\\Claude\\civiccode\\docs\\browser-qa-civiccode-019-sigstore-provenance-mobile-dom.html",
+    "title": "CivicCode - CivicSuite municipal code module",
+    "h1": "CivicCode",
+    "hasSigstoreCopy": true,
+    "hasBundleCopy": true,
+    "hasActionableRunbookCopy": true,
+    "noHorizontalOverflow": true,
+    "focusedAfterTab": "Skip to CivicCode content",
+    "consoleErrors": [],
+    "pageErrors": []
+  }
+]

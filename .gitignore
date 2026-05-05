@@ -12,3 +12,4 @@ node_modules/
 .docker-backup-restore-rehearsal/
 .tmp-chrome-cdp-*/
 docs/browser-qa-*-dom.html
+tests/fixtures/release_provenance/.generated/

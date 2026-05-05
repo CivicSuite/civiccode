@@ -1,103 +1,163 @@
 # Release Signing and Provenance
 
-CivicCode releases must not depend on a secret signing key on one maintainer's
-workstation. The release identity must be real, published, and associated with
-the CivicSuite organization or GitHub's documented web-flow signing identity.
-Do not use `scott@localhost` or any other placeholder identity for release
-commits, taggers, or signing keys.
+CivicCode releases do not rely on a secret signing key on one maintainer's
+workstation. The release trust artifact is a versioned
+`release-attestation.json` plus `release-attestation.json.bundle`, signed by
+Sigstore/cosign from the GitHub Actions release workflow's OIDC identity.
 
 Release provenance is a pre-flight gate, not post-publication forensics. A
 failing gate produces no release assets. There is no dev-process exemption, no
 localhost identity exception, and no "fix it in the next release" path.
 
-## Current v0.1.x Signing Model
+## Current Signing Model
 
-The current CivicCode v0.1.x release line uses GitHub web-flow verification for
-release commits and release tag objects. The acceptable dev-process release
-shape is:
+Git tags are release pointers. They are not the trust root. GitHub's release
+page can show a "Verified" badge for the target commit even when the tag object
+is lightweight or unsigned, so the strengthened gate verifies the Sigstore
+attestation instead of trusting the release-page badge.
 
-1. Merge the release PR through GitHub, not by pushing a local unsigned commit
-   directly to `main`.
-2. Verify the target commit through the GitHub commit API before creating any
-   public release artifact.
-3. Create a GitHub-verified annotated release tag object that points at that
-   GitHub-verified commit.
-4. Run the adversarial fixture suite before checking the real tag:
+The acceptable CivicCode release shape is:
 
-   ```bash
-   python scripts/verify-release-provenance.py --fixtures-dir tests/fixtures/release_provenance
-   ```
+1. Push a `v*` tag only after the release branch has merged through GitHub.
+2. Run the release workflow in `.github/workflows/release.yml`.
+3. Run the adversarial fixture suite before building release assets.
+4. Build the wheel, source distribution, and `SHA256SUMS.txt`.
+5. Build canonical schema-v1 `release-attestation.json` naming the tag ref,
+   target commit, target tree, workflow identity, and artifact hashes.
+6. Sign the attestation with `cosign sign-blob` using GitHub Actions OIDC.
+7. Verify the attestation, bundle, tag target, target tree, exact workflow
+   identity, OIDC issuer, and artifact hashes before publication.
+8. Publish the GitHub Release only after the pre-flight gate passes.
+9. Run the post-publication provenance workflow as a secondary check.
 
-5. Run the live provenance gate before publishing release assets:
+Clean-machine verification for a future attested release:
 
-   ```bash
-   python scripts/verify-release-provenance.py vX.Y.Z \
-     --expected-target <verified-target-commit-sha> \
-     --expected-tree <verified-release-tree-sha>
-   ```
+```bash
+cosign verify-blob release-attestation.json \
+  --bundle release-attestation.json.bundle \
+  --certificate-identity "https://github.com/CivicSuite/civiccode/.github/workflows/release.yml@refs/tags/vX.Y.Z" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
-6. Publish the GitHub Release and assets only after the pre-flight gate passes.
-7. Run the post-publication provenance workflow as a secondary check.
+sha256sum -c SHA256SUMS.txt
+python scripts/verify-release-provenance.py "vX.Y.Z" \
+  --repo "CivicSuite/civiccode" \
+  --attestation release-attestation.json \
+  --bundle release-attestation.json.bundle \
+  --artifacts-dir .
+```
 
-The gate enforces that the release ref is not lightweight, the annotated tag
-object is GitHub-verified, the tagger is a GitHub/org-associated release
-identity, the tag target is the expected commit, the target commit is
-GitHub-verified, the target committer is the GitHub web-flow identity, and the
-target tree matches the verified release build.
+The certificate identity is exact per repo and per tag. Do not widen it to an
+organization-level wildcard. Any future wildcard must carry a written
+auditor-facing justification.
+
+## Attestation Contract
+
+CivicCode consumes the canonical CivicCore release-provenance helper and
+schema-v1 attestation contract. During the transition window, the workflow
+installs the helper from `CivicSuite/civiccore@main` because the helper is not
+yet available in a published CivicCore release. Product runtime tests continue
+to run against the published `civiccore v0.22.0` dependency before the
+provenance tooling phase installs CivicCore main.
+
+The attestation schema is versioned and canonicalized before signing. A valid
+attestation must name:
+
+- schema version,
+- repository,
+- tag name, tag ref type, and tag ref SHA,
+- target commit and target tree,
+- workflow identity and workflow run ID,
+- artifact filenames, sizes, and SHA-256 hashes.
+
+The gate verifies that the attestation claims match GitHub's live tag ref and
+the local artifact bytes. A mismatch fails closed.
 
 ## Adversarial Fixture Suite
 
-The canonical fixture suite lives in
-`tests/fixtures/release_provenance/`. The gate must reject every failure fixture
-with a specific auditor-facing error and accept the known-good fixture.
+The canonical fixture suite lives in CivicCore and is mirrored here for local
+tooling tests. The gate must reject every failure fixture with a specific
+auditor-facing error and accept the known-good fixture.
 
 Current fixtures:
 
-- `00_known_good_web_flow_signed.json`: known-good signed web-flow release tag.
-- `10_lightweight_tag.json`: rejects lightweight tags.
-- `20_annotated_unsigned_tag.json`: rejects annotated-but-unsigned tag objects.
-- `30_signed_tag_unsigned_commit.json`: rejects signed tags pointing at unsigned commits.
-- `40_unassociated_commit_identity.json`: rejects commits signed by a non-org release identity.
-- `50_mismatched_committer_fields.json`: rejects mismatched commit committer fields.
-- `60_tree_mismatch_local_state.json`: rejects a release tree that differs from the verified build tree.
-- `70_localhost_tagger_identity.json`: rejects localhost/local maintainer tagger identities.
+- `00_known_good_sigstore_attestation.json`: accepts a valid schema-v1
+  Sigstore-attested release.
+- `10_missing_attestation_schema.json`: rejects schema-less attestations.
+- `20_wrong_workflow_identity.json`: rejects signatures from the wrong
+  workflow identity.
+- `30_mismatched_artifact_hash.json`: rejects artifact bytes that do not match
+  attestation hashes.
+- `40_unexpected_oidc_issuer.json`: rejects signatures from an unexpected OIDC
+  issuer.
+- `50_transparency_log_unavailable.json`: fails closed when transparency-log
+  verification is unavailable.
+- `60_tag_target_mismatch.json`: rejects attestations whose tag target does
+  not match the live ref.
+- `70_workflow_rename_identity_drift.json`: rejects workflow rename or path
+  drift unless the expected identity is updated deliberately.
+- `80_trust_root_rotation.json`: fails closed on untrusted or rotated trust
+  roots until the trust policy is reviewed.
 
 New production defect classes must be added here before any destructive
 correction is requested.
 
-## Known Failure Modes
+## Failure Modes and Policy
 
-### Lightweight Tag to Unsigned Commit
+### Trust-Root Rotation
 
-Discovered: `v0.1.17` first-publication attempt, 2026-05-04.
+Sigstore/Fulcio trust roots may rotate. The gate fails closed when the bundle no
+longer chains to the configured trust root. Remediation is a policy update with
+auditor review, not a release override.
 
-Prior gate miss: the release was created before provenance verification, and
-`gh release create --target <sha>` created a lightweight tag pointing directly
-at a locally authored unsigned commit.
+### Transparency-Log Availability
 
-Fixture: `10_lightweight_tag.json`.
+Online verification depends on Rekor transparency-log access. A release may not
+publish if Rekor verification is unavailable. For procurement review in
+disconnected environments, auditors verify against the stored bundle and the
+published release evidence package; if offline verification cannot establish
+the expected identity and inclusion proof, the review records an unverifiable
+result rather than accepting by inference.
 
-Expected error: `is a lightweight tag`.
+### Workflow Identity Drift
 
-### Annotated but Unsigned Tag Object
+Renaming `.github/workflows/release.yml`, moving the repo, or changing the tag
+ref changes the certificate identity. That is treated as a release-policy
+change. The exact identity in the release notes and gate configuration must be
+updated in the same reviewed PR.
 
-Discovered: `v0.1.18` first-publication attempt, 2026-05-04.
+### Bootstrap Trust
 
-Prior gate miss: the v0.1.17 correction gate checked that the ref was an
-annotated tag and that the target commit was GitHub-verified, but it did not
-require the annotated tag object itself to be GitHub-verified. The same blind
-spot allowed v0.1.17 and v0.1.18 to appear acceptable even though both tag
-objects were unsigned.
+Sigstore verification requires trust in Sigstore's public roots and GitHub's
+OIDC issuer. The public verification command names the expected issuer and
+workflow identity explicitly so outside auditors can reproduce the trust
+decision from a clean machine.
 
-Fixture: `20_annotated_unsigned_tag.json`.
+### Artifact Mutation After Signing
 
-Expected error: `tag object <sha> is not GitHub-verified`.
+Artifact hashes are part of the attestation. If a wheel, source distribution,
+or checksum manifest changes after signing, the gate rejects the release.
 
-## Live Defect Statement: v0.1.18
+## Historical v0.1.17 and v0.1.18 State
 
-Current public artifact: `v0.1.18`
+The v0.1.17 and v0.1.18 releases predate the Sigstore attestation model and are
+not corrected by deleting or recreating tags. They remain in place as historical
+artifacts until additive attestation retrofit is explicitly authorized per
+release.
 
-Defect an outside auditor can verify:
+### v0.1.17 First Correction Framing
+
+The first v0.1.17 correction was performed against an unachievable target:
+"GitHub-verified signed annotated tag object." GitHub native release creation
+does not produce such a tag object. The auditor authorized that target without
+confirming feasibility; the swarm executed in good faith against the available
+target; the corrected model now uses an achievable Sigstore attestation target.
+This is not recorded as a swarm execution failure.
+
+### Current v0.1.18 Defect Statement
+
+Current public artifact: `v0.1.18`.
+
+Auditor-verifiable facts:
 
 - GitHub tag ref `refs/tags/v0.1.18` points at annotated tag object
   `d82660282fa48193fd437f033c28bec687fb380c`.
@@ -106,100 +166,31 @@ Defect an outside auditor can verify:
 - The target commit is GitHub-verified.
 - The tag object itself is not GitHub-verified:
   `verification.verified=false`, `verification.reason=unsigned`.
-- Therefore v0.1.18 fails the corrected release provenance bar.
+- The release does not include a Sigstore `release-attestation.json` and
+  `release-attestation.json.bundle`.
 
-Reproducer:
-
-```bash
-python scripts/verify-release-provenance.py v0.1.18
-```
-
-Expected output:
-
-```text
-FAIL: v0.1.18 tag object d82660282fa48193fd437f033c28bec687fb380c is not GitHub-verified (reason: unsigned).
-```
-
-Corrected-artifact proof before destructive action:
+Expected current gate behavior:
 
 ```bash
-python scripts/verify-release-provenance.py --fixtures-dir tests/fixtures/release_provenance
+python scripts/verify-release-provenance.py v0.1.18 --repo CivicSuite/civiccode
 ```
 
-The known-good fixture passes and the annotated-unsigned fixture fails with the
-same defect class as the live v0.1.18 artifact.
+The command fails closed because live release verification now requires an
+attestation and bundle.
 
-Defect-discovery latency: v0.1.18 was published at `2026-05-04T17:11:13Z`.
-The swarm detected the unsigned tag-object defect in the same release session,
-before requesting any destructive correction. Treat this as a class defect, not
-a one-off.
+## Post-Publication Verification
 
-## Two-Release Correction Window: v0.1.17
+`.github/workflows/release-provenance.yml` is a secondary check. It downloads
+the published attestation, bundle, wheel, source distribution, and checksum
+manifest from the GitHub Release, then runs the same gate. It is not a
+substitute for the pre-flight gate in `.github/workflows/release.yml`.
 
-Current public artifact: `v0.1.17`
+## Non-Goals
 
-The corrected gate also fails v0.1.17:
-
-```bash
-python scripts/verify-release-provenance.py v0.1.17
-```
-
-Expected output:
-
-```text
-FAIL: v0.1.17 tag object 31d9d18ed4931cf462732b6fd91f2937cc80d792 is not GitHub-verified (reason: unsigned).
-```
-
-Because v0.1.17 and v0.1.18 fail the same corrected gate, any future
-destructive correction must handle both releases in one coordinated correction
-window after explicit chat authorization.
-
-## v0.1.17 Post-Incident Note
-
-During the first v0.1.17 publication attempt, `gh release create --target
-f3e54e89a53857adf7ac1ec4d4a7f44f705e5598` created a release with a lightweight
-tag pointing directly at a locally authored, unsigned commit. The release notes
-also claimed GitHub web-flow signing, which was false for that artifact.
-
-The bad release and tag were deleted before suite synchronization. The
-correction landed an initial runbook and provenance gate through a
-GitHub-verified merge commit, verified the target commit, and recreated
-v0.1.17 with an audit trail in the release notes.
-
-Follow-up finding: that correction prevented the lightweight-tag/unsigned-target
-failure but did not require a verified tag object, which caused the second
-incident class documented above.
-
-## v0.1.18 Post-Incident Note
-
-During the first v0.1.18 publication attempt, the release was created against an
-existing annotated tag object. The target commit was GitHub-verified, but the
-tag object was locally created and unsigned. The post-publication workflow
-queued only after the public release existed, so the defect was detected after
-publication rather than prevented before publication.
-
-No destructive correction has been performed. The current release and tag are
-held in place until the corrected gate, fixture suite, pre-publication workflow,
-and backfill verification are landed and reviewed.
-
-Defect-discovery latency: same release session, under five minutes from
-publication to self-detection.
-
-## Long-Term Sigstore Requirement
-
-The long-term release path is a GitHub Actions release workflow that signs
-release artifacts with Sigstore/cosign using the workflow OIDC identity. That
-workflow must sign at least:
-
-- the wheel,
-- the source distribution,
-- the checksum manifest,
-- the release provenance statement.
-
-The release notes must include the exact clean-machine verification command so
-an outside auditor can verify provenance without trusting a maintainer laptop or
-preloaded local keyring.
-
-By Milestone H, every suite release tag and artifact must be independently
-verifiable against a documented signing identity with no local-secret-key
-dependency.
+- No local maintainer GPG key is required for normal release signing.
+- No placeholder identity such as `scott@localhost` may appear in release
+  commits, taggers, attestations, or release notes.
+- No existing v0.1.17 or v0.1.18 release notes may be edited without explicit
+  per-release authorization.
+- No historical release may be deleted or retagged without explicit
+  per-release destructive-action authorization.

@@ -16,11 +16,41 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install CivicCore release-provenance helper
+        run: python -m pip install "git+https://github.com/CivicSuite/civiccore.git@main"
+      - name: Checkout canonical CivicCore provenance fixtures
+        uses: actions/checkout@v6
+        with:
+          repository: CivicSuite/civiccore
+          ref: main
+          path: .tmp-civiccore
       - name: Verify adversarial release provenance fixtures
-        run: python scripts/verify-release-provenance.py --fixtures-dir tests/fixtures/release_provenance
+        run: python scripts/verify-release-provenance.py --fixtures-dir .tmp-civiccore/tests/fixtures/release_provenance
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.1.1
       - name: Verify published release tag and target commit provenance
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
-        run: python scripts/verify-release-provenance.py "${RELEASE_TAG}"
+        run: |
+          rm -rf .tmp-release-assets
+          mkdir -p .tmp-release-assets
+          gh release download "${RELEASE_TAG}" \
+            --repo "${{ github.repository }}" \
+            --pattern 'release-attestation.json' \
+            --pattern 'release-attestation.json.bundle' \
+            --pattern 'SHA256SUMS.txt' \
+            --pattern '*.whl' \
+            --pattern '*.tar.gz' \
+            --dir .tmp-release-assets
+          python scripts/verify-release-provenance.py "${RELEASE_TAG}" \
+            --repo "${{ github.repository }}" \
+            --attestation .tmp-release-assets/release-attestation.json \
+            --bundle .tmp-release-assets/release-attestation.json.bundle \
+            --artifacts-dir .tmp-release-assets

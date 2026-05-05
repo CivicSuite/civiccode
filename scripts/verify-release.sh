@@ -60,8 +60,12 @@ for path in [
 print("PASS: version surfaces synchronized")
 PY
 
-echo "==> Test suite"
-${PYTHON_BIN} -m pytest -q
+echo "==> Product test suite"
+${PYTHON_BIN} -m pytest -q --ignore=tests/test_release_provenance_gate.py
+
+echo "==> Release-provenance tooling tests"
+${PYTHON_BIN} -m pip install --force-reinstall "git+https://github.com/CivicSuite/civiccore.git@main"
+${PYTHON_BIN} -m pytest -q tests/test_release_provenance_gate.py
 
 echo "==> Documentation gate"
 bash scripts/verify-docs.sh

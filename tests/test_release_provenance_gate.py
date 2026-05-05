@@ -25,11 +25,12 @@ def test_adversarial_release_provenance_fixtures_are_enforced() -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert "FIXTURE PASS: known-good signed web-flow release tag (pass)" in result.stdout
-    assert "FIXTURE PASS: lightweight tag is rejected (fail)" in result.stdout
-    assert "FIXTURE PASS: annotated unsigned tag object is rejected (fail)" in result.stdout
-    assert "FIXTURE PASS: signed tag pointing at unsigned commit is rejected (fail)" in result.stdout
-    assert "FIXTURE PASS: signed commit from non-org identity is rejected (fail)" in result.stdout
-    assert "FIXTURE PASS: mismatched committer fields are rejected (fail)" in result.stdout
-    assert "FIXTURE PASS: target tree mismatch is rejected (fail)" in result.stdout
-    assert "FIXTURE PASS: localhost tagger identity is rejected (fail)" in result.stdout
+    assert "FIXTURE PASS: known-good Sigstore attested release (pass)" in result.stdout
+    assert "FIXTURE PASS: missing attestation schema is rejected (fail)" in result.stdout
+    assert "FIXTURE PASS: wrong workflow identity is rejected (fail)" in result.stdout
+    assert "FIXTURE PASS: mismatched artifact hash is rejected (fail)" in result.stdout
+    assert "FIXTURE PASS: unexpected OIDC issuer is rejected (fail)" in result.stdout
+    assert "FIXTURE PASS: transparency log outage fails closed (fail)" in result.stdout
+    assert "FIXTURE PASS: attestation target mismatch is rejected (fail)" in result.stdout
+    assert "FIXTURE PASS: workflow rename identity drift is rejected (fail)" in result.stdout
+    assert "FIXTURE PASS: trust-root rotation fails closed (fail)" in result.stdout
