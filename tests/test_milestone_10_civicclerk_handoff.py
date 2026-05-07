@@ -57,12 +57,14 @@ async def seed_handoff_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/titles",
+            headers=STAFF_HEADERS,
             json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
         )
     ).status_code == 201
     assert (
         await client.post(
             "/api/v1/civiccode/chapters",
+            headers=STAFF_HEADERS,
             json={
                 "chapter_id": "chapter_6_12",
                 "title_id": "title_6",
@@ -74,6 +76,7 @@ async def seed_handoff_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections",
+            headers=STAFF_HEADERS,
             json={
                 "section_id": "sec_chickens",
                 "chapter_id": "chapter_6_12",
@@ -85,6 +88,7 @@ async def seed_handoff_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections/sec_chickens/versions",
+            headers=STAFF_HEADERS,
             json={
                 "version_id": "v_chickens_current",
                 "section_id": "sec_chickens",
@@ -136,6 +140,92 @@ async def test_valid_civicclerk_handoff_is_accepted_with_provenance(
     assert payload["provenance"]["civicclerk_agenda_item_id"] == "agenda_14"
     assert payload["source_document_hash"] == "sha256:abc123"
     assert payload["likely_conflicts"][0]["section_number"] == "6.12.040"
+
+
+@pytest.mark.asyncio
+async def test_replayed_civicclerk_handoff_returns_existing_event(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+
+    first = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(),
+    )
+    replay = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers={**STAFF_HEADERS, "X-CivicCode-Actor": "deputy@example.gov"},
+        json=handoff_payload(event_id="ord_replayed_client_id"),
+    )
+    audit_events = await client.get(
+        "/api/v1/civiccode/staff/audit-events",
+        headers=STAFF_HEADERS,
+    )
+
+    assert first.status_code == 201
+    assert replay.status_code == 201
+    assert replay.json()["event_id"] == first.json()["event_id"]
+    assert replay.json()["source_document_hash"] == "sha256:abc123"
+    handoff_audits = [
+        event
+        for event in audit_events.json()["events"]
+        if event["event_type"] == "civicclerk_handoff_received"
+    ]
+    assert len(handoff_audits) == 1
+
+
+@pytest.mark.asyncio
+async def test_divergent_civicclerk_handoff_replay_gets_actionable_conflict(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+    created = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(),
+    )
+
+    replay = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(source_document_hash="sha256:corrected"),
+    )
+
+    assert created.status_code == 201
+    assert replay.status_code == 409
+    detail = replay.json()["detail"]
+    assert "already been accepted" in detail["message"]
+    assert "Read the existing handoff" in detail["fix"]
+
+
+@pytest.mark.asyncio
+async def test_duplicate_internal_event_id_still_rejected(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+    created = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(event_id="ord_2026_041"),
+    )
+
+    duplicate = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(
+            event_id="ord_2026_041",
+            external_event_id="cc_event_2026_042",
+            ordinance_number="2026-042",
+            source_document_hash="sha256:def456",
+        ),
+    )
+
+    assert created.status_code == 201
+    assert duplicate.status_code == 409
+    detail = duplicate.json()["detail"]
+    assert "ord_2026_041" in detail["message"]
+    assert "unique event_id" in detail["fix"]
 
 
 @pytest.mark.asyncio
@@ -211,8 +301,55 @@ async def test_affected_lookup_includes_stale_code_warning(client: AsyncClient) 
 
     warning = lookup.json()["handoff_warnings"][0]
     assert warning["message"].startswith("CivicClerk ordinance 2026-041 may affect")
-    assert warning["fix"].startswith("Review CivicClerk event")
+    assert warning["fix"].startswith("Ask municipal staff")
     assert warning["source"] == "CivicClerk"
+    assert "external_event_id" not in warning
+    assert "failure_reason" not in warning
+
+
+@pytest.mark.asyncio
+async def test_staff_can_resolve_handoff_after_codified_version_is_current(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+    handoff = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(),
+    )
+    await client.post(
+        "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
+        json={
+            "version_id": "v_codified_2026_041",
+            "section_id": "sec_chickens",
+            "source_id": "municode_active",
+            "version_label": "Codified ordinance 2026-041",
+            "body": "Residents may keep up to eight backyard chickens with a city permit.",
+            "effective_start": "2026-05-07",
+            "status": "adopted",
+            "is_current": True,
+            "adoption_event_id": handoff.json()["event_id"],
+            "prior_version_id": "v_chickens_current",
+            "amendment_event_id": handoff.json()["event_id"],
+            "amendment_summary": "Codifies ordinance 2026-041 after CivicClerk adoption.",
+        },
+    )
+
+    resolved = await client.post(
+        f"/api/v1/civiccode/staff/civicclerk/ordinance-events/{handoff.json()['event_id']}/resolve",
+        headers=STAFF_HEADERS,
+        json={"section_version_id": "v_codified_2026_041"},
+    )
+    lookup = await client.get(
+        "/api/v1/civiccode/sections/lookup",
+        params={"section_number": "6.12.040"},
+    )
+
+    assert resolved.status_code == 200
+    assert resolved.json()["handoff_state"] == "codified"
+    assert resolved.json()["resolution"]["section_version_id"] == "v_codified_2026_041"
+    assert lookup.json()["handoff_warnings"] == []
 
 
 @pytest.mark.asyncio
@@ -234,7 +371,9 @@ async def test_failed_handoff_is_visible_and_does_not_mutate_code_state(
     assert failed.json()["handoff_state"] == "failed"
     assert failed.json()["failure_reason"] == "Missing signed ordinance PDF."
     assert "six backyard chickens" in lookup.json()["version"]["body"]
-    assert lookup.json()["handoff_warnings"][0]["handoff_state"] == "failed"
+    warning = lookup.json()["handoff_warnings"][0]
+    assert warning["handoff_state"] == "failed"
+    assert "failure_reason" not in warning
 
 
 def test_docs_record_civicclerk_handoff_without_claiming_codification() -> None:

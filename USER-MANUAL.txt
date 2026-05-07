@@ -51,6 +51,9 @@ Current truth:
 - public-safe search can find adopted section text and related public material
   references,
 - stable section permalinks remain the same across text revisions,
+- downstream CivicSuite modules can resolve adopted code context through
+  `civiccode.section_resolution.v1` for CivicZone, CivicLegal, CivicAccess, and
+  CivicComms,
 - deterministic citation objects can be built from adopted section text,
 - citation refusals include reasons and fix paths for missing, stale, or
   contradictory source situations,
@@ -96,6 +99,10 @@ Current truth:
   runtime dependency,
 - residents can open `/civiccode`, search by section number or phrase, and read
   adopted code text with citations and warnings,
+- residents can open `/civiccode/answer` to ask what one adopted section says
+  and receive a cited, non-determination answer,
+- staff can mark CivicClerk handoffs codified after creating the current
+  adopted section version, which removes stale-code warnings for that handoff,
 - no live LLM calls, bundled vendor credentials, automatic ordinance
   codification, or legal determinations are generated yet.
 
@@ -107,13 +114,13 @@ routes legal-advice questions back to staff.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 13 accessibility and records-ready
-export hardening foundation plus
+This repo currently contains the v1.0.0 staff operations surfaces,
+CivicCore v1 contracts, durable import/codifier sync state, and
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
 - standalone module repo under `CivicSuite/`,
-- published `civiccore v0.22.1` release-wheel dependency,
+- published `civiccore v1.0.0` release-wheel dependency,
 - local LLM only through `civiccore.llm`,
 - no cloud dependency,
 - no imports from unreleased CivicCore placeholder packages.
@@ -121,7 +128,7 @@ CivicSuite pattern:
 Install and run:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.1/civiccore-0.22.1-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
@@ -285,10 +292,14 @@ curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/questions/answer \
   -d '{"question":"What does section 6.12.040 say about backyard chickens?","section_number":"6.12.040"}'
 ```
 
-Staff endpoints require `X-CivicCode-Role: staff` and `X-CivicCode-Actor`.
-Staff Q&A context is explicitly marked `staff_only_do_not_publish`. Public
-lookup, public search, and public Q&A responses must not expose staff note text
-or staff note counts.
+Staff endpoints require `X-CivicCode-Role: staff` and `X-CivicCode-Actor` from
+a trusted proxy source. Local mock runs allow loopback (`127.0.0.1/32` and
+`::1/128`) by default; shared environments should set
+`CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` to the reverse proxy CIDR list and strip
+client-supplied staff headers before CivicCode sees the request. Staff Q&A
+context is explicitly marked `staff_only_do_not_publish`. Public lookup, public
+search, and public Q&A responses must not expose staff note text or staff note
+counts.
 
 Draft and approve a plain-language summary:
 
@@ -434,7 +445,7 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.18 is the current durable operational-state release. It
+CivicCode v1.0.0 is the current durable operational-state product release. It
 persists source registry records, title/chapter/section/version records,
 staff-approved popular questions, staff notes, plain-language summaries,
 CivicClerk handoffs, import jobs, and codifier sync source state through
@@ -442,5 +453,10 @@ CivicClerk handoffs, import jobs, and codifier sync source state through
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular
 questions and related materials are navigation aids, not legal determinations.
+Staff operators can call /api/v1/civiccode/staff/operational-state to inspect
+current handoff, import, and sync readiness from existing operational records
+with actionable fixes. Staff can also open /staff/imports and /staff/sync for
+browser review of import provenance and codifier sync health without external
+deployment proof or outbound network.
 Future work moves to the next module or release plan in the CivicSuite unified
 roadmap.

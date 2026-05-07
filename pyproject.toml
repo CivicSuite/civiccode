@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "civiccode"
-version = "0.1.18"
+version = "1.0.0"
 description = "CivicCode runtime foundation for municipal code and ordinance access."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,7 +13,7 @@ authors = [
   { name = "CivicSuite contributors" }
 ]
 dependencies = [
-  "civiccore @ https://github.com/CivicSuite/civiccore/releases/download/v0.22.1/civiccore-0.22.1-py3-none-any.whl",
+  "civiccore @ https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl",
   "alembic>=1.13.0,<2.0.0",
   "fastapi>=0.115.0,<1.0.0",
   "psycopg2-binary>=2.9.0,<3.0.0",
@@ -47,11 +47,31 @@ include = [
   "civiccode/migrations/alembic.ini",
   "scripts",
   "tests",
+  "Dockerfile",
+  "docker-compose.yml",
+  "docker.env.example",
+  ".dockerignore",
+  ".gitignore",
   "README.md",
   "CHANGELOG.md",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
+  "SUPPORT.md",
+  "docs/index.html",
+  "LICENSE",
   "USER-MANUAL.md",
   "LICENSE-CODE",
   "LICENSE-DOCS",
+]
+exclude = [
+  ".tmp-*",
+  ".tmp-*/*",
+  "**/.tmp-*",
+  "**/.tmp-*/*",
+  ".pytest_cache",
+  ".pytest_cache/*",
+  "**/__pycache__",
+  "**/__pycache__/*",
 ]
 
 [tool.ruff]

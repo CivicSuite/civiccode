@@ -56,12 +56,14 @@ async def seed_summary_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/titles",
+            headers=STAFF_HEADERS,
             json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
         )
     ).status_code == 201
     assert (
         await client.post(
             "/api/v1/civiccode/chapters",
+            headers=STAFF_HEADERS,
             json={
                 "chapter_id": "chapter_6_12",
                 "title_id": "title_6",
@@ -73,6 +75,7 @@ async def seed_summary_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections",
+            headers=STAFF_HEADERS,
             json={
                 "section_id": "sec_chickens",
                 "chapter_id": "chapter_6_12",
@@ -84,6 +87,7 @@ async def seed_summary_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections/sec_chickens/versions",
+            headers=STAFF_HEADERS,
             json={
                 "version_id": "v_chickens_current",
                 "section_id": "sec_chickens",
@@ -186,6 +190,7 @@ async def test_summary_requires_adopted_source_citation_before_approval(
 
     pending_version = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json={
             "version_id": "v_chickens_pending",
             "section_id": "sec_chickens",

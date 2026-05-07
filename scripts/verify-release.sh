@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.1.18"
+VERSION="1.0.0"
 
 find_python() {
   local candidates=()
@@ -40,7 +40,7 @@ ${PYTHON_BIN} - <<'PY'
 from pathlib import Path
 import tomllib
 
-version = "0.1.18"
+version = "1.0.0"
 root = Path(".")
 pyproject = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
 assert pyproject["project"]["version"] == version, pyproject["project"]["version"]
@@ -63,8 +63,8 @@ PY
 echo "==> Product test suite"
 ${PYTHON_BIN} -m pytest -q --ignore=tests/test_release_provenance_gate.py
 
-echo "==> Release-provenance tooling tests"
-${PYTHON_BIN} -m pip install --force-reinstall "git+https://github.com/CivicSuite/civiccore.git@main"
+echo "==> Release-provenance tooling tests against published CivicCore"
+${PYTHON_BIN} -m pip install --force-reinstall "https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl"
 ${PYTHON_BIN} -m pytest -q tests/test_release_provenance_gate.py
 
 echo "==> Documentation gate"
@@ -84,8 +84,8 @@ from pathlib import Path
 import hashlib
 
 dist = Path("dist")
-wheel = dist / "civiccode-0.1.18-py3-none-any.whl"
-sdist = dist / "civiccode-0.1.18.tar.gz"
+wheel = dist / "civiccode-1.0.0-py3-none-any.whl"
+sdist = dist / "civiccode-1.0.0.tar.gz"
 assert wheel.exists(), f"missing {wheel}"
 assert sdist.exists(), f"missing {sdist}"
 lines = []

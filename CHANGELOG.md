@@ -6,8 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-07
+
+### Changed
+
+- Promoted CivicCode to the v1.0.0 product line after the active-module release
+  lock scope read, CivicSuiteUnifiedSpec section 11 gap check, CivicCore v1.0.0
+  alignment, durable operational-state runtime, staff/public browser QA
+  evidence, and adversarial mock-city codifier validation path.
+- Updated current release/version surfaces, release verification artifact names,
+  and security/manual copy for the v1.0.0 gate while preserving v0.1.17 and
+  v0.1.18 as historical pre-gate provenance references.
+- Made the real Docker pgvector migration smoke skip with an actionable Docker
+  Desktop instruction when the local Docker daemon is unavailable, while
+  preserving the live migration proof when Docker is running.
+- Added the downstream `civiccode.section_resolution.v1` contract for
+  CivicZone, CivicLegal, CivicAccess, and CivicComms, plus adversarial
+  legal-determination refusal coverage for that boundary.
+- Added the resident `/civiccode/answer` cited-answer page and broadened public
+  legal-determination refusal handling so property-specific prompts route to
+  staff instead of rendering misleading search results.
+- Added staff handoff resolution after codified adopted text is created,
+  including durable handoff-resolution fields and warning suppression for
+  resolved codifications.
+
 ### Added
 
+- Reproducible Playwright staff browser QA harness for CI, covering staff access
+  pages and mock-city staff workspaces with skip-link, main-region, console,
+  horizontal-overflow, and actionable-fix readability checks.
 - CO-4 Tier 1 retrofit ledger for `v0.1.17` and `v0.1.18`, marking both
   releases as historical pre-gate/no-attestation/do-not-promote without
   changing public release notes, tags, or assets.
@@ -25,8 +52,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Staff lifecycle write endpoints now require staff headers before mutating
+  title, chapter, section, or section-version records.
+- Staff headers are now validated through CivicCore trusted-header helpers and
+  must arrive from loopback for local mock runs or
+  `CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` in shared environments.
+- Configured staff principal/role header names now flow through CivicCore's
+  trusted-header validator instead of being blocked by default header prechecks.
+- Browser QA now covers authenticated mobile empty and populated staff states,
+  and the verify workflow runs on `sprint/**` branch pushes as well as `main`
+  and pull requests.
+- Release provenance workflows now install helper code and fixtures from the
+  CivicCore `v1.0` tag instead of mutable `main`.
+- Source distribution builds now exclude `.tmp-*`, cache, and generated
+  interpreter artifact directories.
+- Public section lookup warning payloads now expose resident-safe CivicClerk
+  stale-code guidance without staff-only event IDs or failure details.
+- Staff actionable-fix copy now renders as readable block callouts on mobile
+  instead of long pill controls.
+- Source distribution builds now include Docker demo files, and release
+  workflows install the CivicCore v1.0 wheel used by the package.
 - Updated the active CivicCore dependency and current install/provenance docs to
-  the first attested CivicCore baseline, `v0.22.1`.
+  the published CivicCore v1.0 baseline, `v1.0.0`, without changing
+  CivicCode's v0.1.18 release status.
 - Release provenance gate now treats Git tags as pointers and verifies the
   Sigstore attestation, bundle, exact workflow identity, artifact hashes, target
   commit, and target tree before publication.
@@ -42,6 +90,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   codifier sync runs when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured,
   preserving retry queue records, replay records, and delta cursor records on
   the Docker/PostgreSQL product path.
+- Staff operator API for `/api/v1/civiccode/staff/operational-state`, returning
+  current handoff, import, and sync readiness from existing operational records
+  with actionable fixes for missing state or queued retry work.
 - Alembic revision `civiccode_0009_operational_state` for shared operational
   state records.
 

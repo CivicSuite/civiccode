@@ -50,6 +50,9 @@ class OrdinanceEvent:
     ordinance_text: str = ""
     adopted_at: datetime | None = None
     failure_reason: str | None = None
+    resolved_section_version_id: str | None = None
+    resolved_by: str | None = None
+    resolved_at: datetime | None = None
     created_by: str = "unknown"
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -57,6 +60,8 @@ class OrdinanceEvent:
     def handoff_state(self) -> str:
         if self.status == "failed":
             return "failed"
+        if self.status == "codified":
+            return "codified"
         return "pending_codification"
 
 
@@ -132,6 +137,18 @@ class OrdinanceHandoffStore:
                 "Use a unique event_id or read the existing handoff.",
                 status_code=409,
             )
+        existing_event = self._find_event_by_external_event_id(event.external_event_id)
+        if existing_event:
+            if _events_match_for_replay(existing_event, event):
+                return existing_event
+            raise OrdinanceHandoffError(
+                f"CivicClerk event '{event.external_event_id}' has already been accepted with different payload data.",
+                (
+                    "Read the existing handoff before replaying. If CivicClerk corrected the event, "
+                    "send a new external_event_id or reconcile the stored handoff with clerk staff."
+                ),
+                status_code=409,
+            )
         self._events[event.event_id] = event
         self._append_event("civicclerk_handoff_received", actor=actor, target_id=event.event_id)
         if event.status == "failed":
@@ -153,10 +170,18 @@ class OrdinanceHandoffStore:
         )
         return event
 
+    def _find_event_by_external_event_id(self, external_event_id: str) -> OrdinanceEvent | None:
+        return next(
+            (event for event in self._events.values() if event.external_event_id == external_event_id),
+            None,
+        )
+
     def warnings_for_section(self, section_number: str) -> list[dict[str, Any]]:
         warnings = []
         for event in self._events.values():
             if section_number not in event.affected_sections:
+                continue
+            if event.handoff_state == "codified":
                 continue
             warnings.append(
                 {
@@ -177,8 +202,64 @@ class OrdinanceHandoffStore:
             )
         return warnings
 
+    def public_warnings_for_section(self, section_number: str) -> list[dict[str, Any]]:
+        warnings = []
+        for warning in self.warnings_for_section(section_number):
+            warnings.append(
+                {
+                    "source": warning["source"],
+                    "ordinance_number": warning["ordinance_number"],
+                    "handoff_state": warning["handoff_state"],
+                    "message": warning["message"],
+                    "fix": (
+                        "Ask municipal staff to confirm the ordinance codification status "
+                        "before relying on this section as fully current."
+                    ),
+                }
+            )
+        return warnings
+
     def list_events(self) -> list[OrdinanceEvent]:
         return sorted(self._events.values(), key=lambda event: event.created_at)
+
+    def resolve_event(
+        self,
+        event_id: str,
+        *,
+        actor: str,
+        section_version_id: str,
+    ) -> OrdinanceEvent:
+        event = self._events.get(event_id)
+        if event is None:
+            raise OrdinanceHandoffError(
+                f"CivicClerk ordinance event '{event_id}' was not found.",
+                "Read the handoff list and resolve an existing event.",
+                status_code=404,
+            )
+        if event.status == "failed":
+            raise OrdinanceHandoffError(
+                "Failed CivicClerk handoffs cannot be marked codified.",
+                "Repair and resend the failed handoff before resolving codification.",
+                status_code=409,
+            )
+        event.status = "codified"
+        event.resolved_section_version_id = section_version_id
+        event.resolved_by = actor
+        event.resolved_at = datetime.now(UTC)
+        self._append_event("civicclerk_handoff_codified", actor=actor, target_id=event.event_id)
+        self._operational_store.record_replay(
+            lane="handoff",
+            subject_id=event.event_id,
+            actor=actor,
+            status=event.handoff_state,
+            payload_hash=event.source_document_hash,
+            details={
+                "external_event_id": event.external_event_id,
+                "ordinance_number": event.ordinance_number,
+                "section_version_id": section_version_id,
+            },
+        )
+        return event
 
     def audit_events(self) -> list[HandoffAuditEvent]:
         return list(self._audit_events)
@@ -221,6 +302,9 @@ ordinance_handoff_records = sa.Table(
     sa.Column("ordinance_text", sa.Text(), nullable=False),
     sa.Column("adopted_at", sa.DateTime(timezone=True), nullable=True),
     sa.Column("failure_reason", sa.Text(), nullable=True),
+    sa.Column("resolved_section_version_id", sa.String(255), nullable=True),
+    sa.Column("resolved_by", sa.String(255), nullable=True),
+    sa.Column("resolved_at", sa.DateTime(timezone=True), nullable=True),
     sa.Column("created_by", sa.String(255), nullable=False),
     sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
     schema="civiccode",
@@ -260,9 +344,33 @@ class OrdinanceHandoffRepository(OrdinanceHandoffStore):
         self._load()
 
     def create_event(self, data: dict[str, Any], *, actor: str) -> OrdinanceEvent:
+        existing_event_ids = set(self._events)
         event = super().create_event(data, actor=actor)
+        if event.event_id in existing_event_ids:
+            return event
         with self.engine.begin() as connection:
             connection.execute(ordinance_handoff_records.insert().values(**event_to_record(event)))
+        return event
+
+    def resolve_event(
+        self,
+        event_id: str,
+        *,
+        actor: str,
+        section_version_id: str,
+    ) -> OrdinanceEvent:
+        event = super().resolve_event(event_id, actor=actor, section_version_id=section_version_id)
+        with self.engine.begin() as connection:
+            connection.execute(
+                ordinance_handoff_records.update()
+                .where(ordinance_handoff_records.c.event_id == event.event_id)
+                .values(
+                    status=event.status,
+                    resolved_section_version_id=event.resolved_section_version_id,
+                    resolved_by=event.resolved_by,
+                    resolved_at=event.resolved_at,
+                )
+            )
         return event
 
     def reset(self) -> None:
@@ -301,6 +409,9 @@ def event_to_record(event: OrdinanceEvent) -> dict[str, Any]:
         "ordinance_text": event.ordinance_text,
         "adopted_at": event.adopted_at,
         "failure_reason": event.failure_reason,
+        "resolved_section_version_id": event.resolved_section_version_id,
+        "resolved_by": event.resolved_by,
+        "resolved_at": event.resolved_at,
         "created_by": event.created_by,
         "created_at": event.created_at,
     }
@@ -321,9 +432,21 @@ def event_from_record(row: Any) -> OrdinanceEvent:
         ordinance_text=row["ordinance_text"],
         adopted_at=row["adopted_at"],
         failure_reason=row["failure_reason"],
+        resolved_section_version_id=row.get("resolved_section_version_id"),
+        resolved_by=row.get("resolved_by"),
+        resolved_at=row.get("resolved_at"),
         created_by=row["created_by"],
         created_at=row["created_at"],
     )
+
+
+def _events_match_for_replay(existing: OrdinanceEvent, incoming: OrdinanceEvent) -> bool:
+    existing_record = event_to_record(existing)
+    incoming_record = event_to_record(incoming)
+    for generated_field in ("event_id", "created_by", "created_at"):
+        existing_record.pop(generated_field)
+        incoming_record.pop(generated_field)
+    return existing_record == incoming_record
 
 
 def audit_event_to_record(event: HandoffAuditEvent) -> dict[str, Any]:
@@ -358,6 +481,13 @@ def event_to_dict(event: OrdinanceEvent) -> dict[str, Any]:
         "source_document_url": event.source_document_url,
         "source_document_hash": event.source_document_hash,
         "failure_reason": event.failure_reason,
+        "resolution": {
+            "section_version_id": event.resolved_section_version_id,
+            "resolved_by": event.resolved_by,
+            "resolved_at": event.resolved_at.isoformat() if event.resolved_at else None,
+        }
+        if event.handoff_state == "codified"
+        else None,
         "provenance": {
             "civicclerk_meeting_id": event.civicclerk_meeting_id,
             "civicclerk_agenda_item_id": event.civicclerk_agenda_item_id,

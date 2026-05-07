@@ -6,6 +6,8 @@ from html import escape
 from typing import Any
 from urllib.parse import quote, urlencode
 
+from civiccode.qa_harness import looks_like_legal_determination
+
 
 LEGAL_ADVICE_MARKERS = (
     "should i sue",
@@ -20,7 +22,9 @@ LEGAL_ADVICE_MARKERS = (
 
 def is_legal_advice_query(query: str) -> bool:
     normalized = query.strip().lower()
-    return any(marker in normalized for marker in LEGAL_ADVICE_MARKERS)
+    return any(marker in normalized for marker in LEGAL_ADVICE_MARKERS) or looks_like_legal_determination(
+        query
+    )
 
 
 def render_home_page(popular_questions: list[dict[str, Any]] | None = None) -> str:
@@ -49,6 +53,22 @@ def render_home_page(popular_questions: list[dict[str, Any]] | None = None) -> s
             Results load after you submit the form. Empty and error states explain
             how to fix the request.
           </div>
+        </section>
+        <section class="lookup-panel" aria-labelledby="answer-heading">
+          <h2 id="answer-heading">Ask about one section</h2>
+          <form action="/civiccode/answer" method="get">
+            <label for="question">Question</label>
+            <div class="search-row">
+              <input id="question" name="q" type="search" autocomplete="off"
+                placeholder="Example: What does section 6.12.040 say?" />
+            </div>
+            <label for="section-number">Section number</label>
+            <div class="search-row">
+              <input id="section-number" name="section_number" type="search"
+                autocomplete="off" placeholder="6.12.040" />
+              <button type="submit">Get cited answer</button>
+            </div>
+          </form>
         </section>
         {_popular_questions_block(popular_questions)}
         <section class="notice-grid" aria-label="Lookup boundaries">
@@ -98,6 +118,49 @@ def render_search_page(query: str, results: list[dict[str, Any]]) -> str:
           provenance, citation details, and any pending codification warnings.</p>
           <ol class="result-list">{items}</ol>
         </section>
+        """,
+    )
+
+
+def render_answer_page(query: str, payload: dict[str, Any]) -> str:
+    if payload.get("status") != "ok":
+        return _page(
+            "Code answer unavailable",
+            f"""
+            {_answer_form(query, "")}
+            <section class="state-card warning" role="alert">
+              <p class="eyebrow">{escape(payload.get("refusal_type", "answer refusal"))}</p>
+              <h1>CivicCode cannot answer that question.</h1>
+              <p>{escape(payload.get("reason", "No cited adopted code section could ground the answer."))}</p>
+              <p>{escape(payload.get("fix", "Ask with an exact adopted section number."))}</p>
+              <p class="code-chip">code_answer_behavior: not_available</p>
+            </section>
+            """,
+        )
+    citation = payload["citations"][0]
+    return _page(
+        "Cited code answer",
+        f"""
+        {_answer_form(query, payload.get("matched_section_number", ""))}
+        <article class="section-detail" aria-labelledby="answer-title">
+          <p class="eyebrow">Cited code answer</p>
+          <h1 id="answer-title">Cited code answer</h1>
+          <section class="code-card" aria-labelledby="answer-heading">
+            <h2 id="answer-heading">Answer</h2>
+            <p>{escape(payload["answer"])}</p>
+          </section>
+          <section class="citation-card" aria-labelledby="answer-citation-heading">
+            <h2 id="answer-citation-heading">Citation</h2>
+            <p>{escape(citation["citation_text"])}</p>
+            <p><a href="/civiccode/sections/{escape(citation['section_number'])}">
+            Open authoritative section text.</a></p>
+          </section>
+          <section class="contact-card" aria-labelledby="answer-boundary-heading">
+            <h2 id="answer-boundary-heading">Review boundary</h2>
+            <p>This is not a legal determination. City staff remain responsible
+            for official interpretations, enforcement decisions, and legal advice.</p>
+          </section>
+        </article>
         """,
     )
 
@@ -352,6 +415,27 @@ def _search_form(query: str) -> str:
         <div class="search-row">
           <input id="q" name="q" type="search" value="{escape(query)}" />
           <button type="submit">Search code</button>
+        </div>
+      </form>
+    </section>
+    """
+
+
+def _answer_form(query: str, section_number: str) -> str:
+    return f"""
+    <section class="lookup-panel" aria-labelledby="answer-form-heading">
+      <h2 id="answer-form-heading">Ask about one section</h2>
+      <form action="/civiccode/answer" method="get">
+        <label for="question">Question</label>
+        <div class="search-row">
+          <input id="question" name="q" type="search" autocomplete="off"
+            value="{escape(query)}" />
+        </div>
+        <label for="section-number">Section number</label>
+        <div class="search-row">
+          <input id="section-number" name="section_number" type="search"
+            value="{escape(section_number)}" />
+          <button type="submit">Get cited answer</button>
         </div>
       </form>
     </section>

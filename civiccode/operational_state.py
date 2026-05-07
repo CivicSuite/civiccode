@@ -137,7 +137,9 @@ class OperationalStateStore:
             records = [record for record in records if record.record_type == record_type]
         if subject_id is not None:
             records = [record for record in records if record.subject_id == subject_id]
-        return tuple(sorted(records, key=lambda record: (record.created_at, record.record_id)))
+        return tuple(
+            sorted(records, key=lambda record: (_as_aware_utc(record.created_at), record.record_id))
+        )
 
     def reset(self) -> None:
         self._records.clear()
@@ -263,16 +265,28 @@ def operational_record_from_row(row: Any) -> OperationalStateRecord:
         status=row["status"],
         actor=row["actor"],
         attempt_count=row["attempt_count"],
-        next_attempt_at=row["next_attempt_at"],
+        next_attempt_at=_as_optional_aware_utc(row["next_attempt_at"]),
         cursor_key=row["cursor_key"],
         cursor_value=row["cursor_value"],
         replay_of=row["replay_of"],
         payload_hash=row["payload_hash"],
         details=dict(row["details"] or {}),
         failure=dict(row["failure"]) if row["failure"] else None,
-        created_at=row["created_at"],
-        updated_at=row["updated_at"],
+        created_at=_as_aware_utc(row["created_at"]),
+        updated_at=_as_aware_utc(row["updated_at"]),
     )
+
+
+def _as_optional_aware_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    return _as_aware_utc(value)
+
+
+def _as_aware_utc(value: datetime) -> datetime:
+    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 def _validate_operational_record(record: OperationalStateRecord) -> None:

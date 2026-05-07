@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 import importlib
 from pathlib import Path
+import re
+import shutil
 import subprocess
 import time
 import uuid
@@ -253,6 +255,16 @@ def operational_state_records_migration_path() -> Path:
     )
 
 
+def handoff_resolution_migration_path() -> Path:
+    return (
+        ROOT
+        / "civiccode"
+        / "migrations"
+        / "versions"
+        / "civiccode_0010_handoff_resolution.py"
+    )
+
+
 def test_canonical_table_models_exist_and_no_tables_are_missing_or_extra() -> None:
     models = model_module()
     metadata = models.Base.metadata
@@ -323,6 +335,7 @@ def test_alembic_scaffold_exists_for_civiccode_schema_chain() -> None:
         import_job_records_migration_path(),
         codifier_sync_records_migration_path(),
         operational_state_records_migration_path(),
+        handoff_resolution_migration_path(),
     ]
 
     for path in expected:
@@ -353,6 +366,20 @@ def test_schema_aware_guard_checks_table_inside_target_schema() -> None:
 
 def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.MonkeyPatch) -> None:
     """Run the actual operator migration path against disposable Postgres."""
+    if shutil.which("docker") is None:
+        pytest.skip("Docker CLI is not available for the real pgvector migration smoke.")
+    daemon = subprocess.run(
+        ["docker", "info"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if daemon.returncode != 0:
+        pytest.skip(
+            "Docker daemon is not available for the real pgvector migration smoke. "
+            "Start Docker Desktop and rerun this test before release if Docker proof is required."
+        )
+
     name = f"civiccode-m2-{uuid.uuid4().hex[:12]}"
     subprocess.run(
         [
@@ -424,7 +451,7 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             )
 
         assert civiccore_revision == "civiccore_0002_llm"
-        assert civiccode_revision == "civiccode_0009_operational_state"
+        assert civiccode_revision == "civiccode_0010_handoff_resolve"
         assert civiccode_tables == set(CANONICAL_TABLES) | {
             "source_registry_records",
             "popular_question_records",
@@ -593,6 +620,31 @@ def test_operational_state_records_migration_declares_persistent_records_table()
         "payload_hash",
     ]:
         assert f'"{column_name}"' in text
+
+
+def test_handoff_resolution_migration_declares_durable_resolution_fields() -> None:
+    text = handoff_resolution_migration_path().read_text(encoding="utf-8")
+
+    assert 'revision = "civiccode_0010_handoff_resolve"' in text
+    assert 'down_revision = "civiccode_0009_operational_state"' in text
+    for column_name in [
+        "resolved_section_version_id",
+        "resolved_by",
+        "resolved_at",
+    ]:
+        assert column_name in text
+
+
+def test_migration_revision_ids_fit_alembic_version_column() -> None:
+    """Alembic's default version table stores revision IDs in VARCHAR(32)."""
+    migrations_dir = ROOT / "civiccode" / "migrations" / "versions"
+    for migration in migrations_dir.glob("*.py"):
+        text = migration.read_text(encoding="utf-8")
+        match = re.search(r'^revision = "([^"]+)"', text, flags=re.MULTILINE)
+        if match is None:
+            continue
+        revision = match.group(1)
+        assert len(revision) <= 32, f"{migration.name} revision ID is too long: {revision}"
 
 
 def test_docs_and_changelog_record_schema_milestone_without_claiming_code_answers() -> None:

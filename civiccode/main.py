@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import os
+from contextvars import ContextVar
 from datetime import date, datetime
 from typing import Any
 
-from fastapi import FastAPI, Header, HTTPException
+from civiccore.auth import (
+    TrustedHeaderAuthConfig,
+    authorize_trusted_header_roles,
+    enforce_trusted_proxy_source,
+    load_trusted_header_auth_config,
+)
+from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import HTMLResponse
 
@@ -28,6 +35,7 @@ from civiccode.import_connectors import (
     provenance_report,
 )
 from civiccode.mock_city_environment import mock_city_codifier_contracts, mock_city_import_payload
+from civiccode.operational_readiness import build_operational_readiness
 from civiccode.ordinance_handoff import (
     OrdinanceHandoffError,
     OrdinanceHandoffRepository,
@@ -45,6 +53,7 @@ from civiccode.plain_language import (
 )
 from civiccode.public_lookup import (
     is_legal_advice_query,
+    render_answer_page,
     render_error_page,
     render_home_page,
     render_refusal_page,
@@ -80,6 +89,14 @@ from civiccode.staff_sources import (
     render_staff_source_required_page,
     render_staff_source_workspace,
 )
+from civiccode.staff_imports import (
+    render_staff_import_ledger,
+    render_staff_import_required_page,
+)
+from civiccode.staff_sync import (
+    render_staff_sync_required_page,
+    render_staff_sync_workspace,
+)
 from civiccode.staff_code import (
     render_staff_code_required_page,
     render_staff_code_workspace,
@@ -110,6 +127,7 @@ app = FastAPI(
     version=__version__,
     summary="Runtime foundation for CivicCode municipal code access workflows.",
 )
+_current_request: ContextVar[Request | None] = ContextVar("current_request", default=None)
 
 SOURCE_STORE = SourceRegistryStore()
 _source_registry_repository: SourceRegistryRepository | None = None
@@ -348,6 +366,17 @@ class QuestionAnswerRequest(BaseModel):
     as_of: date | None = None
 
 
+class SectionResolveRequest(BaseModel):
+    """Request body for downstream module section-resolution clients."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    consumer_module: str = Field(min_length=1)
+    section_number: str | None = None
+    query: str | None = None
+    as_of: date | None = None
+
+
 class PopularQuestionCreate(BaseModel):
     """Request body for a staff-approved public popular-question navigation aid."""
 
@@ -402,6 +431,14 @@ class CivicClerkOrdinanceEventCreate(BaseModel):
     ordinance_text: str = ""
     adopted_at: datetime | None = None
     failure_reason: str | None = None
+
+
+class CivicClerkOrdinanceEventResolve(BaseModel):
+    """Request body for resolving a handoff after staff codifies the amendment."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    section_version_id: str = Field(min_length=1)
 
 
 class ImportBundleCreate(BaseModel):
@@ -474,6 +511,13 @@ def _require_staff(
     x_civiccode_role: str | None,
     x_civiccode_actor: str | None,
 ) -> str:
+    request = _current_request.get()
+    config = _staff_trusted_header_config() if request is not None else None
+    if request is not None and (
+        config.principal_header_name != "X-CivicCode-Actor"
+        or config.roles_header_name != "X-CivicCode-Role"
+    ):
+        return _require_staff_from_trusted_headers(request, config)
     if x_civiccode_role != "staff":
         raise HTTPException(
             status_code=403,
@@ -491,7 +535,54 @@ def _require_staff(
                 "fix": "Send X-CivicCode-Actor with the staff email or service account.",
             },
         )
-    return actor
+    if request is None:
+        return actor
+    if config is None:
+        config = _staff_trusted_header_config()
+    return _require_staff_from_trusted_headers(request, config)
+
+
+def _require_staff_from_trusted_headers(
+    request: Request,
+    config: TrustedHeaderAuthConfig,
+) -> str:
+    enforce_trusted_proxy_source(
+        request.client.host if request.client else None,
+        service_name="CivicCode",
+        feature_name="staff endpoint access",
+        config=config,
+        trusted_proxy_env_var="CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS",
+    )
+    principal = authorize_trusted_header_roles(
+        request.headers,
+        service_name="CivicCode",
+        feature_name="staff endpoint access",
+        principal_header_name=config.principal_header_name,
+        roles_header_name=config.roles_header_name,
+        allowed_roles={"staff"},
+        provider_name=config.provider_name,
+    )
+    return principal.subject or ""
+
+
+def _staff_trusted_header_config() -> TrustedHeaderAuthConfig:
+    config = load_trusted_header_auth_config(
+        provider_env_var="CIVICCODE_STAFF_AUTH_PROVIDER",
+        provider_default="CivicCode staff shell",
+        principal_header_env_var="CIVICCODE_STAFF_PRINCIPAL_HEADER",
+        principal_header_default="X-CivicCode-Actor",
+        roles_header_env_var="CIVICCODE_STAFF_ROLES_HEADER",
+        roles_header_default="X-CivicCode-Role",
+        trusted_proxy_env_var="CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS",
+    )
+    if config.trusted_proxy_cidrs:
+        return config
+    return TrustedHeaderAuthConfig(
+        provider_name=config.provider_name,
+        principal_header_name=config.principal_header_name,
+        roles_header_name=config.roles_header_name,
+        trusted_proxy_cidrs=("127.0.0.1/32", "::1/128"),
+    )
 
 
 def _staff_code_payload() -> dict[str, Any]:
@@ -576,11 +667,46 @@ def _staff_code_next_action(
     return "Ready: current adopted text and approved summary state are aligned for staff review."
 
 
+def _staff_import_payload() -> dict[str, Any]:
+    jobs = []
+    for job in _get_import_store().list_jobs():
+        jobs.append(provenance_report(job, _get_source_store()))
+    connector_types = sorted({item["job"]["connector_type"] for item in jobs})
+    connector_label = ", ".join(connector_types) if connector_types else ", ".join(sorted(CONNECTOR_TYPES))
+    return {
+        "jobs": jobs,
+        "connector_types": connector_label,
+        "counts": {
+            "total_jobs": len(jobs),
+            "completed_jobs": sum(1 for item in jobs if item["job"]["status"] == "completed"),
+            "failed_jobs": sum(1 for item in jobs if item["job"]["status"] == "failed"),
+            "retried_jobs": sum(1 for item in jobs if item["job"].get("retry_of")),
+        },
+    }
+
+
+def _operational_readiness_payload() -> dict[str, Any]:
+    records = []
+    for store in (HANDOFF_STORE, _get_import_store(), _get_codifier_sync_store()):
+        records.extend(store.operational_records())
+    payload = build_operational_readiness(records)
+    payload["api"] = {
+        "path": "/api/v1/civiccode/staff/operational-state",
+        "audience": "staff_operator",
+        "auth": "X-CivicCode-Role: staff and X-CivicCode-Actor required",
+    }
+    return payload
+
+
 @app.middleware("http")
 async def _demo_seed_middleware(request: Any, call_next: Any) -> Any:
     """Seed the opt-in demo city before the first rendered/API request."""
-    _seed_demo_city_if_enabled()
-    return await call_next(request)
+    token = _current_request.set(request)
+    try:
+        _seed_demo_city_if_enabled()
+        return await call_next(request)
+    finally:
+        _current_request.reset(token)
 
 
 @app.get("/")
@@ -601,6 +727,9 @@ async def root() -> dict[str, str]:
             "CivicClerk ordinance handoff intake, durable handoff records, audit "
             "events, and affected-section warnings are online. Resident-facing "
             "public lookup pages are online at /civiccode. "
+            "The downstream section-resolution service is online for CivicZone, "
+            "CivicLegal, CivicAccess, and CivicComms. The resident cited-answer "
+            "page is online at /civiccode/answer. "
             "Local file-drop and fixture import jobs are online with provenance, "
             "retry, and no required outbound dependency. Records-ready section "
             "exports are online with citation, version, and source metadata. "
@@ -618,7 +747,7 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.18 persists section/version lifecycle records, "
+            "CivicCode v1.0.0 persists section/version lifecycle records, "
             "popular-question discovery aids, staff notes, plain-language "
             "summaries, CivicClerk handoff records, handoff audit events, and "
             "local import job ledgers, codifier sync source state, and "
@@ -658,6 +787,29 @@ async def public_lookup_search(q: str = "") -> str:
     return render_search_page(query, results)
 
 
+@app.get("/civiccode/answer", response_class=HTMLResponse)
+async def public_lookup_answer(
+    q: str = "",
+    section_number: str | None = None,
+    as_of: date | None = None,
+) -> str:
+    """Render a resident-facing cited answer for one adopted section."""
+    query = q.strip()
+    if not query:
+        return render_error_page(
+            "Question required",
+            "Question cannot be empty.",
+            "Ask what one adopted section says and include the exact section number.",
+            status_label="Empty question",
+        )
+    payload = build_grounded_answer(
+        QuestionRequestContext(question=query, section_number=section_number, as_of=as_of),
+        search=SECTION_STORE.search,
+        build_citation=_build_citation_for_section,
+    )
+    return render_answer_page(query, payload)
+
+
 @app.get("/civiccode/sections/{section_ref}", response_class=HTMLResponse)
 async def public_section_detail(section_ref: str, as_of: date | None = None) -> str:
     """Render a public section detail page with citation and warning context."""
@@ -686,7 +838,7 @@ async def public_section_detail(section_ref: str, as_of: date | None = None) -> 
                 authoritative_text=version.body,
             )
         )
-    warnings = HANDOFF_STORE.warnings_for_section(section_number)
+    warnings = HANDOFF_STORE.public_warnings_for_section(section_number)
     related = [
         related_material_to_public_dict(item)
         for item in SECTION_STORE.related_materials(section_number)["items"]
@@ -740,6 +892,36 @@ async def staff_code_workspace(
     return HTMLResponse(render_staff_code_workspace(_staff_code_payload(), actor=actor))
 
 
+@app.get("/staff/sync", response_class=HTMLResponse)
+async def staff_sync_workspace(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> HTMLResponse:
+    """Render the staff codifier sync health workspace."""
+    try:
+        actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    except HTTPException:
+        return HTMLResponse(render_staff_sync_required_page(), status_code=403)
+    sources = [
+        sync_source_to_dict(source)
+        for source in _get_codifier_sync_store().list_sources()
+    ]
+    return HTMLResponse(render_staff_sync_workspace(sources, actor=actor))
+
+
+@app.get("/staff/imports", response_class=HTMLResponse)
+async def staff_import_ledger(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> HTMLResponse:
+    """Render the staff import job and provenance ledger."""
+    try:
+        actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    except HTTPException:
+        return HTMLResponse(render_staff_import_required_page(), status_code=403)
+    return HTMLResponse(render_staff_import_ledger(_staff_import_payload(), actor=actor))
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Provide a simple operational health check for IT staff."""
@@ -749,6 +931,16 @@ async def health() -> dict[str, str]:
         "version": __version__,
         "civiccore": CIVICCORE_VERSION,
     }
+
+
+@app.get("/api/v1/civiccode/staff/operational-state")
+async def get_staff_operational_state(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return current operational readiness state for staff operators."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    return _operational_readiness_payload()
 
 
 @app.get("/api/v1/civiccode/sources/catalog")
@@ -864,8 +1056,13 @@ async def transition_source(
 
 
 @app.post("/api/v1/civiccode/titles", status_code=201)
-async def create_title(request: TitleCreate) -> dict[str, Any]:
+async def create_title(
+    request: TitleCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a municipal code title container."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         title = SECTION_STORE.create_title(request.model_dump())
     except SectionLifecycleError as exc:
@@ -874,8 +1071,13 @@ async def create_title(request: TitleCreate) -> dict[str, Any]:
 
 
 @app.post("/api/v1/civiccode/chapters", status_code=201)
-async def create_chapter(request: ChapterCreate) -> dict[str, Any]:
+async def create_chapter(
+    request: ChapterCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a municipal code chapter under a title."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         chapter = SECTION_STORE.create_chapter(request.model_dump())
     except SectionLifecycleError as exc:
@@ -884,8 +1086,13 @@ async def create_chapter(request: ChapterCreate) -> dict[str, Any]:
 
 
 @app.post("/api/v1/civiccode/sections", status_code=201)
-async def create_section(request: SectionCreate) -> dict[str, Any]:
+async def create_section(
+    request: SectionCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a code section or subsection without generating answers."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         section = SECTION_STORE.create_section(request.model_dump())
     except SectionLifecycleError as exc:
@@ -897,8 +1104,11 @@ async def create_section(request: SectionCreate) -> dict[str, Any]:
 async def create_section_version(
     section_id: str,
     request: SectionVersionCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Create an immutable section version for adopted, pending, or retired text."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     data = request.model_dump()
     if data["section_id"] != section_id:
         raise HTTPException(
@@ -948,8 +1158,107 @@ async def lookup_section(section_number: str, as_of: date | None = None) -> dict
         payload = SECTION_STORE.lookup_section(section_number, as_of=as_of)
     except SectionLifecycleError as exc:
         _raise_section_error(exc)
-    payload["handoff_warnings"] = HANDOFF_STORE.warnings_for_section(section_number)
+    payload["handoff_warnings"] = HANDOFF_STORE.public_warnings_for_section(section_number)
     return payload
+
+
+@app.post("/api/v1/civiccode/sections/resolve")
+async def resolve_section(request: SectionResolveRequest) -> dict[str, Any]:
+    """Resolve adopted code context for downstream CivicSuite module clients."""
+    allowed_consumers = {"CivicZone", "CivicLegal", "CivicAccess", "CivicComms"}
+    if request.consumer_module not in allowed_consumers:
+        return {
+            "status": "refused",
+            "reason": "unsupported_consumer_module",
+            "message": f"CivicCode does not expose a section-resolution contract for {request.consumer_module}.",
+            "fix": f"Use one of: {', '.join(sorted(allowed_consumers))}.",
+            "consumer_module": request.consumer_module,
+            "code_answer_behavior": "not_available",
+        }
+    query = (request.query or "").strip()
+    if query and (is_legal_advice_query(query) or looks_like_legal_determination(query)):
+        refused = build_grounded_answer(
+            QuestionRequestContext(question=query, section_number=request.section_number, as_of=request.as_of),
+            search=SECTION_STORE.search,
+            build_citation=_build_citation_for_section,
+        )
+        refused["consumer_module"] = request.consumer_module
+        return refused
+    section_number = request.section_number
+    resolution_mode = "exact_section"
+    if section_number is None:
+        if not query:
+            return {
+                "status": "refused",
+                "reason": "missing_resolution_input",
+                "message": "Section resolution requires section_number or query.",
+                "fix": "Send an exact section_number when possible; use query only for public-safe code-text matching.",
+                "consumer_module": request.consumer_module,
+                "code_answer_behavior": "not_available",
+            }
+        search_payload = SECTION_STORE.search(query)
+        matches = [
+            result
+            for result in search_payload["results"]
+            if result.get("result_type") == "code_section" and result.get("section_number")
+        ]
+        if len(matches) != 1:
+            return {
+                "status": "refused",
+                "reason": "ambiguous_resolution" if matches else "no_resolution",
+                "message": f"{len(matches)} adopted code sections matched the resolution query.",
+                "fix": "Send an exact section_number so CivicCode can resolve one authoritative section.",
+                "consumer_module": request.consumer_module,
+                "code_answer_behavior": "not_available",
+            }
+        section_number = matches[0]["section_number"]
+        resolution_mode = "query_single_match"
+    try:
+        lookup = SECTION_STORE.lookup_section(section_number, as_of=request.as_of)
+    except SectionLifecycleError as exc:
+        return {
+            "status": "refused",
+            "reason": "section_lookup",
+            "message": exc.message,
+            "fix": exc.fix,
+            "consumer_module": request.consumer_module,
+            "code_answer_behavior": "not_available",
+        }
+    citation_payload = _build_citation_for_section(section_number, as_of=request.as_of)
+    if citation_payload.get("status") != "ok":
+        citation_payload["consumer_module"] = request.consumer_module
+        return citation_payload
+    warnings = HANDOFF_STORE.public_warnings_for_section(section_number)
+    return {
+        "status": "ok",
+        "consumer_module": request.consumer_module,
+        "resolution_mode": resolution_mode,
+        "section": lookup["section"],
+        "version": lookup["version"],
+        "citation": citation_payload["citation"],
+        "handoff_warnings": warnings,
+        "version_context": {
+            "as_of": request.as_of.isoformat() if request.as_of else lookup["as_of"],
+            "preserves_date_context": True,
+        },
+        "legal_boundary": {
+            "classification": "information_not_determination",
+            "legal_determination": "not_provided",
+            "legal_advice": "not_provided",
+            "pending_language_is_adopted_law": False,
+        },
+        "stable_contract": {
+            "contract_name": "civiccode.section_resolution.v1",
+            "guarantee": "Resolved payload cites one adopted section/version/source or returns a structured refusal.",
+        },
+        "downstream_usage": {
+            "CivicZone": "Use citations for zoning-context explanations, not official determinations.",
+            "CivicLegal": "Use as city-code source context; attorney review controls legal conclusions.",
+            "CivicAccess": "Use for accessible/plain-language transforms while retaining authoritative text.",
+            "CivicComms": "Use for public explainers with exact citation and no advocacy or legal advice.",
+        }[request.consumer_module],
+        "code_answer_behavior": "section_resolution",
+    }
 
 
 @app.get("/api/v1/civiccode/sections/{section_id}/history")
@@ -1230,7 +1539,7 @@ async def get_imported_tree(
                 "Open the job details, fix the failure, and retry before reading its imported tree.",
                 status_code=409,
             )
-        return imported_tree_snapshot(job.source_id, SOURCE_STORE, SECTION_STORE)
+        return imported_tree_snapshot(job.source_id, _get_source_store(), SECTION_STORE)
     except CivicCodeImportError as exc:
         _raise_import_error(exc)
     except SourceRegistryError as exc:
@@ -1306,6 +1615,49 @@ async def create_civicclerk_ordinance_event(
         for section_number in request.affected_sections:
             SECTION_STORE.lookup_section(section_number)
         event = HANDOFF_STORE.create_event(request.model_dump(), actor=actor)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    except OrdinanceHandoffError as exc:
+        _raise_handoff_error(exc)
+    return event_to_dict(event)
+
+
+@app.post("/api/v1/civiccode/staff/civicclerk/ordinance-events/{event_id}/resolve")
+async def resolve_civicclerk_ordinance_event(
+    event_id: str,
+    request: CivicClerkOrdinanceEventResolve,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Mark a CivicClerk handoff codified after staff creates the adopted code version."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        version = SECTION_STORE.get_version(request.section_version_id)
+        section = SECTION_STORE.get_section(version.section_id)
+        event = next((item for item in HANDOFF_STORE.list_events() if item.event_id == event_id), None)
+        if event is None:
+            raise OrdinanceHandoffError(
+                f"CivicClerk ordinance event '{event_id}' was not found.",
+                "Read the handoff list and resolve an existing event.",
+                status_code=404,
+            )
+        if section.section_number not in event.affected_sections:
+            raise OrdinanceHandoffError(
+                "Resolved section version does not belong to an affected section.",
+                "Create or select an adopted version for one of the handoff's affected_sections.",
+                status_code=409,
+            )
+        if version.status != "adopted" or not version.is_current:
+            raise OrdinanceHandoffError(
+                "Resolved handoffs require a current adopted section version.",
+                "Create the codified adopted version and mark it current before resolving the handoff.",
+                status_code=409,
+            )
+        event = HANDOFF_STORE.resolve_event(
+            event_id,
+            actor=actor,
+            section_version_id=request.section_version_id,
+        )
     except SectionLifecycleError as exc:
         _raise_section_error(exc)
     except OrdinanceHandoffError as exc:

@@ -24,13 +24,13 @@ jobs:
           python-version: "3.13"
 
       - name: Install CivicCore release-provenance helper
-        run: python -m pip install "git+https://github.com/CivicSuite/civiccore.git@main"
+        run: python -m pip install "git+https://github.com/CivicSuite/civiccore.git@v1.0"
 
       - name: Checkout canonical CivicCore provenance fixtures
         uses: actions/checkout@v6
         with:
           repository: CivicSuite/civiccore
-          ref: main
+          ref: v1.0
           path: .tmp-civiccore
 
       - name: Verify adversarial release provenance fixtures
@@ -52,7 +52,7 @@ jobs:
           cache: pip
 
       - name: Install CivicCore release wheel
-        run: python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.1/civiccore-0.22.1-py3-none-any.whl
+        run: python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl
 
       - name: Install package and test dependencies
         run: python -m pip install -e ".[dev]"
@@ -87,7 +87,7 @@ jobs:
           echo "target_tree=$target_tree" >> "$GITHUB_OUTPUT"
 
       - name: Install CivicCore release-provenance helper
-        run: python -m pip install --force-reinstall "git+https://github.com/CivicSuite/civiccore.git@main"
+        run: python -m pip install --force-reinstall "git+https://github.com/CivicSuite/civiccore.git@v1.0"
 
       - name: Build release attestation
         run: |

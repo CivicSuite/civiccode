@@ -18,7 +18,7 @@ plain-language summaries, staff workbench, citation-grounded Q&A, citation
 contract, search and permalink, section/version, source registry, runtime
 foundation, and canonical schema foundations: an
 installable Python package, a FastAPI app shell, `/` and `/health` endpoints,
-a published `civiccore v0.22.1` release-wheel dependency, canonical SQLAlchemy table
+a published `civiccore v1.0.0` release-wheel dependency, canonical SQLAlchemy table
 metadata, Alembic migrations under the `civiccode` schema, source registry APIs,
 optional database-backed source registry persistence, staff-header-protected
 source registry mutations and staff source reads, staff source registry
@@ -61,7 +61,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current product line is CivicCode v0.1.18. Release provenance is moving to
+The current product line is CivicCode v1.0.0. Release provenance now follows
 the suite-wide Sigstore attestation model: the Git tag is a pointer, and the
 trust artifact is `release-attestation.json` plus
 `release-attestation.json.bundle`, verified against the exact
@@ -109,6 +109,8 @@ baselines:
 - label popular questions and related materials as navigation aids, not legal
   determinations,
 - expose stable section permalinks that survive text revisions,
+- resolve adopted section context for CivicZone, CivicLegal, CivicAccess, and
+  CivicComms through the `civiccode.section_resolution.v1` contract,
 - build deterministic citation objects for adopted section text,
 - return structured refusals for missing, stale, or contradictory source
   situations,
@@ -139,9 +141,13 @@ baselines:
   `CIVICCODE_SOURCE_REGISTRY_DB_URL` so pending codification warnings survive
   process restarts on the Docker/PostgreSQL path,
 - distinguish pending codification from adopted codified law,
+- let staff mark a CivicClerk handoff codified after creating the current
+  adopted section version,
 - warn affected section lookups when a handoff may make the codified text stale,
 - detect likely conflicts when ordinance text references affected sections,
 - render a resident-facing public code lookup surface under `/civiccode`,
+- render a resident-facing cited-answer page under `/civiccode/answer` when one
+  adopted section and exact citation ground the response,
 - show accessible search success, empty, refusal, stale-source, and section
   detail states,
 - import local CSV/file-drop bundles and official HTML extract fixtures through
@@ -164,6 +170,11 @@ baselines:
 - persist operational retry queue, replay, and delta-cursor records for
   CivicClerk handoffs, local imports, and codifier sync runs with
   `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
+- expose `/api/v1/civiccode/staff/operational-state` for staff operators to
+  inspect current handoff, import, and sync readiness from existing local or
+  durable operational records with actionable missing-data fixes,
+- render `/staff/imports` and `/staff/sync` so staff can review import
+  provenance and codifier sync health without calling external vendors,
 - run already-fetched local codifier payloads through the import path without
   outbound vendor calls,
 - plan delta request URLs for Municode, American Legal Publishing, Code
@@ -188,11 +199,11 @@ baselines:
   `scripts/start_docker_backup_restore_rehearsal.sh` on Bash,
 - document CivicAccess as planned infrastructure, not a shipped runtime
   dependency,
-- consume the current shared CivicCore v0.22.1 release wheel,
+- consume the current shared CivicCore v1.0.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.18 durable operational-state
-  release.
+- keep docs, browser QA, adversarial mock validation, and CI gates green for
+  the v1.0.0 product release.
 
 ## Why CivicCode before CivicZone
 
@@ -239,7 +250,7 @@ Install the CivicCore release wheel first, then install CivicCode in editable
 mode:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.1/civiccore-0.22.1-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
@@ -400,10 +411,13 @@ curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/questions/answer \
 ```
 
 Expected staff-workbench truth today: staff endpoints require
-`X-CivicCode-Role: staff` and `X-CivicCode-Actor`, staff interpretation notes
-are returned only to staff endpoints, staff Q&A adds `staff_context` with
-`staff_only_do_not_publish`, and public lookup, search, and Q&A never expose
-staff notes or staff note counts.
+`X-CivicCode-Role: staff` and `X-CivicCode-Actor` from a trusted proxy source.
+Local mock runs allow loopback (`127.0.0.1/32` and `::1/128`) by default; shared
+environments should set `CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` to the reverse
+proxy CIDR list and strip client-supplied staff headers before CivicCode sees
+the request. Staff interpretation notes are returned only to staff endpoints,
+staff Q&A adds `staff_context` with `staff_only_do_not_publish`, and public
+lookup, search, and Q&A never expose staff notes or staff note counts.
 
 Plain-language summary smoke:
 

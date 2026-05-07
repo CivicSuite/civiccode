@@ -53,6 +53,7 @@ async def create_section_tree(client: AsyncClient, section_id: str = "sec_chicke
 
     title = await client.post(
         "/api/v1/civiccode/titles",
+        headers=STAFF_HEADERS,
         json={
             "title_id": "title_6",
             "title_number": "6",
@@ -63,6 +64,7 @@ async def create_section_tree(client: AsyncClient, section_id: str = "sec_chicke
 
     chapter = await client.post(
         "/api/v1/civiccode/chapters",
+        headers=STAFF_HEADERS,
         json={
             "chapter_id": "chapter_6_12",
             "title_id": "title_6",
@@ -74,6 +76,7 @@ async def create_section_tree(client: AsyncClient, section_id: str = "sec_chicke
 
     section = await client.post(
         "/api/v1/civiccode/sections",
+        headers=STAFF_HEADERS,
         json={
             "section_id": section_id,
             "chapter_id": "chapter_6_12",
@@ -86,6 +89,40 @@ async def create_section_tree(client: AsyncClient, section_id: str = "sec_chicke
         },
     )
     assert section.status_code == 201, section.text
+
+
+@pytest.mark.asyncio
+async def test_section_lifecycle_writes_require_staff_headers(client: AsyncClient) -> None:
+    title = await client.post(
+        "/api/v1/civiccode/titles",
+        json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
+    )
+    chapter = await client.post(
+        "/api/v1/civiccode/chapters",
+        json={
+            "chapter_id": "chapter_6_12",
+            "title_id": "title_6",
+            "chapter_number": "6.12",
+            "chapter_name": "Urban Livestock",
+        },
+    )
+    section = await client.post(
+        "/api/v1/civiccode/sections",
+        json={
+            "section_id": "sec_chickens",
+            "chapter_id": "chapter_6_12",
+            "section_number": "6.12.040",
+            "section_heading": "Backyard chickens",
+        },
+    )
+    version = await client.post(
+        "/api/v1/civiccode/sections/sec_chickens/versions",
+        json=adopted_version(version_id="v_current"),
+    )
+
+    for response in (title, chapter, section, version):
+        assert response.status_code == 403
+        assert response.json()["detail"]["fix"].startswith("Send X-CivicCode-Role: staff")
 
 
 def adopted_version(
@@ -138,6 +175,7 @@ async def test_lookup_current_section_by_number(client: AsyncClient) -> None:
     await create_section_tree(client)
     version = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json=adopted_version(version_id="v_current"),
     )
     assert version.status_code == 201, version.text
@@ -160,6 +198,7 @@ async def test_lookup_historical_section_by_effective_date(client: AsyncClient) 
     await create_section_tree(client)
     old_version = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json=adopted_version(
             version_id="v_2024",
             body="Up to four hens are allowed with a permit.",
@@ -171,6 +210,7 @@ async def test_lookup_historical_section_by_effective_date(client: AsyncClient) 
     assert old_version.status_code == 201, old_version.text
     current_version = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json=adopted_version(
             version_id="v_2026",
             effective_start="2026-01-01",
@@ -194,6 +234,7 @@ async def test_overlapping_effective_dates_fail_actionably(client: AsyncClient) 
     await create_section_tree(client)
     first = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json=adopted_version(
             version_id="v_overlap_a",
             effective_start="2025-01-01",
@@ -204,6 +245,7 @@ async def test_overlapping_effective_dates_fail_actionably(client: AsyncClient) 
     assert first.status_code == 201, first.text
     second = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json=adopted_version(
             version_id="v_overlap_b",
             body="Overlapping adopted text.",
@@ -249,6 +291,7 @@ async def test_pending_ordinance_language_is_not_treated_as_adopted_law(
     assert source.status_code == 201, source.text
     pending = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json={
             "version_id": "pending_ord",
             "section_id": "sec_chickens",
@@ -279,6 +322,7 @@ async def test_amendment_history_preserves_prior_and_current_text(client: AsyncC
     await create_section_tree(client)
     prior = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json=adopted_version(
             version_id="prior_text",
             body="Up to four hens are allowed.",
@@ -290,6 +334,7 @@ async def test_amendment_history_preserves_prior_and_current_text(client: AsyncC
     assert prior.status_code == 201, prior.text
     current = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json=adopted_version(
             version_id="current_text",
             body="Up to six hens are allowed with a permit.",
@@ -314,6 +359,7 @@ async def test_current_lookup_without_deterministic_current_version_fails(client
     await create_section_tree(client)
     draft = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json={
             "version_id": "draft_only",
             "section_id": "sec_chickens",
@@ -343,6 +389,7 @@ async def test_current_flag_rejects_non_adopted_version(client: AsyncClient) -> 
     await create_section_tree(client)
     response = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json={
             "version_id": "bad_current",
             "section_id": "sec_chickens",
@@ -366,6 +413,7 @@ async def test_section_version_requires_registered_source(client: AsyncClient) -
     await create_section_tree(client)
     response = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json={
             "version_id": "missing_source_version",
             "section_id": "sec_chickens",
@@ -407,6 +455,7 @@ async def test_adopted_version_requires_active_public_source(client: AsyncClient
 
     response = await client.post(
         "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
         json={
             "version_id": "draft_backed_adopted",
             "section_id": "sec_chickens",

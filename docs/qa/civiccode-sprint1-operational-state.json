@@ -1,0 +1,200 @@
+{
+  "status": "needs_attention",
+  "message": "Operational state includes queued retry work that staff must resolve.",
+  "fixes": [
+    "Open the failed import job, correct the bundle data, then use the retry endpoint.",
+    "Create a CivicClerk handoff event or failed-handoff fixture before relying on handoff retry/replay readiness."
+  ],
+  "counts": {
+    "records": 6,
+    "retry_queue": 1,
+    "replay_record": 4,
+    "delta_cursor": 1,
+    "lanes_with_state": 2
+  },
+  "lanes": {
+    "handoff": {
+      "lane": "handoff",
+      "status": "missing_state",
+      "record_count": 0,
+      "queued_retry_count": 0,
+      "replay_count": 0,
+      "delta_cursor_count": 0,
+      "latest_record_at": null,
+      "fixes": [
+        "Create a CivicClerk handoff event or failed-handoff fixture before relying on handoff retry/replay readiness."
+      ]
+    },
+    "import": {
+      "lane": "import",
+      "status": "needs_attention",
+      "record_count": 4,
+      "queued_retry_count": 1,
+      "replay_count": 3,
+      "delta_cursor_count": 0,
+      "latest_record_at": "2026-05-07T04:44:45.442127+00:00",
+      "fixes": [
+        "Open the failed import job, correct the bundle data, then use the retry endpoint."
+      ]
+    },
+    "sync": {
+      "lane": "sync",
+      "status": "ready",
+      "record_count": 2,
+      "queued_retry_count": 0,
+      "replay_count": 1,
+      "delta_cursor_count": 1,
+      "latest_record_at": "2026-05-07T04:44:45.438998+00:00",
+      "fixes": []
+    }
+  },
+  "records": [
+    {
+      "record_id": "replay_import_job_municode_brookfield_e66235b8b69f4a6694c8b6621852d56e",
+      "lane": "import",
+      "record_type": "replay_record",
+      "subject_id": "job_municode_brookfield",
+      "status": "completed",
+      "actor": "qa@example.gov",
+      "attempt_count": 0,
+      "next_attempt_at": null,
+      "cursor_key": null,
+      "cursor_value": null,
+      "replay_of": null,
+      "payload_hash": "bf0771da4bcdea5ab691ea84413ab99ce0d61bc97500f2affe5940545ac64cd3",
+      "details": {
+        "connector_type": "official_html_extract",
+        "source_id": "src_municode_brookfield"
+      },
+      "failure": null,
+      "created_at": "2026-05-07T04:44:45.356644+00:00",
+      "updated_at": "2026-05-07T04:44:45.356644+00:00"
+    },
+    {
+      "record_id": "replay_import_job_municode_brookfield_sync_185bc9986edf4ea69d8d44aa8496c261",
+      "lane": "import",
+      "record_type": "replay_record",
+      "subject_id": "job_municode_brookfield_sync",
+      "status": "completed",
+      "actor": "qa@example.gov",
+      "attempt_count": 0,
+      "next_attempt_at": null,
+      "cursor_key": null,
+      "cursor_value": null,
+      "replay_of": null,
+      "payload_hash": "36ad0f116d9a9631af8fe3e9858fae6ace2a957d3b080eaafb560570921c09f4",
+      "details": {
+        "connector_type": "official_html_extract",
+        "source_id": "src_municode_brookfield"
+      },
+      "failure": null,
+      "created_at": "2026-05-07T04:44:45.438726+00:00",
+      "updated_at": "2026-05-07T04:44:45.438727+00:00"
+    },
+    {
+      "record_id": "replay_import_import_broken_missing_section_e6bb2975ba2c4c32b5fc080350fb475c",
+      "lane": "import",
+      "record_type": "replay_record",
+      "subject_id": "import_broken_missing_section",
+      "status": "failed",
+      "actor": "qa@example.gov",
+      "attempt_count": 0,
+      "next_attempt_at": null,
+      "cursor_key": null,
+      "cursor_value": null,
+      "replay_of": null,
+      "payload_hash": "7746ca5e831fd3ab165abd67f2b4cbfbd8f5c1abef7e0afa088c62b41f0d5191",
+      "details": {
+        "connector_type": "csv_bundle",
+        "source_id": "broken_source"
+      },
+      "failure": {
+        "message": "Version 'version_orphan' references missing section 'missing_section'.",
+        "fix": "Include the section in the same bundle or import it before this version."
+      },
+      "created_at": "2026-05-07T04:44:45.442127+00:00",
+      "updated_at": "2026-05-07T04:44:45.442127+00:00"
+    },
+    {
+      "record_id": "retry_import_import_broken_missing_section_3c0fdc3e626241ff98b08b530c4c9ad5",
+      "lane": "import",
+      "record_type": "retry_queue",
+      "subject_id": "import_broken_missing_section",
+      "status": "queued",
+      "actor": "qa@example.gov",
+      "attempt_count": 0,
+      "next_attempt_at": null,
+      "cursor_key": null,
+      "cursor_value": null,
+      "replay_of": null,
+      "payload_hash": null,
+      "details": {
+        "reason": "Version 'version_orphan' references missing section 'missing_section'."
+      },
+      "failure": {
+        "message": "Version 'version_orphan' references missing section 'missing_section'.",
+        "fix": "Include the section in the same bundle or import it before this version."
+      },
+      "created_at": "2026-05-07T04:44:45.442118+00:00",
+      "updated_at": "2026-05-07T04:44:45.442118+00:00"
+    },
+    {
+      "record_id": "cursor_sync_src_municode_brookfield_updatedSince",
+      "lane": "sync",
+      "record_type": "delta_cursor",
+      "subject_id": "src_municode_brookfield",
+      "status": "current",
+      "actor": "qa@example.gov",
+      "attempt_count": 0,
+      "next_attempt_at": null,
+      "cursor_key": "updatedSince",
+      "cursor_value": "2026-05-07T04:44:45Z",
+      "replay_of": null,
+      "payload_hash": null,
+      "details": {
+        "connector": "municode",
+        "import_job_id": "job_municode_brookfield_sync"
+      },
+      "failure": null,
+      "created_at": "2026-05-07T04:44:45.438745+00:00",
+      "updated_at": "2026-05-07T04:44:45.438746+00:00"
+    },
+    {
+      "record_id": "replay_sync_src_municode_brookfield_0f7f74c829344f9eb1465d78c7c04d96",
+      "lane": "sync",
+      "record_type": "replay_record",
+      "subject_id": "src_municode_brookfield",
+      "status": "completed",
+      "actor": "qa@example.gov",
+      "attempt_count": 0,
+      "next_attempt_at": null,
+      "cursor_key": null,
+      "cursor_value": null,
+      "replay_of": null,
+      "payload_hash": "36ad0f116d9a9631af8fe3e9858fae6ace2a957d3b080eaafb560570921c09f4",
+      "details": {
+        "connector": "municode",
+        "import_job_id": "job_municode_brookfield_sync"
+      },
+      "failure": null,
+      "created_at": "2026-05-07T04:44:45.438997+00:00",
+      "updated_at": "2026-05-07T04:44:45.438998+00:00"
+    }
+  ],
+  "data_source": {
+    "kind": "existing_operational_state",
+    "includes": [
+      "handoff",
+      "import",
+      "sync"
+    ],
+    "external_deployment_required": false,
+    "network_required": false
+  },
+  "code_answer_behavior": "not_available",
+  "api": {
+    "path": "/api/v1/civiccode/staff/operational-state",
+    "audience": "staff_operator",
+    "auth": "X-CivicCode-Role: staff and X-CivicCode-Actor required"
+  }
+}

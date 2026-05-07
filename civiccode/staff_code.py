@@ -193,6 +193,17 @@ def _page(title: str, body: str) -> str:
       outline: 4px solid var(--focus);
       outline-offset: 3px;
     }}
+    .skip-link {{
+      position: absolute;
+      left: .75rem;
+      top: .75rem;
+      transform: translateY(-200%);
+      background: var(--ink);
+      color: white;
+      padding: .65rem .9rem;
+      z-index: 5;
+    }}
+    .skip-link:focus {{ transform: translateY(0); }}
     header, main, footer {{
       width: min(1160px, calc(100% - 2rem));
       margin-inline: auto;
@@ -225,7 +236,7 @@ def _page(title: str, body: str) -> str:
       text-transform: uppercase;
     }}
     .lede {{ color: var(--muted); font-size: 1.18rem; max-width: 64rem; }}
-    .actor-chip, .fix-path, .source-line {{
+    .actor-chip, .source-line {{
       display: inline-block;
       background: var(--card);
       border: 2px solid var(--line);
@@ -233,6 +244,18 @@ def _page(title: str, body: str) -> str:
       padding: .55rem .8rem;
       font-family: "Courier New", monospace;
       font-size: .92rem;
+    }}
+    .fix-path {{
+      display: block;
+      max-width: 62rem;
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: .5rem;
+      padding: .75rem .9rem;
+      font-family: "Courier New", monospace;
+      font-size: .92rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
     }}
     .overview, .state-card, .section-card {{
       background: rgba(255, 250, 240, .94);
@@ -296,11 +319,12 @@ def _page(title: str, body: str) -> str:
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#content">Skip to staff code workspace</a>
   <header>
     <a class="brand" href="/staff/code">CivicCode</a>
     <span>Staff code lifecycle</span>
   </header>
-  <main>
+  <main id="content">
     {body}
   </main>
   <footer>

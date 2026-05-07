@@ -123,12 +123,13 @@
 
   <div class="grid">
     <section>
-      <h2>What it will do</h2>
+      <h2>What CivicCode does</h2>
       <ul>
         <li>Import authoritative municipal code sources from local fixtures and file drops.</li>
         <li>Preserve section versions and effective dates.</li>
         <li>Export records-ready section packages with citations and source provenance.</li>
         <li>Answer routine code questions with citations.</li>
+        <li>Resolve adopted section context for downstream CivicSuite modules.</li>
         <li>Label summaries as non-authoritative.</li>
       </ul>
     </section>
@@ -146,7 +147,7 @@
       <ul>
         <li>Installable Python package.</li>
         <li>FastAPI runtime foundation with <code>/</code> and <code>/health</code>.</li>
-        <li>Published <code>civiccore v0.22.1</code> release-wheel dependency.</li>
+        <li>Published <code>civiccore v1.0.0</code> release-wheel dependency.</li>
         <li>Staff-header-protected source registry mutations and staff source reads.</li>
         <li>Staff source registry workspace at <code>/staff/sources</code> with empty, active, stale, failed, and access-required states.</li>
         <li>Staff code lifecycle workspace at <code>/staff/code</code> with access-required, empty, readiness-snapshot, section-card, draft-summary, and pending-codification states.</li>
@@ -160,22 +161,28 @@
         <li>Related materials from explicit public cross-references, labeled as navigation aids and not legal determinations.</li>
         <li>Deterministic citation/refusal objects with section, version, source, and effective-date fields.</li>
         <li>Citation-grounded Q&amp;A harness for questions that resolve to one adopted section and active source.</li>
+        <li>Resident-facing cited-answer page at <code>/civiccode/answer</code>.</li>
+        <li>Downstream section-resolution contract for CivicZone, CivicLegal, CivicAccess, and CivicComms.</li>
         <li>Staff interpretation notes, staff Q&amp;A context, and staff workbench audit events.</li>
         <li>Durable staff-note and staff-workbench audit event storage through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Staff-approved plain-language summaries labeled non-authoritative with <code>non_authoritative_explanation</code>.</li>
         <li>Durable plain-language summary and summary audit event storage through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Authoritative code text remains visible beside approved summaries.</li>
         <li>CivicClerk handoff intake with pending codification warnings and likely conflict signals.</li>
+        <li>Staff handoff resolution after codified adopted text is created.</li>
         <li>Durable CivicClerk handoff and handoff audit event storage through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Resident-facing public code lookup surface under <code>/civiccode</code> for the "Read code" workflow.</li>
         <li>Search, empty, legal-advice refusal, stale-source warning, and section detail states.</li>
         <li>Staff-only local import jobs for CSV/file-drop bundles and official HTML extract fixtures.</li>
+        <li>Staff import provenance ledger at <code>/staff/imports</code> with access-required, empty, populated, failed-job, and actionable recovery states.</li>
         <li>Durable import job status, counts, provenance, actionable failure details, and completion timestamps through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Import retry, visible failure records, imported-tree verification, and provenance report endpoints.</li>
         <li>No outbound network dependency, Redis/Celery worker, or vendor credentials required for local import.</li>
         <li>Staff-controlled codifier sync readiness endpoints with schedule validation, SSRF-safe host checks, and supported connector validation.</li>
+        <li>Staff codifier sync health page at <code>/staff/sync</code> with access-required, empty, configured-source, circuit-health, host-validation, and local-payload states.</li>
         <li>Durable codifier sync source configuration, host-validation result, next-run cursor, last-run state, circuit-breaker state, and delta-plan history through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code>.</li>
         <li>Durable operational retry queue, replay, and delta-cursor records for CivicClerk handoffs, local imports, and codifier sync runs through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code>.</li>
+        <li>Staff operational-state API at <code>/api/v1/civiccode/staff/operational-state</code> summarizing handoff, import, and sync readiness from existing records without external deployment proof or outbound network.</li>
         <li>Delta request planning for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
         <li>Local codifier payload runs through the import path with CivicCore circuit-breaker health, shared source-list health projection, and actionable operator copy.</li>
         <li>Reusable mock-city codifier contracts for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
@@ -191,8 +198,8 @@
       </ul>
     </section>
     <section>
-      <h2>Current next step</h2>
-      <p>CivicCode v0.1.18 is the current durable operational-state product line with CivicCore v0.22.1 source-list health projection reuse. Release provenance is moving to the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and CO-4 records both as historical pre-gate/no-attestation releases; review <code>docs/ops/tier1-retrofit-ledger.md</code> before publishing, mirroring, or relying on release artifacts.</p>
+      <h2>Release status</h2>
+      <p>CivicCode v1.0.0 is the current durable operational-state product line with CivicCore v1.0.0 source-list health projection reuse. Release provenance follows the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and CO-4 records both as historical pre-gate/no-attestation releases; review <code>docs/ops/tier1-retrofit-ledger.md</code> before relying on those older artifacts.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

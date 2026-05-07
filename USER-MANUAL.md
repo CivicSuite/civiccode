@@ -69,6 +69,9 @@ Current truth:
 - public related-material lists come only from explicit public cross-references
   and do not expose staff notes,
 - stable section permalinks remain the same across text revisions,
+- downstream CivicSuite modules can resolve adopted code context through
+  `civiccode.section_resolution.v1` for CivicZone, CivicLegal, CivicAccess, and
+  CivicComms,
 - deterministic citation objects can be built from adopted section text,
 - citation refusals include reasons and fix paths for missing, stale, or
   contradictory source situations,
@@ -106,6 +109,11 @@ Current truth:
 - codifier sync source state persists configuration, host-validation result,
   next-run cursor, last attempted/successful run, circuit-breaker state, and
   delta-plan history on the configured Docker/PostgreSQL path,
+- staff operators can call `/api/v1/civiccode/staff/operational-state` to view
+  current handoff, import, and sync readiness from existing operational records,
+  including specific fixes when state is missing or queued retry work exists,
+- staff operators can open `/staff/imports` and `/staff/sync` for browser
+  review of import provenance and codifier sync health,
 - provenance reports show source metadata, fixture checksum, and
   no-outbound-dependency status,
 - staff can configure active official codifier sources for sync readiness,
@@ -123,6 +131,10 @@ Current truth:
   runtime dependency,
 - residents can open `/civiccode`, search by section number or phrase, and read
   adopted code text with citations and warnings,
+- residents can open `/civiccode/answer` to ask what one adopted section says
+  and receive a cited, non-determination answer,
+- staff can mark CivicClerk handoffs codified after creating the current
+  adopted section version, which removes stale-code warnings for that handoff,
 - no live LLM calls, bundled vendor credentials, automatic ordinance
   codification, or legal determinations are generated yet.
 
@@ -135,13 +147,13 @@ back to staff.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 13 accessibility and records-ready
-export hardening foundation plus
+This repo currently contains the v1.0.0 staff operations surfaces,
+CivicCore v1 contracts, durable import/codifier sync state, and
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
 - standalone module repo under `CivicSuite/`,
-- published `civiccore v0.22.1` release-wheel dependency,
+- published `civiccore v1.0.0` release-wheel dependency,
 - local LLM only through `civiccore.llm`,
 - no cloud dependency,
 - no imports from unreleased CivicCore placeholder packages.
@@ -149,7 +161,7 @@ CivicSuite pattern:
 Install and run:
 
 ```bash
-python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v0.22.1/civiccore-0.22.1-py3-none-any.whl
+python -m pip install https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl
 python -m pip install -e ".[dev]"
 python -m uvicorn civiccode.main:app --reload
 ```
@@ -357,10 +369,14 @@ curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/questions/answer \
   -d '{"question":"What does section 6.12.040 say about backyard chickens?","section_number":"6.12.040"}'
 ```
 
-Staff endpoints require `X-CivicCode-Role: staff` and `X-CivicCode-Actor`.
-Staff Q&A context is explicitly marked `staff_only_do_not_publish`. Public
-lookup, public search, and public Q&A responses must not expose staff note text
-or staff note counts.
+Staff endpoints require `X-CivicCode-Role: staff` and `X-CivicCode-Actor` from
+a trusted proxy source. Local mock runs allow loopback (`127.0.0.1/32` and
+`::1/128`) by default; shared environments should set
+`CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` to the reverse proxy CIDR list and strip
+client-supplied staff headers before CivicCode sees the request. Staff Q&A
+context is explicitly marked `staff_only_do_not_publish`. Public lookup, public
+search, and public Q&A responses must not expose staff note text or staff note
+counts.
 
 Draft and approve a plain-language summary:
 
@@ -417,6 +433,7 @@ Public lookup route:
 curl "http://127.0.0.1:8000/civiccode"
 curl "http://127.0.0.1:8000/civiccode/search?q=6.12.040"
 curl "http://127.0.0.1:8000/civiccode/sections/6.12.040"
+curl "http://127.0.0.1:8000/civiccode/answer?q=What%20does%20section%206.12.040%20say%3F&section_number=6.12.040"
 ```
 
 CivicClerk handoff events preserve meeting and agenda item provenance. They
@@ -424,7 +441,9 @@ persist with handoff audit events when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is
 configured, surface pending codification warnings on affected lookups, and show
 likely conflict signals when ordinance text references existing sections. They
 do not perform automatic ordinance codification and pending ordinance language
-is not adopted law.
+is not adopted law. After staff creates the codified adopted section version,
+staff can resolve the handoff so stale-code warnings no longer show for that
+event.
 
 Local import route:
 
@@ -511,11 +530,10 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v0.1.18 is the current durable operational-state product line. Its
-first publication is a historical pre-gate release because the annotated tag
-object is unsigned and no Sigstore attestation assets were published; check
-`docs/ops/tier1-retrofit-ledger.md` before publishing, mirroring, or relying on
-release artifacts. The product line
+CivicCode v1.0.0 is the current durable operational-state product line. The
+older v0.1.17 and v0.1.18 publications are historical pre-gate releases; check
+`docs/ops/tier1-retrofit-ledger.md` before relying on those older artifacts.
+The product line
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists while retaining CivicCode-specific legal-boundary copy, and it now
 keeps local import job status, codifier sync configuration, host-validation

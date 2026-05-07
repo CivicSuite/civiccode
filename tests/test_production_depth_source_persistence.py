@@ -113,12 +113,14 @@ async def test_api_popular_questions_use_configured_database(monkeypatch, tmp_pa
         assert (
             await client.post(
                 "/api/v1/civiccode/titles",
+                headers=STAFF_HEADERS,
                 json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
             )
         ).status_code == 201
         assert (
             await client.post(
                 "/api/v1/civiccode/chapters",
+                headers=STAFF_HEADERS,
                 json={
                     "chapter_id": "chapter_6_12",
                     "title_id": "title_6",
@@ -130,6 +132,7 @@ async def test_api_popular_questions_use_configured_database(monkeypatch, tmp_pa
         assert (
             await client.post(
                 "/api/v1/civiccode/sections",
+                headers=STAFF_HEADERS,
                 json={
                     "section_id": "sec_chickens",
                     "chapter_id": "chapter_6_12",
@@ -141,6 +144,7 @@ async def test_api_popular_questions_use_configured_database(monkeypatch, tmp_pa
         assert (
             await client.post(
                 "/api/v1/civiccode/sections/sec_chickens/versions",
+                headers=STAFF_HEADERS,
                 json={
                     "version_id": "v_chickens_current",
                     "section_id": "sec_chickens",
@@ -194,12 +198,14 @@ async def test_api_section_lifecycle_uses_configured_database(monkeypatch, tmp_p
         assert (
             await client.post(
                 "/api/v1/civiccode/titles",
+                headers=STAFF_HEADERS,
                 json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
             )
         ).status_code == 201
         assert (
             await client.post(
                 "/api/v1/civiccode/chapters",
+                headers=STAFF_HEADERS,
                 json={
                     "chapter_id": "chapter_6_12",
                     "title_id": "title_6",
@@ -211,6 +217,7 @@ async def test_api_section_lifecycle_uses_configured_database(monkeypatch, tmp_p
         assert (
             await client.post(
                 "/api/v1/civiccode/sections",
+                headers=STAFF_HEADERS,
                 json={
                     "section_id": "sec_chickens",
                     "chapter_id": "chapter_6_12",
@@ -222,6 +229,7 @@ async def test_api_section_lifecycle_uses_configured_database(monkeypatch, tmp_p
         assert (
             await client.post(
                 "/api/v1/civiccode/sections/sec_chickens/versions",
+                headers=STAFF_HEADERS,
                 json={
                     "version_id": "v_chickens_current",
                     "section_id": "sec_chickens",
@@ -271,12 +279,14 @@ async def test_api_staff_notes_use_configured_database(monkeypatch, tmp_path) ->
         assert (
             await client.post(
                 "/api/v1/civiccode/titles",
+                headers=STAFF_HEADERS,
                 json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
             )
         ).status_code == 201
         assert (
             await client.post(
                 "/api/v1/civiccode/chapters",
+                headers=STAFF_HEADERS,
                 json={
                     "chapter_id": "chapter_6_12",
                     "title_id": "title_6",
@@ -288,6 +298,7 @@ async def test_api_staff_notes_use_configured_database(monkeypatch, tmp_path) ->
         assert (
             await client.post(
                 "/api/v1/civiccode/sections",
+                headers=STAFF_HEADERS,
                 json={
                     "section_id": "sec_chickens",
                     "chapter_id": "chapter_6_12",
@@ -340,12 +351,14 @@ async def test_api_plain_language_summaries_use_configured_database(monkeypatch,
         assert (
             await client.post(
                 "/api/v1/civiccode/titles",
+                headers=STAFF_HEADERS,
                 json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
             )
         ).status_code == 201
         assert (
             await client.post(
                 "/api/v1/civiccode/chapters",
+                headers=STAFF_HEADERS,
                 json={
                     "chapter_id": "chapter_6_12",
                     "title_id": "title_6",
@@ -357,6 +370,7 @@ async def test_api_plain_language_summaries_use_configured_database(monkeypatch,
         assert (
             await client.post(
                 "/api/v1/civiccode/sections",
+                headers=STAFF_HEADERS,
                 json={
                     "section_id": "sec_chickens",
                     "chapter_id": "chapter_6_12",
@@ -368,6 +382,7 @@ async def test_api_plain_language_summaries_use_configured_database(monkeypatch,
         assert (
             await client.post(
                 "/api/v1/civiccode/sections/sec_chickens/versions",
+                headers=STAFF_HEADERS,
                 json={
                     "version_id": "v_chickens_current",
                     "section_id": "sec_chickens",
@@ -432,12 +447,14 @@ async def test_api_civicclerk_handoffs_use_configured_database(monkeypatch, tmp_
         assert (
             await client.post(
                 "/api/v1/civiccode/titles",
+                headers=STAFF_HEADERS,
                 json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
             )
         ).status_code == 201
         assert (
             await client.post(
                 "/api/v1/civiccode/chapters",
+                headers=STAFF_HEADERS,
                 json={
                     "chapter_id": "chapter_6_12",
                     "title_id": "title_6",
@@ -449,6 +466,7 @@ async def test_api_civicclerk_handoffs_use_configured_database(monkeypatch, tmp_
         assert (
             await client.post(
                 "/api/v1/civiccode/sections",
+                headers=STAFF_HEADERS,
                 json={
                     "section_id": "sec_chickens",
                     "chapter_id": "chapter_6_12",
@@ -460,6 +478,7 @@ async def test_api_civicclerk_handoffs_use_configured_database(monkeypatch, tmp_
         assert (
             await client.post(
                 "/api/v1/civiccode/sections/sec_chickens/versions",
+                headers=STAFF_HEADERS,
                 json={
                     "version_id": "v_chickens_current",
                     "section_id": "sec_chickens",
@@ -538,3 +557,35 @@ async def test_api_import_jobs_use_configured_database(monkeypatch, tmp_path) ->
     assert jobs[0].counts["sources_created"] == 1
     assert jobs[0].provenance["fixture_checksum"]
     assert jobs[0].completed_at is not None
+
+
+@pytest.mark.asyncio
+async def test_api_imported_tree_uses_configured_database(monkeypatch, tmp_path) -> None:
+    import civiccode.main as app_module
+
+    db_url = f"sqlite:///{tmp_path / 'api-import-tree.db'}"
+    monkeypatch.setenv("CIVICCODE_SOURCE_REGISTRY_DB_URL", db_url)
+    app_module.SOURCE_STORE.reset()
+    app_module.SECTION_STORE.reset()
+    app_module.IMPORT_STORE.reset()
+    app_module._source_registry_repository = None
+    app_module._section_lifecycle_repository = None
+    app_module._import_store = None
+    payload = mock_city_import_payload(mock_city_codifier_contracts()[0])
+    payload["job_id"] = "import_tree_code_vendor"
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
+        created = await client.post(
+            "/api/v1/civiccode/staff/imports/local-bundle",
+            headers=STAFF_HEADERS,
+            json=payload,
+        )
+        tree = await client.get(
+            "/api/v1/civiccode/staff/imports/import_tree_code_vendor/tree",
+            headers=STAFF_HEADERS,
+        )
+
+    assert created.status_code == 201
+    assert tree.status_code == 200
+    assert tree.json()["source"]["source_id"] == payload["source"]["source_id"]
+    assert tree.json()["sections"][0]["section_number"] == "6.12.040"

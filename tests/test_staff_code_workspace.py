@@ -55,12 +55,14 @@ async def seed_code_workspace(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/titles",
+            headers=STAFF_HEADERS,
             json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
         )
     ).status_code == 201
     assert (
         await client.post(
             "/api/v1/civiccode/chapters",
+            headers=STAFF_HEADERS,
             json={
                 "chapter_id": "chapter_6_12",
                 "title_id": "title_6",
@@ -72,6 +74,7 @@ async def seed_code_workspace(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections",
+            headers=STAFF_HEADERS,
             json={
                 "section_id": "sec_chickens",
                 "chapter_id": "chapter_6_12",
@@ -83,6 +86,7 @@ async def seed_code_workspace(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections/sec_chickens/versions",
+            headers=STAFF_HEADERS,
             json={
                 "version_id": "v_chickens_current",
                 "section_id": "sec_chickens",
@@ -105,6 +109,8 @@ async def test_staff_code_workspace_requires_staff_access(client: AsyncClient) -
     assert "Staff code workspace requires staff access" in response.text
     assert "X-CivicCode-Role: staff" in response.text
     assert "Fix: sign in through the staff shell" in response.text
+    assert '<a class="skip-link" href="#content">Skip to staff code workspace</a>' in response.text
+    assert '<main id="content">' in response.text
 
 
 @pytest.mark.asyncio
@@ -117,6 +123,9 @@ async def test_staff_code_workspace_empty_state_is_actionable(client: AsyncClien
     assert "register an active official source" in html
     assert "local code bundle" in html
     assert "Code lifecycle command center" in html
+    assert '<a class="skip-link" href="#content">Skip to staff code workspace</a>' in html
+    assert '<main id="content">' in html
+    assert ".skip-link:focus" in html
 
 
 @pytest.mark.asyncio
@@ -166,3 +175,5 @@ async def test_staff_code_workspace_shows_lifecycle_blockers(client: AsyncClient
     assert "2026-041" in html
     assert "Fix: review the CivicClerk handoff" in html
     assert "/civiccode/sections/6.12.040" in html
+    assert '<a class="skip-link" href="#content">Skip to staff code workspace</a>' in html
+    assert '<main id="content">' in html
