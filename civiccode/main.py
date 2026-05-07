@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import os
+from contextvars import ContextVar
 from datetime import date, datetime
 from typing import Any
 
-from fastapi import FastAPI, Header, HTTPException
+from civiccore.auth import (
+    TrustedHeaderAuthConfig,
+    authorize_trusted_header_roles,
+    enforce_trusted_proxy_source,
+    load_trusted_header_auth_config,
+)
+from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import HTMLResponse
 
@@ -119,6 +126,7 @@ app = FastAPI(
     version=__version__,
     summary="Runtime foundation for CivicCode municipal code access workflows.",
 )
+_current_request: ContextVar[Request | None] = ContextVar("current_request", default=None)
 
 SOURCE_STORE = SourceRegistryStore()
 _source_registry_repository: SourceRegistryRepository | None = None
@@ -500,7 +508,47 @@ def _require_staff(
                 "fix": "Send X-CivicCode-Actor with the staff email or service account.",
             },
         )
-    return actor
+    request = _current_request.get()
+    if request is None:
+        return actor
+    config = _staff_trusted_header_config()
+    enforce_trusted_proxy_source(
+        request.client.host if request.client else None,
+        service_name="CivicCode",
+        feature_name="staff endpoint access",
+        config=config,
+        trusted_proxy_env_var="CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS",
+    )
+    principal = authorize_trusted_header_roles(
+        request.headers,
+        service_name="CivicCode",
+        feature_name="staff endpoint access",
+        principal_header_name=config.principal_header_name,
+        roles_header_name=config.roles_header_name,
+        allowed_roles={"staff"},
+        provider_name=config.provider_name,
+    )
+    return principal.subject or actor
+
+
+def _staff_trusted_header_config() -> TrustedHeaderAuthConfig:
+    config = load_trusted_header_auth_config(
+        provider_env_var="CIVICCODE_STAFF_AUTH_PROVIDER",
+        provider_default="CivicCode staff shell",
+        principal_header_env_var="CIVICCODE_STAFF_PRINCIPAL_HEADER",
+        principal_header_default="X-CivicCode-Actor",
+        roles_header_env_var="CIVICCODE_STAFF_ROLES_HEADER",
+        roles_header_default="X-CivicCode-Role",
+        trusted_proxy_env_var="CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS",
+    )
+    if config.trusted_proxy_cidrs:
+        return config
+    return TrustedHeaderAuthConfig(
+        provider_name=config.provider_name,
+        principal_header_name=config.principal_header_name,
+        roles_header_name=config.roles_header_name,
+        trusted_proxy_cidrs=("127.0.0.1/32", "::1/128"),
+    )
 
 
 def _staff_code_payload() -> dict[str, Any]:
@@ -619,8 +667,12 @@ def _operational_readiness_payload() -> dict[str, Any]:
 @app.middleware("http")
 async def _demo_seed_middleware(request: Any, call_next: Any) -> Any:
     """Seed the opt-in demo city before the first rendered/API request."""
-    _seed_demo_city_if_enabled()
-    return await call_next(request)
+    token = _current_request.set(request)
+    try:
+        _seed_demo_city_if_enabled()
+        return await call_next(request)
+    finally:
+        _current_request.reset(token)
 
 
 @app.get("/")
@@ -726,7 +778,7 @@ async def public_section_detail(section_ref: str, as_of: date | None = None) -> 
                 authoritative_text=version.body,
             )
         )
-    warnings = HANDOFF_STORE.warnings_for_section(section_number)
+    warnings = HANDOFF_STORE.public_warnings_for_section(section_number)
     related = [
         related_material_to_public_dict(item)
         for item in SECTION_STORE.related_materials(section_number)["items"]
@@ -944,8 +996,13 @@ async def transition_source(
 
 
 @app.post("/api/v1/civiccode/titles", status_code=201)
-async def create_title(request: TitleCreate) -> dict[str, Any]:
+async def create_title(
+    request: TitleCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a municipal code title container."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         title = SECTION_STORE.create_title(request.model_dump())
     except SectionLifecycleError as exc:
@@ -954,8 +1011,13 @@ async def create_title(request: TitleCreate) -> dict[str, Any]:
 
 
 @app.post("/api/v1/civiccode/chapters", status_code=201)
-async def create_chapter(request: ChapterCreate) -> dict[str, Any]:
+async def create_chapter(
+    request: ChapterCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a municipal code chapter under a title."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         chapter = SECTION_STORE.create_chapter(request.model_dump())
     except SectionLifecycleError as exc:
@@ -964,8 +1026,13 @@ async def create_chapter(request: ChapterCreate) -> dict[str, Any]:
 
 
 @app.post("/api/v1/civiccode/sections", status_code=201)
-async def create_section(request: SectionCreate) -> dict[str, Any]:
+async def create_section(
+    request: SectionCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
     """Create a code section or subsection without generating answers."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     try:
         section = SECTION_STORE.create_section(request.model_dump())
     except SectionLifecycleError as exc:
@@ -977,8 +1044,11 @@ async def create_section(request: SectionCreate) -> dict[str, Any]:
 async def create_section_version(
     section_id: str,
     request: SectionVersionCreate,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Create an immutable section version for adopted, pending, or retired text."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
     data = request.model_dump()
     if data["section_id"] != section_id:
         raise HTTPException(
@@ -1028,7 +1098,7 @@ async def lookup_section(section_number: str, as_of: date | None = None) -> dict
         payload = SECTION_STORE.lookup_section(section_number, as_of=as_of)
     except SectionLifecycleError as exc:
         _raise_section_error(exc)
-    payload["handoff_warnings"] = HANDOFF_STORE.warnings_for_section(section_number)
+    payload["handoff_warnings"] = HANDOFF_STORE.public_warnings_for_section(section_number)
     return payload
 
 

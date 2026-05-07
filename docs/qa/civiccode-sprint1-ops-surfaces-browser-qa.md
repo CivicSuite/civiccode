@@ -16,4 +16,6 @@ Target: http://127.0.0.1:18021
 
 Operational API evidence: status=needs_attention; records=6; network_required=false; external_deployment_required=false; artifact=civiccode-sprint1-operational-state.json
 
-Result: PASS
+Scoped browser recheck after audit fixes: `node scripts/browser-staff-surfaces-qa.cjs` passed on 2026-05-07 with mock-city seed, Chromium, mobile access pages, desktop staff workspaces, skip-link checks, `main#content` checks, console/page-error checks, horizontal-overflow checks, and `.fix-path` readability checks.
+
+Result: PASS: needs_attention state renders actionable fixes without requiring external deployment.

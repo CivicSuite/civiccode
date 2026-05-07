@@ -57,12 +57,14 @@ async def seed_handoff_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/titles",
+            headers=STAFF_HEADERS,
             json={"title_id": "title_6", "title_number": "6", "title_name": "Animals"},
         )
     ).status_code == 201
     assert (
         await client.post(
             "/api/v1/civiccode/chapters",
+            headers=STAFF_HEADERS,
             json={
                 "chapter_id": "chapter_6_12",
                 "title_id": "title_6",
@@ -74,6 +76,7 @@ async def seed_handoff_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections",
+            headers=STAFF_HEADERS,
             json={
                 "section_id": "sec_chickens",
                 "chapter_id": "chapter_6_12",
@@ -85,6 +88,7 @@ async def seed_handoff_fixture(client: AsyncClient) -> None:
     assert (
         await client.post(
             "/api/v1/civiccode/sections/sec_chickens/versions",
+            headers=STAFF_HEADERS,
             json={
                 "version_id": "v_chickens_current",
                 "section_id": "sec_chickens",
@@ -297,8 +301,10 @@ async def test_affected_lookup_includes_stale_code_warning(client: AsyncClient) 
 
     warning = lookup.json()["handoff_warnings"][0]
     assert warning["message"].startswith("CivicClerk ordinance 2026-041 may affect")
-    assert warning["fix"].startswith("Review CivicClerk event")
+    assert warning["fix"].startswith("Ask municipal staff")
     assert warning["source"] == "CivicClerk"
+    assert "external_event_id" not in warning
+    assert "failure_reason" not in warning
 
 
 @pytest.mark.asyncio
@@ -320,7 +326,9 @@ async def test_failed_handoff_is_visible_and_does_not_mutate_code_state(
     assert failed.json()["handoff_state"] == "failed"
     assert failed.json()["failure_reason"] == "Missing signed ordinance PDF."
     assert "six backyard chickens" in lookup.json()["version"]["body"]
-    assert lookup.json()["handoff_warnings"][0]["handoff_state"] == "failed"
+    warning = lookup.json()["handoff_warnings"][0]
+    assert warning["handoff_state"] == "failed"
+    assert "failure_reason" not in warning
 
 
 def test_docs_record_civicclerk_handoff_without_claiming_codification() -> None:

@@ -195,6 +195,23 @@ class OrdinanceHandoffStore:
             )
         return warnings
 
+    def public_warnings_for_section(self, section_number: str) -> list[dict[str, Any]]:
+        warnings = []
+        for warning in self.warnings_for_section(section_number):
+            warnings.append(
+                {
+                    "source": warning["source"],
+                    "ordinance_number": warning["ordinance_number"],
+                    "handoff_state": warning["handoff_state"],
+                    "message": warning["message"],
+                    "fix": (
+                        "Ask municipal staff to confirm the ordinance codification status "
+                        "before relying on this section as fully current."
+                    ),
+                }
+            )
+        return warnings
+
     def list_events(self) -> list[OrdinanceEvent]:
         return sorted(self._events.values(), key=lambda event: event.created_at)
 

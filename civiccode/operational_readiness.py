@@ -82,8 +82,13 @@ def _lane_fixes(
         fixes.append(_missing_lane_fix(lane))
     if queued_retries:
         fixes.append(_queued_retry_fix(lane))
-    if lane in {"import", "handoff", "sync"} and records and not replay_records:
-        fixes.append(f"Run or replay one {lane} operation so operators can see the latest outcome.")
+    if lane in {"import", "sync"} and records and not replay_records:
+        fixes.append(f"Run one {lane} operation so operators can see the latest outcome.")
+    if lane == "handoff" and records and not replay_records:
+        fixes.append(
+            "Create a corrected CivicClerk handoff event with a new external_event_id "
+            "so operators can see the latest outcome."
+        )
     if lane == "sync" and records and not delta_cursors:
         fixes.append(
             "Complete one successful codifier sync run so the next delta cursor is visible to operators."
@@ -111,7 +116,10 @@ def _missing_lane_fix(lane: str) -> str:
 
 def _queued_retry_fix(lane: str) -> str:
     fixes = {
-        "handoff": "Open the failed CivicClerk event, attach the missing ordinance packet, then replay the handoff.",
+        "handoff": (
+            "Open the failed CivicClerk event in CivicClerk, attach the missing ordinance packet, "
+            "then send a corrected new handoff event with a new external_event_id."
+        ),
         "import": "Open the failed import job, correct the bundle data, then use the retry endpoint.",
         "sync": "Fix the source payload or circuit-breaker cause, then rerun the configured codifier source.",
     }

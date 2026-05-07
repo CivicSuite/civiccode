@@ -405,10 +405,13 @@ curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/questions/answer \
 ```
 
 Expected staff-workbench truth today: staff endpoints require
-`X-CivicCode-Role: staff` and `X-CivicCode-Actor`, staff interpretation notes
-are returned only to staff endpoints, staff Q&A adds `staff_context` with
-`staff_only_do_not_publish`, and public lookup, search, and Q&A never expose
-staff notes or staff note counts.
+`X-CivicCode-Role: staff` and `X-CivicCode-Actor` from a trusted proxy source.
+Local mock runs allow loopback (`127.0.0.1/32` and `::1/128`) by default; shared
+environments should set `CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` to the reverse
+proxy CIDR list and strip client-supplied staff headers before CivicCode sees
+the request. Staff interpretation notes are returned only to staff endpoints,
+staff Q&A adds `staff_context` with `staff_only_do_not_publish`, and public
+lookup, search, and Q&A never expose staff notes or staff note counts.
 
 Plain-language summary smoke:
 

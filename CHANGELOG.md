@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Reproducible Playwright staff browser QA harness for CI, covering staff access
+  pages and mock-city staff workspaces with skip-link, main-region, console,
+  horizontal-overflow, and actionable-fix readability checks.
 - CO-4 Tier 1 retrofit ledger for `v0.1.17` and `v0.1.18`, marking both
   releases as historical pre-gate/no-attestation/do-not-promote without
   changing public release notes, tags, or assets.
@@ -25,6 +28,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Staff lifecycle write endpoints now require staff headers before mutating
+  title, chapter, section, or section-version records.
+- Staff headers are now validated through CivicCore trusted-header helpers and
+  must arrive from loopback for local mock runs or
+  `CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` in shared environments.
+- Public section lookup warning payloads now expose resident-safe CivicClerk
+  stale-code guidance without staff-only event IDs or failure details.
+- Staff actionable-fix copy now renders as readable block callouts on mobile
+  instead of long pill controls.
+- Source distribution builds now include Docker demo files, and release
+  workflows install the CivicCore v1.0 wheel used by the package.
 - Updated the active CivicCore dependency and current install/provenance docs to
   the published CivicCore v1.0 baseline, `v1.0.0`, without changing
   CivicCode's v0.1.18 release status.

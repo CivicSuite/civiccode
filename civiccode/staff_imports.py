@@ -233,7 +233,7 @@ def _page(title: str, body: str) -> str:
       text-transform: uppercase;
     }}
     .lede {{ color: var(--muted); font-size: 1.18rem; max-width: 64rem; }}
-    .actor-chip, .fix-path, .source-line, .connector-pill {{
+    .actor-chip, .source-line, .connector-pill {{
       display: inline-block;
       max-width: 100%;
       background: var(--card);
@@ -242,6 +242,18 @@ def _page(title: str, body: str) -> str:
       padding: .55rem .8rem;
       font-family: "Courier New", monospace;
       font-size: .92rem;
+      overflow-wrap: anywhere;
+    }}
+    .fix-path {{
+      display: block;
+      max-width: 62rem;
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: .5rem;
+      padding: .75rem .9rem;
+      font-family: "Courier New", monospace;
+      font-size: .92rem;
+      line-height: 1.45;
       overflow-wrap: anywhere;
     }}
     .overview, .state-card, .job-card {{

@@ -7,6 +7,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from civiccode.mock_city_environment import mock_city_codifier_contracts, mock_city_import_payload
+from civiccode.operational_state import OperationalStateRepository
 
 
 STAFF_HEADERS = {
@@ -149,3 +150,40 @@ async def test_staff_operational_state_requires_staff_headers(client: AsyncClien
 
     assert response.status_code == 403
     assert response.json()["detail"]["fix"].startswith("Send X-CivicCode-Role: staff")
+
+
+@pytest.mark.asyncio
+async def test_staff_headers_must_come_from_trusted_proxy(app_module) -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app_module.app, client=("203.0.113.22", 12345)),
+        base_url="http://testserver",
+    ) as remote_client:
+        response = await remote_client.get(
+            "/api/v1/civiccode/staff/operational-state",
+            headers=STAFF_HEADERS,
+        )
+
+    assert response.status_code == 403
+    assert response.json()["detail"]["message"] == (
+        "Trusted staff headers were not received from an approved proxy."
+    )
+    assert "CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS" in response.json()["detail"]["fix"]
+
+
+def test_operational_state_repository_reloads_sqlite_datetimes_as_utc(tmp_path) -> None:
+    db_url = f"sqlite+pysqlite:///{tmp_path / 'operational-state.db'}"
+    store = OperationalStateRepository(db_url=db_url)
+    store.record_replay(
+        lane="handoff",
+        subject_id="ord_2026_108",
+        actor="operator@example.gov",
+        status="pending_codification",
+        payload_hash="sha256:operational-ready",
+    )
+
+    reloaded = OperationalStateRepository(db_url=db_url)
+    records = reloaded.list_records()
+
+    assert len(records) == 1
+    assert records[0].created_at.tzinfo is not None
+    assert records[0].created_at.isoformat().endswith("+00:00")

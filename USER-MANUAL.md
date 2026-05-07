@@ -140,8 +140,8 @@ back to staff.
 
 ## For IT and technical staff
 
-This repo currently contains the Milestone 13 accessibility and records-ready
-export hardening foundation plus
+This repo currently contains the v0.1.18 staff operations surfaces,
+CivicCore v1 contracts, durable import/codifier sync state, and
 documentation and verification gates. Runtime implementation must follow the
 CivicSuite pattern:
 
@@ -362,10 +362,14 @@ curl -X POST http://127.0.0.1:8000/api/v1/civiccode/staff/questions/answer \
   -d '{"question":"What does section 6.12.040 say about backyard chickens?","section_number":"6.12.040"}'
 ```
 
-Staff endpoints require `X-CivicCode-Role: staff` and `X-CivicCode-Actor`.
-Staff Q&A context is explicitly marked `staff_only_do_not_publish`. Public
-lookup, public search, and public Q&A responses must not expose staff note text
-or staff note counts.
+Staff endpoints require `X-CivicCode-Role: staff` and `X-CivicCode-Actor` from
+a trusted proxy source. Local mock runs allow loopback (`127.0.0.1/32` and
+`::1/128`) by default; shared environments should set
+`CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` to the reverse proxy CIDR list and strip
+client-supplied staff headers before CivicCode sees the request. Staff Q&A
+context is explicitly marked `staff_only_do_not_publish`. Public lookup, public
+search, and public Q&A responses must not expose staff note text or staff note
+counts.
 
 Draft and approve a plain-language summary:
 
