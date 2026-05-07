@@ -26,7 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Updated the active CivicCore dependency and current install/provenance docs to
-  the first attested CivicCore baseline, `v0.22.1`.
+  the published CivicCore v1.0 baseline, `v1.0.0`, without changing
+  CivicCode's v0.1.18 release status.
 - Release provenance gate now treats Git tags as pointers and verifies the
   Sigstore attestation, bundle, exact workflow identity, artifact hashes, target
   commit, and target tree before publication.

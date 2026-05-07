@@ -158,6 +158,17 @@ def _page(title: str, body: str) -> str:
       outline: 4px solid var(--focus);
       outline-offset: 3px;
     }}
+    .skip-link {{
+      position: absolute;
+      left: .75rem;
+      top: .75rem;
+      transform: translateY(-200%);
+      background: var(--ink);
+      color: white;
+      padding: .65rem .9rem;
+      z-index: 5;
+    }}
+    .skip-link:focus {{ transform: translateY(0); }}
     header, main, footer {{
       width: min(1120px, calc(100% - 2rem));
       margin-inline: auto;
@@ -262,11 +273,12 @@ def _page(title: str, body: str) -> str:
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#content">Skip to staff source registry</a>
   <header>
     <a class="brand" href="/staff/sources">CivicCode</a>
     <span>Staff source registry</span>
   </header>
-  <main>
+  <main id="content">
     {body}
   </main>
   <footer>

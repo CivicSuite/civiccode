@@ -132,6 +132,18 @@ class OrdinanceHandoffStore:
                 "Use a unique event_id or read the existing handoff.",
                 status_code=409,
             )
+        existing_event = self._find_event_by_external_event_id(event.external_event_id)
+        if existing_event:
+            if _events_match_for_replay(existing_event, event):
+                return existing_event
+            raise OrdinanceHandoffError(
+                f"CivicClerk event '{event.external_event_id}' has already been accepted with different payload data.",
+                (
+                    "Read the existing handoff before replaying. If CivicClerk corrected the event, "
+                    "send a new external_event_id or reconcile the stored handoff with clerk staff."
+                ),
+                status_code=409,
+            )
         self._events[event.event_id] = event
         self._append_event("civicclerk_handoff_received", actor=actor, target_id=event.event_id)
         if event.status == "failed":
@@ -152,6 +164,12 @@ class OrdinanceHandoffStore:
             failure={"message": event.failure_reason} if event.failure_reason else None,
         )
         return event
+
+    def _find_event_by_external_event_id(self, external_event_id: str) -> OrdinanceEvent | None:
+        return next(
+            (event for event in self._events.values() if event.external_event_id == external_event_id),
+            None,
+        )
 
     def warnings_for_section(self, section_number: str) -> list[dict[str, Any]]:
         warnings = []
@@ -260,7 +278,10 @@ class OrdinanceHandoffRepository(OrdinanceHandoffStore):
         self._load()
 
     def create_event(self, data: dict[str, Any], *, actor: str) -> OrdinanceEvent:
+        existing_event_ids = set(self._events)
         event = super().create_event(data, actor=actor)
+        if event.event_id in existing_event_ids:
+            return event
         with self.engine.begin() as connection:
             connection.execute(ordinance_handoff_records.insert().values(**event_to_record(event)))
         return event
@@ -324,6 +345,15 @@ def event_from_record(row: Any) -> OrdinanceEvent:
         created_by=row["created_by"],
         created_at=row["created_at"],
     )
+
+
+def _events_match_for_replay(existing: OrdinanceEvent, incoming: OrdinanceEvent) -> bool:
+    existing_record = event_to_record(existing)
+    incoming_record = event_to_record(incoming)
+    for generated_field in ("event_id", "created_by", "created_at"):
+        existing_record.pop(generated_field)
+        incoming_record.pop(generated_field)
+    return existing_record == incoming_record
 
 
 def audit_event_to_record(event: HandoffAuditEvent) -> dict[str, Any]:

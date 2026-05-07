@@ -53,6 +53,8 @@ async def test_staff_source_workspace_requires_staff_access(client: AsyncClient)
     assert "Staff source workspace requires staff access" in response.text
     assert "Open this page through the trusted staff shell" in response.text
     assert "X-CivicCode-Role: staff" in response.text
+    assert '<a class="skip-link" href="#content">Skip to staff source registry</a>' in response.text
+    assert '<main id="content">' in response.text
 
 
 @pytest.mark.asyncio
@@ -65,6 +67,9 @@ async def test_staff_source_workspace_empty_state_is_actionable(client: AsyncCli
     assert "Register an official Municode, American Legal, Code Publishing, General Code" in html
     assert "Staff-only notes stay off public endpoints" in html
     assert "Source of truth gate" in html
+    assert '<a class="skip-link" href="#content">Skip to staff source registry</a>' in html
+    assert '<main id="content">' in html
+    assert ".skip-link:focus" in html
 
 
 @pytest.mark.asyncio
@@ -104,4 +109,5 @@ async def test_staff_source_workspace_renders_warnings_and_fix_paths(
     assert "Review the failure note" in html
     assert "Public-visible" in html
     assert "Search eligible" in html
-
+    assert '<a class="skip-link" href="#content">Skip to staff source registry</a>' in html
+    assert '<main id="content">' in html

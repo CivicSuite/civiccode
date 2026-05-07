@@ -116,7 +116,7 @@ behavior.
 
 Work:
 
-- Add `pyproject.toml` with package metadata and `civiccore==0.2.0` pin.
+- Add `pyproject.toml` with package metadata and the published CivicCore release-wheel dependency.
 - Add `civiccode/__init__.py` with `__version__ = "0.1.0.dev0"`.
 - Add `civiccode/main.py` FastAPI app with `/` and `/health`.
 - Add app settings surface for local-only runtime defaults.

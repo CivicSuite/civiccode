@@ -63,8 +63,8 @@ PY
 echo "==> Product test suite"
 ${PYTHON_BIN} -m pytest -q --ignore=tests/test_release_provenance_gate.py
 
-echo "==> Release-provenance tooling tests"
-${PYTHON_BIN} -m pip install --force-reinstall "git+https://github.com/CivicSuite/civiccore.git@main"
+echo "==> Release-provenance tooling tests against published CivicCore"
+${PYTHON_BIN} -m pip install --force-reinstall "https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl"
 ${PYTHON_BIN} -m pytest -q tests/test_release_provenance_gate.py
 
 echo "==> Documentation gate"

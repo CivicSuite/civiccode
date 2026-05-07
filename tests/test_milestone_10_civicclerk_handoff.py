@@ -139,6 +139,92 @@ async def test_valid_civicclerk_handoff_is_accepted_with_provenance(
 
 
 @pytest.mark.asyncio
+async def test_replayed_civicclerk_handoff_returns_existing_event(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+
+    first = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(),
+    )
+    replay = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers={**STAFF_HEADERS, "X-CivicCode-Actor": "deputy@example.gov"},
+        json=handoff_payload(event_id="ord_replayed_client_id"),
+    )
+    audit_events = await client.get(
+        "/api/v1/civiccode/staff/audit-events",
+        headers=STAFF_HEADERS,
+    )
+
+    assert first.status_code == 201
+    assert replay.status_code == 201
+    assert replay.json()["event_id"] == first.json()["event_id"]
+    assert replay.json()["source_document_hash"] == "sha256:abc123"
+    handoff_audits = [
+        event
+        for event in audit_events.json()["events"]
+        if event["event_type"] == "civicclerk_handoff_received"
+    ]
+    assert len(handoff_audits) == 1
+
+
+@pytest.mark.asyncio
+async def test_divergent_civicclerk_handoff_replay_gets_actionable_conflict(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+    created = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(),
+    )
+
+    replay = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(source_document_hash="sha256:corrected"),
+    )
+
+    assert created.status_code == 201
+    assert replay.status_code == 409
+    detail = replay.json()["detail"]
+    assert "already been accepted" in detail["message"]
+    assert "Read the existing handoff" in detail["fix"]
+
+
+@pytest.mark.asyncio
+async def test_duplicate_internal_event_id_still_rejected(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+    created = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(event_id="ord_2026_041"),
+    )
+
+    duplicate = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(
+            event_id="ord_2026_041",
+            external_event_id="cc_event_2026_042",
+            ordinance_number="2026-042",
+            source_document_hash="sha256:def456",
+        ),
+    )
+
+    assert created.status_code == 201
+    assert duplicate.status_code == 409
+    detail = duplicate.json()["detail"]
+    assert "ord_2026_041" in detail["message"]
+    assert "unique event_id" in detail["fix"]
+
+
+@pytest.mark.asyncio
 async def test_invalid_handoff_rejected_with_fix_path(client: AsyncClient) -> None:
     response = await client.post(
         "/api/v1/civiccode/staff/civicclerk/ordinance-events",
