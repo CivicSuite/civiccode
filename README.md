@@ -164,6 +164,11 @@ baselines:
 - persist operational retry queue, replay, and delta-cursor records for
   CivicClerk handoffs, local imports, and codifier sync runs with
   `CIVICCODE_SOURCE_REGISTRY_DB_URL`,
+- expose `/api/v1/civiccode/staff/operational-state` for staff operators to
+  inspect current handoff, import, and sync readiness from existing local or
+  durable operational records with actionable missing-data fixes,
+- render `/staff/imports` and `/staff/sync` so staff can review import
+  provenance and codifier sync health without calling external vendors,
 - run already-fetched local codifier payloads through the import path without
   outbound vendor calls,
 - plan delta request URLs for Municode, American Legal Publishing, Code

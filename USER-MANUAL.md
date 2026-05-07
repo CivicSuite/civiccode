@@ -106,6 +106,11 @@ Current truth:
 - codifier sync source state persists configuration, host-validation result,
   next-run cursor, last attempted/successful run, circuit-breaker state, and
   delta-plan history on the configured Docker/PostgreSQL path,
+- staff operators can call `/api/v1/civiccode/staff/operational-state` to view
+  current handoff, import, and sync readiness from existing operational records,
+  including specific fixes when state is missing or queued retry work exists,
+- staff operators can open `/staff/imports` and `/staff/sync` for browser
+  review of import provenance and codifier sync health,
 - provenance reports show source metadata, fixture checksum, and
   no-outbound-dependency status,
 - staff can configure active official codifier sources for sync readiness,

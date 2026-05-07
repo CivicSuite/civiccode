@@ -442,5 +442,10 @@ CivicClerk handoffs, import jobs, and codifier sync source state through
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular
 questions and related materials are navigation aids, not legal determinations.
+Staff operators can call /api/v1/civiccode/staff/operational-state to inspect
+current handoff, import, and sync readiness from existing operational records
+with actionable fixes. Staff can also open /staff/imports and /staff/sync for
+browser review of import provenance and codifier sync health without external
+deployment proof or outbound network.
 Future work moves to the next module or release plan in the CivicSuite unified
 roadmap.

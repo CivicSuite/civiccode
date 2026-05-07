@@ -28,6 +28,7 @@ from civiccode.import_connectors import (
     provenance_report,
 )
 from civiccode.mock_city_environment import mock_city_codifier_contracts, mock_city_import_payload
+from civiccode.operational_readiness import build_operational_readiness
 from civiccode.ordinance_handoff import (
     OrdinanceHandoffError,
     OrdinanceHandoffRepository,
@@ -79,6 +80,14 @@ from civiccode.section_lifecycle import (
 from civiccode.staff_sources import (
     render_staff_source_required_page,
     render_staff_source_workspace,
+)
+from civiccode.staff_imports import (
+    render_staff_import_ledger,
+    render_staff_import_required_page,
+)
+from civiccode.staff_sync import (
+    render_staff_sync_required_page,
+    render_staff_sync_workspace,
 )
 from civiccode.staff_code import (
     render_staff_code_required_page,
@@ -576,6 +585,37 @@ def _staff_code_next_action(
     return "Ready: current adopted text and approved summary state are aligned for staff review."
 
 
+def _staff_import_payload() -> dict[str, Any]:
+    jobs = []
+    for job in _get_import_store().list_jobs():
+        jobs.append(provenance_report(job, _get_source_store()))
+    connector_types = sorted({item["job"]["connector_type"] for item in jobs})
+    connector_label = ", ".join(connector_types) if connector_types else ", ".join(sorted(CONNECTOR_TYPES))
+    return {
+        "jobs": jobs,
+        "connector_types": connector_label,
+        "counts": {
+            "total_jobs": len(jobs),
+            "completed_jobs": sum(1 for item in jobs if item["job"]["status"] == "completed"),
+            "failed_jobs": sum(1 for item in jobs if item["job"]["status"] == "failed"),
+            "retried_jobs": sum(1 for item in jobs if item["job"].get("retry_of")),
+        },
+    }
+
+
+def _operational_readiness_payload() -> dict[str, Any]:
+    records = []
+    for store in (HANDOFF_STORE, _get_import_store(), _get_codifier_sync_store()):
+        records.extend(store.operational_records())
+    payload = build_operational_readiness(records)
+    payload["api"] = {
+        "path": "/api/v1/civiccode/staff/operational-state",
+        "audience": "staff_operator",
+        "auth": "X-CivicCode-Role: staff and X-CivicCode-Actor required",
+    }
+    return payload
+
+
 @app.middleware("http")
 async def _demo_seed_middleware(request: Any, call_next: Any) -> Any:
     """Seed the opt-in demo city before the first rendered/API request."""
@@ -740,6 +780,36 @@ async def staff_code_workspace(
     return HTMLResponse(render_staff_code_workspace(_staff_code_payload(), actor=actor))
 
 
+@app.get("/staff/sync", response_class=HTMLResponse)
+async def staff_sync_workspace(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> HTMLResponse:
+    """Render the staff codifier sync health workspace."""
+    try:
+        actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    except HTTPException:
+        return HTMLResponse(render_staff_sync_required_page(), status_code=403)
+    sources = [
+        sync_source_to_dict(source)
+        for source in _get_codifier_sync_store().list_sources()
+    ]
+    return HTMLResponse(render_staff_sync_workspace(sources, actor=actor))
+
+
+@app.get("/staff/imports", response_class=HTMLResponse)
+async def staff_import_ledger(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> HTMLResponse:
+    """Render the staff import job and provenance ledger."""
+    try:
+        actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    except HTTPException:
+        return HTMLResponse(render_staff_import_required_page(), status_code=403)
+    return HTMLResponse(render_staff_import_ledger(_staff_import_payload(), actor=actor))
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Provide a simple operational health check for IT staff."""
@@ -749,6 +819,16 @@ async def health() -> dict[str, str]:
         "version": __version__,
         "civiccore": CIVICCORE_VERSION,
     }
+
+
+@app.get("/api/v1/civiccode/staff/operational-state")
+async def get_staff_operational_state(
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return current operational readiness state for staff operators."""
+    _require_staff(x_civiccode_role, x_civiccode_actor)
+    return _operational_readiness_payload()
 
 
 @app.get("/api/v1/civiccode/sources/catalog")

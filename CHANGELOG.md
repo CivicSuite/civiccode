@@ -43,6 +43,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   codifier sync runs when `CIVICCODE_SOURCE_REGISTRY_DB_URL` is configured,
   preserving retry queue records, replay records, and delta cursor records on
   the Docker/PostgreSQL product path.
+- Staff operator API for `/api/v1/civiccode/staff/operational-state`, returning
+  current handoff, import, and sync readiness from existing operational records
+  with actionable fixes for missing state or queued retry work.
 - Alembic revision `civiccode_0009_operational_state` for shared operational
   state records.
 

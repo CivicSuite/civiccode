@@ -65,6 +65,8 @@ visible through staff endpoints with an actionable fix path. Re-importing the
 same bundle is idempotent. Provenance report endpoints expose source metadata,
 fixture checksums, and a no-outbound-dependency marker. Redis/Celery workers
 and vendor credentials are not required for local import.
+Staff can open /staff/imports to review import status, failure recovery copy,
+and provenance links in the browser.
 
 Codifier sync foundation truth today
 ------------------------------------
@@ -75,6 +77,8 @@ SSRF-safe source hosts, view next-run and circuit-breaker health, plan delta
 requests, and run already-fetched local payloads through the import path.
 CivicCode does not ship vendor credentials, make outbound calls from the
 foundation smoke, or automatically codify ordinances.
+Staff can open /staff/sync to review configured source readiness, circuit
+health, host validation, cursor planning, and local payload run state.
 
 Mock-city codifier contract truth today
 ---------------------------------------
@@ -169,3 +173,7 @@ CivicClerk handoff records, handoff audit events, local import job records, and 
 reuses the shared CivicCore source-list health projection for codifier sync
 source lists, and retains CivicCode-specific legal-boundary copy. Popular
 questions and related materials are navigation aids, not legal determinations.
+Staff operators can call /api/v1/civiccode/staff/operational-state to inspect
+current handoff, import, and sync readiness from existing operational records
+with actionable missing-data and retry-work fixes. The endpoint requires no
+external deployment proof or outbound network.

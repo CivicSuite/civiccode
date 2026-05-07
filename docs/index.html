@@ -170,12 +170,15 @@
         <li>Resident-facing public code lookup surface under <code>/civiccode</code> for the "Read code" workflow.</li>
         <li>Search, empty, legal-advice refusal, stale-source warning, and section detail states.</li>
         <li>Staff-only local import jobs for CSV/file-drop bundles and official HTML extract fixtures.</li>
+        <li>Staff import provenance ledger at <code>/staff/imports</code> with access-required, empty, populated, failed-job, and actionable recovery states.</li>
         <li>Durable import job status, counts, provenance, actionable failure details, and completion timestamps through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Import retry, visible failure records, imported-tree verification, and provenance report endpoints.</li>
         <li>No outbound network dependency, Redis/Celery worker, or vendor credentials required for local import.</li>
         <li>Staff-controlled codifier sync readiness endpoints with schedule validation, SSRF-safe host checks, and supported connector validation.</li>
+        <li>Staff codifier sync health page at <code>/staff/sync</code> with access-required, empty, configured-source, circuit-health, host-validation, and local-payload states.</li>
         <li>Durable codifier sync source configuration, host-validation result, next-run cursor, last-run state, circuit-breaker state, and delta-plan history through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code>.</li>
         <li>Durable operational retry queue, replay, and delta-cursor records for CivicClerk handoffs, local imports, and codifier sync runs through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code>.</li>
+        <li>Staff operational-state API at <code>/api/v1/civiccode/staff/operational-state</code> summarizing handoff, import, and sync readiness from existing records without external deployment proof or outbound network.</li>
         <li>Delta request planning for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
         <li>Local codifier payload runs through the import path with CivicCore circuit-breaker health, shared source-list health projection, and actionable operator copy.</li>
         <li>Reusable mock-city codifier contracts for Municode, American Legal Publishing, Code Publishing Company, and General Code.</li>
