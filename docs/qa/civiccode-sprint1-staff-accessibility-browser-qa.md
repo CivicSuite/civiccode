@@ -1,19 +1,19 @@
 # CivicCode Sprint 1 Staff Accessibility Browser QA
 
 Run date: 2026-05-07
-Target: http://127.0.0.1:18020
+Target: `node scripts/browser-staff-surfaces-qa.cjs`
 
 | Scenario | Viewport | Status | Evidence | Result |
 |---|---:|---:|---|---|
-| staff-code-access-desktop | 1440x1100 | 403 | main#content=1; skip=1; first focus="Skip to staff code workspace"; fix copy=true; overflow=false; expected denied console=1; unexpected console=0; pageErrors=0; screenshot=staff-code-access-desktop.png | PASS |
-| staff-code-access-mobile | 390x900 | 403 | main#content=1; skip=1; first focus="Skip to staff code workspace"; fix copy=true; overflow=false; expected denied console=1; unexpected console=0; pageErrors=0; screenshot=staff-code-access-mobile.png | PASS |
-| staff-code-workspace-desktop | 1440x1100 | 200 | main#content=1; skip=1; first focus="Skip to staff code workspace"; fix copy=true; overflow=false; expected denied console=0; unexpected console=0; pageErrors=0; screenshot=staff-code-workspace-desktop.png | PASS |
-| staff-code-workspace-mobile | 390x900 | 200 | main#content=1; skip=1; first focus="Skip to staff code workspace"; fix copy=true; overflow=false; expected denied console=0; unexpected console=0; pageErrors=0; screenshot=staff-code-workspace-mobile.png | PASS |
-| staff-sources-access-desktop | 1440x1100 | 403 | main#content=1; skip=1; first focus="Skip to staff source registry"; fix copy=true; overflow=false; expected denied console=1; unexpected console=0; pageErrors=0; screenshot=staff-sources-access-desktop.png | PASS |
-| staff-sources-access-mobile | 390x900 | 403 | main#content=1; skip=1; first focus="Skip to staff source registry"; fix copy=true; overflow=false; expected denied console=1; unexpected console=0; pageErrors=0; screenshot=staff-sources-access-mobile.png | PASS |
-| staff-sources-workspace-desktop | 1440x1100 | 200 | main#content=1; skip=1; first focus="Skip to staff source registry"; fix copy=true; overflow=false; expected denied console=0; unexpected console=0; pageErrors=0; screenshot=staff-sources-workspace-desktop.png | PASS |
-| staff-sources-workspace-mobile | 390x900 | 200 | main#content=1; skip=1; first focus="Skip to staff source registry"; fix copy=true; overflow=false; expected denied console=0; unexpected console=0; pageErrors=0; screenshot=staff-sources-workspace-mobile.png | PASS |
+| staff-code-access-mobile | 390x900 | 403 | phase=empty; main#content=1; skip=1; first focus="Skip to staff code workspace"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
+| staff-code-empty-mobile | 390x900 | 200 | phase=empty; main#content=1; skip=1; first focus="Skip to staff code workspace"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
+| staff-code-workspace-desktop | 1440x1100 | 200 | phase=populated; main#content=1; skip=1; first focus="Skip to staff code workspace"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
+| staff-code-workspace-mobile | 390x900 | 200 | phase=populated; main#content=1; skip=1; first focus="Skip to staff code workspace"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
+| staff-sources-access-mobile | 390x900 | 403 | phase=empty; main#content=1; skip=1; first focus="Skip to staff source registry"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
+| staff-sources-empty-mobile | 390x900 | 200 | phase=empty; main#content=1; skip=1; first focus="Skip to staff source registry"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
+| staff-sources-workspace-desktop | 1440x1100 | 200 | phase=populated; main#content=1; skip=1; first focus="Skip to staff source registry"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
+| staff-sources-workspace-mobile | 390x900 | 200 | phase=populated; main#content=1; skip=1; first focus="Skip to staff source registry"; fixReadable=true; overflow=false; unexpected console=0; pageErrors=0 | PASS |
 
-Scoped browser recheck after audit fixes: `node scripts/browser-staff-surfaces-qa.cjs` passed on 2026-05-07 with Chromium across 16 scenarios: mobile access pages, authenticated empty mobile staff states, authenticated populated desktop staff workspaces, authenticated populated mobile staff workspaces, skip-link checks, `main#content` checks, console/page-error checks, horizontal-overflow checks, and `.fix-path` readability checks.
+Scoped browser recheck after audit fixes: `node scripts/browser-staff-surfaces-qa.cjs` passed on 2026-05-07 with Chromium across 16 scenarios. This table records the 8 code/source scenarios from the current committed harness; the import/sync scenarios are recorded in `civiccode-sprint1-ops-surfaces-browser-qa.md`.
 
 Result: PASS
