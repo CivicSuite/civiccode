@@ -139,7 +139,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: civiccode-dist
-          path: dist/
+          path: .
 
       - name: Write release notes with exact provenance command
         run: |
@@ -171,7 +171,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" dist/* \
+          gh release create "${{ github.ref_name }}" \
+            dist/* \
+            release-attestation.json \
+            release-attestation.json.bundle \
             --repo "$GH_REPO" \
             --title "civiccode ${{ github.ref_name }}" \
             --notes-file release-notes.md
