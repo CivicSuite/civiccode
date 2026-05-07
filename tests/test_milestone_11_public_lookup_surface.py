@@ -136,6 +136,26 @@ async def test_public_search_success_links_to_section_and_citation(
 
 
 @pytest.mark.asyncio
+async def test_public_question_answer_page_renders_cited_answer(client: AsyncClient) -> None:
+    await seed_public_lookup_fixture(client)
+
+    response = await client.get(
+        "/civiccode/answer",
+        params={
+            "q": "What does section 6.12.040 say about backyard chickens?",
+            "section_number": "6.12.040",
+        },
+    )
+
+    assert response.status_code == 200
+    html = response.text
+    assert "Cited code answer" in html
+    assert "Residents may keep up to six backyard chickens" in html
+    assert "Title 6 (Animals)" in html
+    assert "This is not a legal determination" in html
+
+
+@pytest.mark.asyncio
 async def test_public_section_detail_separates_code_summary_and_warning(
     client: AsyncClient,
 ) -> None:
@@ -214,6 +234,24 @@ async def test_public_legal_advice_query_gets_refusal_with_route_to_staff(
     html = response.text
     assert "CivicCode cannot provide legal advice" in html
     assert "Ask for the code section or contact the City Attorney" in html
+    assert "not_available" in html
+
+
+@pytest.mark.asyncio
+async def test_public_property_specific_determination_query_gets_refusal(
+    client: AsyncClient,
+) -> None:
+    await seed_public_lookup_fixture(client)
+
+    response = await client.get(
+        "/civiccode/search",
+        params={"q": "Can I keep chickens at 123 Main Street?"},
+    )
+
+    assert response.status_code == 200
+    html = response.text
+    assert "CivicCode cannot provide legal advice" in html
+    assert "Search results for" not in html
     assert "not_available" in html
 
 

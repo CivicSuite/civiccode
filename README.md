@@ -61,7 +61,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current product line is CivicCode v0.1.18. Release provenance is moving to
+The current product line is CivicCode v1.0.0. Release provenance now follows
 the suite-wide Sigstore attestation model: the Git tag is a pointer, and the
 trust artifact is `release-attestation.json` plus
 `release-attestation.json.bundle`, verified against the exact
@@ -109,6 +109,8 @@ baselines:
 - label popular questions and related materials as navigation aids, not legal
   determinations,
 - expose stable section permalinks that survive text revisions,
+- resolve adopted section context for CivicZone, CivicLegal, CivicAccess, and
+  CivicComms through the `civiccode.section_resolution.v1` contract,
 - build deterministic citation objects for adopted section text,
 - return structured refusals for missing, stale, or contradictory source
   situations,
@@ -139,9 +141,13 @@ baselines:
   `CIVICCODE_SOURCE_REGISTRY_DB_URL` so pending codification warnings survive
   process restarts on the Docker/PostgreSQL path,
 - distinguish pending codification from adopted codified law,
+- let staff mark a CivicClerk handoff codified after creating the current
+  adopted section version,
 - warn affected section lookups when a handoff may make the codified text stale,
 - detect likely conflicts when ordinance text references affected sections,
 - render a resident-facing public code lookup surface under `/civiccode`,
+- render a resident-facing cited-answer page under `/civiccode/answer` when one
+  adopted section and exact citation ground the response,
 - show accessible search success, empty, refusal, stale-source, and section
   detail states,
 - import local CSV/file-drop bundles and official HTML extract fixtures through
@@ -196,8 +202,8 @@ baselines:
 - consume the current shared CivicCore v1.0.0 release wheel,
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
-- keep docs and CI gates green for the v0.1.18 durable operational-state
-  release.
+- keep docs, browser QA, adversarial mock validation, and CI gates green for
+  the v1.0.0 product release.
 
 ## Why CivicCode before CivicZone
 

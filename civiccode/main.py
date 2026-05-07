@@ -53,6 +53,7 @@ from civiccode.plain_language import (
 )
 from civiccode.public_lookup import (
     is_legal_advice_query,
+    render_answer_page,
     render_error_page,
     render_home_page,
     render_refusal_page,
@@ -365,6 +366,17 @@ class QuestionAnswerRequest(BaseModel):
     as_of: date | None = None
 
 
+class SectionResolveRequest(BaseModel):
+    """Request body for downstream module section-resolution clients."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    consumer_module: str = Field(min_length=1)
+    section_number: str | None = None
+    query: str | None = None
+    as_of: date | None = None
+
+
 class PopularQuestionCreate(BaseModel):
     """Request body for a staff-approved public popular-question navigation aid."""
 
@@ -419,6 +431,14 @@ class CivicClerkOrdinanceEventCreate(BaseModel):
     ordinance_text: str = ""
     adopted_at: datetime | None = None
     failure_reason: str | None = None
+
+
+class CivicClerkOrdinanceEventResolve(BaseModel):
+    """Request body for resolving a handoff after staff codifies the amendment."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    section_version_id: str = Field(min_length=1)
 
 
 class ImportBundleCreate(BaseModel):
@@ -707,6 +727,9 @@ async def root() -> dict[str, str]:
             "CivicClerk ordinance handoff intake, durable handoff records, audit "
             "events, and affected-section warnings are online. Resident-facing "
             "public lookup pages are online at /civiccode. "
+            "The downstream section-resolution service is online for CivicZone, "
+            "CivicLegal, CivicAccess, and CivicComms. The resident cited-answer "
+            "page is online at /civiccode/answer. "
             "Local file-drop and fixture import jobs are online with provenance, "
             "retry, and no required outbound dependency. Records-ready section "
             "exports are online with citation, version, and source metadata. "
@@ -724,7 +747,7 @@ async def root() -> dict[str, str]:
         "api_base": "/api/v1/civiccode",
         "future_public_path": "/civiccode",
         "next_step": (
-            "CivicCode v0.1.18 persists section/version lifecycle records, "
+            "CivicCode v1.0.0 persists section/version lifecycle records, "
             "popular-question discovery aids, staff notes, plain-language "
             "summaries, CivicClerk handoff records, handoff audit events, and "
             "local import job ledgers, codifier sync source state, and "
@@ -762,6 +785,29 @@ async def public_lookup_search(q: str = "") -> str:
     except SectionLifecycleError:
         results = []
     return render_search_page(query, results)
+
+
+@app.get("/civiccode/answer", response_class=HTMLResponse)
+async def public_lookup_answer(
+    q: str = "",
+    section_number: str | None = None,
+    as_of: date | None = None,
+) -> str:
+    """Render a resident-facing cited answer for one adopted section."""
+    query = q.strip()
+    if not query:
+        return render_error_page(
+            "Question required",
+            "Question cannot be empty.",
+            "Ask what one adopted section says and include the exact section number.",
+            status_label="Empty question",
+        )
+    payload = build_grounded_answer(
+        QuestionRequestContext(question=query, section_number=section_number, as_of=as_of),
+        search=SECTION_STORE.search,
+        build_citation=_build_citation_for_section,
+    )
+    return render_answer_page(query, payload)
 
 
 @app.get("/civiccode/sections/{section_ref}", response_class=HTMLResponse)
@@ -1114,6 +1160,105 @@ async def lookup_section(section_number: str, as_of: date | None = None) -> dict
         _raise_section_error(exc)
     payload["handoff_warnings"] = HANDOFF_STORE.public_warnings_for_section(section_number)
     return payload
+
+
+@app.post("/api/v1/civiccode/sections/resolve")
+async def resolve_section(request: SectionResolveRequest) -> dict[str, Any]:
+    """Resolve adopted code context for downstream CivicSuite module clients."""
+    allowed_consumers = {"CivicZone", "CivicLegal", "CivicAccess", "CivicComms"}
+    if request.consumer_module not in allowed_consumers:
+        return {
+            "status": "refused",
+            "reason": "unsupported_consumer_module",
+            "message": f"CivicCode does not expose a section-resolution contract for {request.consumer_module}.",
+            "fix": f"Use one of: {', '.join(sorted(allowed_consumers))}.",
+            "consumer_module": request.consumer_module,
+            "code_answer_behavior": "not_available",
+        }
+    query = (request.query or "").strip()
+    if query and (is_legal_advice_query(query) or looks_like_legal_determination(query)):
+        refused = build_grounded_answer(
+            QuestionRequestContext(question=query, section_number=request.section_number, as_of=request.as_of),
+            search=SECTION_STORE.search,
+            build_citation=_build_citation_for_section,
+        )
+        refused["consumer_module"] = request.consumer_module
+        return refused
+    section_number = request.section_number
+    resolution_mode = "exact_section"
+    if section_number is None:
+        if not query:
+            return {
+                "status": "refused",
+                "reason": "missing_resolution_input",
+                "message": "Section resolution requires section_number or query.",
+                "fix": "Send an exact section_number when possible; use query only for public-safe code-text matching.",
+                "consumer_module": request.consumer_module,
+                "code_answer_behavior": "not_available",
+            }
+        search_payload = SECTION_STORE.search(query)
+        matches = [
+            result
+            for result in search_payload["results"]
+            if result.get("result_type") == "code_section" and result.get("section_number")
+        ]
+        if len(matches) != 1:
+            return {
+                "status": "refused",
+                "reason": "ambiguous_resolution" if matches else "no_resolution",
+                "message": f"{len(matches)} adopted code sections matched the resolution query.",
+                "fix": "Send an exact section_number so CivicCode can resolve one authoritative section.",
+                "consumer_module": request.consumer_module,
+                "code_answer_behavior": "not_available",
+            }
+        section_number = matches[0]["section_number"]
+        resolution_mode = "query_single_match"
+    try:
+        lookup = SECTION_STORE.lookup_section(section_number, as_of=request.as_of)
+    except SectionLifecycleError as exc:
+        return {
+            "status": "refused",
+            "reason": "section_lookup",
+            "message": exc.message,
+            "fix": exc.fix,
+            "consumer_module": request.consumer_module,
+            "code_answer_behavior": "not_available",
+        }
+    citation_payload = _build_citation_for_section(section_number, as_of=request.as_of)
+    if citation_payload.get("status") != "ok":
+        citation_payload["consumer_module"] = request.consumer_module
+        return citation_payload
+    warnings = HANDOFF_STORE.public_warnings_for_section(section_number)
+    return {
+        "status": "ok",
+        "consumer_module": request.consumer_module,
+        "resolution_mode": resolution_mode,
+        "section": lookup["section"],
+        "version": lookup["version"],
+        "citation": citation_payload["citation"],
+        "handoff_warnings": warnings,
+        "version_context": {
+            "as_of": request.as_of.isoformat() if request.as_of else lookup["as_of"],
+            "preserves_date_context": True,
+        },
+        "legal_boundary": {
+            "classification": "information_not_determination",
+            "legal_determination": "not_provided",
+            "legal_advice": "not_provided",
+            "pending_language_is_adopted_law": False,
+        },
+        "stable_contract": {
+            "contract_name": "civiccode.section_resolution.v1",
+            "guarantee": "Resolved payload cites one adopted section/version/source or returns a structured refusal.",
+        },
+        "downstream_usage": {
+            "CivicZone": "Use citations for zoning-context explanations, not official determinations.",
+            "CivicLegal": "Use as city-code source context; attorney review controls legal conclusions.",
+            "CivicAccess": "Use for accessible/plain-language transforms while retaining authoritative text.",
+            "CivicComms": "Use for public explainers with exact citation and no advocacy or legal advice.",
+        }[request.consumer_module],
+        "code_answer_behavior": "section_resolution",
+    }
 
 
 @app.get("/api/v1/civiccode/sections/{section_id}/history")
@@ -1470,6 +1615,49 @@ async def create_civicclerk_ordinance_event(
         for section_number in request.affected_sections:
             SECTION_STORE.lookup_section(section_number)
         event = HANDOFF_STORE.create_event(request.model_dump(), actor=actor)
+    except SectionLifecycleError as exc:
+        _raise_section_error(exc)
+    except OrdinanceHandoffError as exc:
+        _raise_handoff_error(exc)
+    return event_to_dict(event)
+
+
+@app.post("/api/v1/civiccode/staff/civicclerk/ordinance-events/{event_id}/resolve")
+async def resolve_civicclerk_ordinance_event(
+    event_id: str,
+    request: CivicClerkOrdinanceEventResolve,
+    x_civiccode_role: str | None = Header(default=None),
+    x_civiccode_actor: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Mark a CivicClerk handoff codified after staff creates the adopted code version."""
+    actor = _require_staff(x_civiccode_role, x_civiccode_actor)
+    try:
+        version = SECTION_STORE.get_version(request.section_version_id)
+        section = SECTION_STORE.get_section(version.section_id)
+        event = next((item for item in HANDOFF_STORE.list_events() if item.event_id == event_id), None)
+        if event is None:
+            raise OrdinanceHandoffError(
+                f"CivicClerk ordinance event '{event_id}' was not found.",
+                "Read the handoff list and resolve an existing event.",
+                status_code=404,
+            )
+        if section.section_number not in event.affected_sections:
+            raise OrdinanceHandoffError(
+                "Resolved section version does not belong to an affected section.",
+                "Create or select an adopted version for one of the handoff's affected_sections.",
+                status_code=409,
+            )
+        if version.status != "adopted" or not version.is_current:
+            raise OrdinanceHandoffError(
+                "Resolved handoffs require a current adopted section version.",
+                "Create the codified adopted version and mark it current before resolving the handoff.",
+                status_code=409,
+            )
+        event = HANDOFF_STORE.resolve_event(
+            event_id,
+            actor=actor,
+            section_version_id=request.section_version_id,
+        )
     except SectionLifecycleError as exc:
         _raise_section_error(exc)
     except OrdinanceHandoffError as exc:

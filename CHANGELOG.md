@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-07
+
+### Changed
+
+- Promoted CivicCode to the v1.0.0 product line after the active-module release
+  lock scope read, CivicSuiteUnifiedSpec section 11 gap check, CivicCore v1.0.0
+  alignment, durable operational-state runtime, staff/public browser QA
+  evidence, and adversarial mock-city codifier validation path.
+- Updated current release/version surfaces, release verification artifact names,
+  and security/manual copy for the v1.0.0 gate while preserving v0.1.17 and
+  v0.1.18 as historical pre-gate provenance references.
+- Made the real Docker pgvector migration smoke skip with an actionable Docker
+  Desktop instruction when the local Docker daemon is unavailable, while
+  preserving the live migration proof when Docker is running.
+- Added the downstream `civiccode.section_resolution.v1` contract for
+  CivicZone, CivicLegal, CivicAccess, and CivicComms, plus adversarial
+  legal-determination refusal coverage for that boundary.
+- Added the resident `/civiccode/answer` cited-answer page and broadened public
+  legal-determination refusal handling so property-specific prompts route to
+  staff instead of rendering misleading search results.
+- Added staff handoff resolution after codified adopted text is created,
+  including durable handoff-resolution fields and warning suppression for
+  resolved codifications.
+
 ### Added
 
 - Reproducible Playwright staff browser QA harness for CI, covering staff access

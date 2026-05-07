@@ -50,6 +50,9 @@ class OrdinanceEvent:
     ordinance_text: str = ""
     adopted_at: datetime | None = None
     failure_reason: str | None = None
+    resolved_section_version_id: str | None = None
+    resolved_by: str | None = None
+    resolved_at: datetime | None = None
     created_by: str = "unknown"
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -57,6 +60,8 @@ class OrdinanceEvent:
     def handoff_state(self) -> str:
         if self.status == "failed":
             return "failed"
+        if self.status == "codified":
+            return "codified"
         return "pending_codification"
 
 
@@ -176,6 +181,8 @@ class OrdinanceHandoffStore:
         for event in self._events.values():
             if section_number not in event.affected_sections:
                 continue
+            if event.handoff_state == "codified":
+                continue
             warnings.append(
                 {
                     "source": "CivicClerk",
@@ -214,6 +221,45 @@ class OrdinanceHandoffStore:
 
     def list_events(self) -> list[OrdinanceEvent]:
         return sorted(self._events.values(), key=lambda event: event.created_at)
+
+    def resolve_event(
+        self,
+        event_id: str,
+        *,
+        actor: str,
+        section_version_id: str,
+    ) -> OrdinanceEvent:
+        event = self._events.get(event_id)
+        if event is None:
+            raise OrdinanceHandoffError(
+                f"CivicClerk ordinance event '{event_id}' was not found.",
+                "Read the handoff list and resolve an existing event.",
+                status_code=404,
+            )
+        if event.status == "failed":
+            raise OrdinanceHandoffError(
+                "Failed CivicClerk handoffs cannot be marked codified.",
+                "Repair and resend the failed handoff before resolving codification.",
+                status_code=409,
+            )
+        event.status = "codified"
+        event.resolved_section_version_id = section_version_id
+        event.resolved_by = actor
+        event.resolved_at = datetime.now(UTC)
+        self._append_event("civicclerk_handoff_codified", actor=actor, target_id=event.event_id)
+        self._operational_store.record_replay(
+            lane="handoff",
+            subject_id=event.event_id,
+            actor=actor,
+            status=event.handoff_state,
+            payload_hash=event.source_document_hash,
+            details={
+                "external_event_id": event.external_event_id,
+                "ordinance_number": event.ordinance_number,
+                "section_version_id": section_version_id,
+            },
+        )
+        return event
 
     def audit_events(self) -> list[HandoffAuditEvent]:
         return list(self._audit_events)
@@ -256,6 +302,9 @@ ordinance_handoff_records = sa.Table(
     sa.Column("ordinance_text", sa.Text(), nullable=False),
     sa.Column("adopted_at", sa.DateTime(timezone=True), nullable=True),
     sa.Column("failure_reason", sa.Text(), nullable=True),
+    sa.Column("resolved_section_version_id", sa.String(255), nullable=True),
+    sa.Column("resolved_by", sa.String(255), nullable=True),
+    sa.Column("resolved_at", sa.DateTime(timezone=True), nullable=True),
     sa.Column("created_by", sa.String(255), nullable=False),
     sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
     schema="civiccode",
@@ -303,6 +352,27 @@ class OrdinanceHandoffRepository(OrdinanceHandoffStore):
             connection.execute(ordinance_handoff_records.insert().values(**event_to_record(event)))
         return event
 
+    def resolve_event(
+        self,
+        event_id: str,
+        *,
+        actor: str,
+        section_version_id: str,
+    ) -> OrdinanceEvent:
+        event = super().resolve_event(event_id, actor=actor, section_version_id=section_version_id)
+        with self.engine.begin() as connection:
+            connection.execute(
+                ordinance_handoff_records.update()
+                .where(ordinance_handoff_records.c.event_id == event.event_id)
+                .values(
+                    status=event.status,
+                    resolved_section_version_id=event.resolved_section_version_id,
+                    resolved_by=event.resolved_by,
+                    resolved_at=event.resolved_at,
+                )
+            )
+        return event
+
     def reset(self) -> None:
         super().reset()
         with self.engine.begin() as connection:
@@ -339,6 +409,9 @@ def event_to_record(event: OrdinanceEvent) -> dict[str, Any]:
         "ordinance_text": event.ordinance_text,
         "adopted_at": event.adopted_at,
         "failure_reason": event.failure_reason,
+        "resolved_section_version_id": event.resolved_section_version_id,
+        "resolved_by": event.resolved_by,
+        "resolved_at": event.resolved_at,
         "created_by": event.created_by,
         "created_at": event.created_at,
     }
@@ -359,6 +432,9 @@ def event_from_record(row: Any) -> OrdinanceEvent:
         ordinance_text=row["ordinance_text"],
         adopted_at=row["adopted_at"],
         failure_reason=row["failure_reason"],
+        resolved_section_version_id=row.get("resolved_section_version_id"),
+        resolved_by=row.get("resolved_by"),
+        resolved_at=row.get("resolved_at"),
         created_by=row["created_by"],
         created_at=row["created_at"],
     )
@@ -405,6 +481,13 @@ def event_to_dict(event: OrdinanceEvent) -> dict[str, Any]:
         "source_document_url": event.source_document_url,
         "source_document_hash": event.source_document_hash,
         "failure_reason": event.failure_reason,
+        "resolution": {
+            "section_version_id": event.resolved_section_version_id,
+            "resolved_by": event.resolved_by,
+            "resolved_at": event.resolved_at.isoformat() if event.resolved_at else None,
+        }
+        if event.handoff_state == "codified"
+        else None,
         "provenance": {
             "civicclerk_meeting_id": event.civicclerk_meeting_id,
             "civicclerk_agenda_item_id": event.civicclerk_agenda_item_id,

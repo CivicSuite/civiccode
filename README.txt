@@ -22,7 +22,9 @@ source records with CIVICCODE_SOURCE_REGISTRY_DB_URL when configured, staff can
 create titles, chapters, sections, and adopted or pending section versions,
 public-safe search/permalink APIs are available, deterministic citation or
 refusal objects can be built, and citation-grounded questions can be answered
-when one adopted section and active source can be cited. Staff-only
+when one adopted section and active source can be cited. Downstream CivicSuite
+modules can use the `civiccode.section_resolution.v1` contract for adopted
+section context. Staff-only
 interpretation notes, staff Q&A context, and staff workbench audit events are
 available behind the trusted staff header seam.
 Staff-approved plain-language summaries are available after review, are labeled
@@ -34,7 +36,7 @@ when CIVICCODE_SOURCE_REGISTRY_DB_URL is configured. CivicClerk ordinance/adopti
 persisted as pending codification warnings without replacing adopted code text.
 Residents can open
 /civiccode, search by section number or plain-language phrase, read adopted
-code text, see citations, view approved summaries, and see pending
+code text, ask a cited question at /civiccode/answer, see citations, view approved summaries, and see pending
 codification warnings. Docker Compose can start PostgreSQL 17 with pgvector,
 run migrations, serve the FastAPI app, persist source registry, staff guidance,
 plain-language summary, and CivicClerk handoff records, seed a
@@ -165,7 +167,7 @@ Migration smoke
 Release
 -------
 
-CivicCode v0.1.18 is the current durable operational-state release. It
+CivicCode v1.0.0 is the current durable operational-state product release. It
 persists source registry records, title/chapter/section/version records,
 staff-approved popular questions, staff notes, plain-language summaries,
 CivicClerk handoff records, handoff audit events, local import job records, and codifier sync source records through

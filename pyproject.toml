@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "civiccode"
-version = "0.1.18"
+version = "1.0.0"
 description = "CivicCode runtime foundation for municipal code and ordinance access."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -51,8 +51,14 @@ include = [
   "docker-compose.yml",
   "docker.env.example",
   ".dockerignore",
+  ".gitignore",
   "README.md",
   "CHANGELOG.md",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
+  "SUPPORT.md",
+  "docs/index.html",
+  "LICENSE",
   "USER-MANUAL.md",
   "LICENSE-CODE",
   "LICENSE-DOCS",

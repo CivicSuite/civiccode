@@ -308,6 +308,51 @@ async def test_affected_lookup_includes_stale_code_warning(client: AsyncClient) 
 
 
 @pytest.mark.asyncio
+async def test_staff_can_resolve_handoff_after_codified_version_is_current(
+    client: AsyncClient,
+) -> None:
+    await seed_handoff_fixture(client)
+    handoff = await client.post(
+        "/api/v1/civiccode/staff/civicclerk/ordinance-events",
+        headers=STAFF_HEADERS,
+        json=handoff_payload(),
+    )
+    await client.post(
+        "/api/v1/civiccode/sections/sec_chickens/versions",
+        headers=STAFF_HEADERS,
+        json={
+            "version_id": "v_codified_2026_041",
+            "section_id": "sec_chickens",
+            "source_id": "municode_active",
+            "version_label": "Codified ordinance 2026-041",
+            "body": "Residents may keep up to eight backyard chickens with a city permit.",
+            "effective_start": "2026-05-07",
+            "status": "adopted",
+            "is_current": True,
+            "adoption_event_id": handoff.json()["event_id"],
+            "prior_version_id": "v_chickens_current",
+            "amendment_event_id": handoff.json()["event_id"],
+            "amendment_summary": "Codifies ordinance 2026-041 after CivicClerk adoption.",
+        },
+    )
+
+    resolved = await client.post(
+        f"/api/v1/civiccode/staff/civicclerk/ordinance-events/{handoff.json()['event_id']}/resolve",
+        headers=STAFF_HEADERS,
+        json={"section_version_id": "v_codified_2026_041"},
+    )
+    lookup = await client.get(
+        "/api/v1/civiccode/sections/lookup",
+        params={"section_number": "6.12.040"},
+    )
+
+    assert resolved.status_code == 200
+    assert resolved.json()["handoff_state"] == "codified"
+    assert resolved.json()["resolution"]["section_version_id"] == "v_codified_2026_041"
+    assert lookup.json()["handoff_warnings"] == []
+
+
+@pytest.mark.asyncio
 async def test_failed_handoff_is_visible_and_does_not_mutate_code_state(
     client: AsyncClient,
 ) -> None:

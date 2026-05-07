@@ -123,12 +123,13 @@
 
   <div class="grid">
     <section>
-      <h2>What it will do</h2>
+      <h2>What CivicCode does</h2>
       <ul>
         <li>Import authoritative municipal code sources from local fixtures and file drops.</li>
         <li>Preserve section versions and effective dates.</li>
         <li>Export records-ready section packages with citations and source provenance.</li>
         <li>Answer routine code questions with citations.</li>
+        <li>Resolve adopted section context for downstream CivicSuite modules.</li>
         <li>Label summaries as non-authoritative.</li>
       </ul>
     </section>
@@ -160,12 +161,15 @@
         <li>Related materials from explicit public cross-references, labeled as navigation aids and not legal determinations.</li>
         <li>Deterministic citation/refusal objects with section, version, source, and effective-date fields.</li>
         <li>Citation-grounded Q&amp;A harness for questions that resolve to one adopted section and active source.</li>
+        <li>Resident-facing cited-answer page at <code>/civiccode/answer</code>.</li>
+        <li>Downstream section-resolution contract for CivicZone, CivicLegal, CivicAccess, and CivicComms.</li>
         <li>Staff interpretation notes, staff Q&amp;A context, and staff workbench audit events.</li>
         <li>Durable staff-note and staff-workbench audit event storage through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Staff-approved plain-language summaries labeled non-authoritative with <code>non_authoritative_explanation</code>.</li>
         <li>Durable plain-language summary and summary audit event storage through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Authoritative code text remains visible beside approved summaries.</li>
         <li>CivicClerk handoff intake with pending codification warnings and likely conflict signals.</li>
+        <li>Staff handoff resolution after codified adopted text is created.</li>
         <li>Durable CivicClerk handoff and handoff audit event storage through <code>CIVICCODE_SOURCE_REGISTRY_DB_URL</code> for Docker/PostgreSQL demos.</li>
         <li>Resident-facing public code lookup surface under <code>/civiccode</code> for the "Read code" workflow.</li>
         <li>Search, empty, legal-advice refusal, stale-source warning, and section detail states.</li>
@@ -194,8 +198,8 @@
       </ul>
     </section>
     <section>
-      <h2>Current next step</h2>
-      <p>CivicCode v0.1.18 is the current durable operational-state product line with CivicCore v1.0.0 source-list health projection reuse. Release provenance is moving to the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and CO-4 records both as historical pre-gate/no-attestation releases; review <code>docs/ops/tier1-retrofit-ledger.md</code> before publishing, mirroring, or relying on release artifacts.</p>
+      <h2>Release status</h2>
+      <p>CivicCode v1.0.0 is the current durable operational-state product line with CivicCore v1.0.0 source-list health projection reuse. Release provenance follows the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and CO-4 records both as historical pre-gate/no-attestation releases; review <code>docs/ops/tier1-retrofit-ledger.md</code> before relying on those older artifacts.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>
