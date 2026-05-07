@@ -1310,7 +1310,7 @@ async def get_imported_tree(
                 "Open the job details, fix the failure, and retry before reading its imported tree.",
                 status_code=409,
             )
-        return imported_tree_snapshot(job.source_id, SOURCE_STORE, SECTION_STORE)
+        return imported_tree_snapshot(job.source_id, _get_source_store(), SECTION_STORE)
     except CivicCodeImportError as exc:
         _raise_import_error(exc)
     except SourceRegistryError as exc:
