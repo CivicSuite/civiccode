@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import importlib
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import time
@@ -450,7 +451,7 @@ def test_alembic_command_upgrades_real_pgvector_database(monkeypatch: pytest.Mon
             )
 
         assert civiccore_revision == "civiccore_0002_llm"
-        assert civiccode_revision == "civiccode_0010_handoff_resolution"
+        assert civiccode_revision == "civiccode_0010_handoff_resolve"
         assert civiccode_tables == set(CANONICAL_TABLES) | {
             "source_registry_records",
             "popular_question_records",
@@ -624,7 +625,7 @@ def test_operational_state_records_migration_declares_persistent_records_table()
 def test_handoff_resolution_migration_declares_durable_resolution_fields() -> None:
     text = handoff_resolution_migration_path().read_text(encoding="utf-8")
 
-    assert 'revision = "civiccode_0010_handoff_resolution"' in text
+    assert 'revision = "civiccode_0010_handoff_resolve"' in text
     assert 'down_revision = "civiccode_0009_operational_state"' in text
     for column_name in [
         "resolved_section_version_id",
@@ -632,6 +633,18 @@ def test_handoff_resolution_migration_declares_durable_resolution_fields() -> No
         "resolved_at",
     ]:
         assert column_name in text
+
+
+def test_migration_revision_ids_fit_alembic_version_column() -> None:
+    """Alembic's default version table stores revision IDs in VARCHAR(32)."""
+    migrations_dir = ROOT / "civiccode" / "migrations" / "versions"
+    for migration in migrations_dir.glob("*.py"):
+        text = migration.read_text(encoding="utf-8")
+        match = re.search(r'^revision = "([^"]+)"', text, flags=re.MULTILINE)
+        if match is None:
+            continue
+        revision = match.group(1)
+        assert len(revision) <= 32, f"{migration.name} revision ID is too long: {revision}"
 
 
 def test_docs_and_changelog_record_schema_milestone_without_claiming_code_answers() -> None:

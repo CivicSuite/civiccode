@@ -6,7 +6,7 @@ import sqlalchemy as sa
 from alembic import op
 
 
-revision = "civiccode_0010_handoff_resolution"
+revision = "civiccode_0010_handoff_resolve"
 down_revision = "civiccode_0009_operational_state"
 branch_labels = None
 depends_on = None
