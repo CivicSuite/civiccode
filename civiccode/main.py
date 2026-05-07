@@ -491,6 +491,13 @@ def _require_staff(
     x_civiccode_role: str | None,
     x_civiccode_actor: str | None,
 ) -> str:
+    request = _current_request.get()
+    config = _staff_trusted_header_config() if request is not None else None
+    if request is not None and (
+        config.principal_header_name != "X-CivicCode-Actor"
+        or config.roles_header_name != "X-CivicCode-Role"
+    ):
+        return _require_staff_from_trusted_headers(request, config)
     if x_civiccode_role != "staff":
         raise HTTPException(
             status_code=403,
@@ -508,10 +515,17 @@ def _require_staff(
                 "fix": "Send X-CivicCode-Actor with the staff email or service account.",
             },
         )
-    request = _current_request.get()
     if request is None:
         return actor
-    config = _staff_trusted_header_config()
+    if config is None:
+        config = _staff_trusted_header_config()
+    return _require_staff_from_trusted_headers(request, config)
+
+
+def _require_staff_from_trusted_headers(
+    request: Request,
+    config: TrustedHeaderAuthConfig,
+) -> str:
     enforce_trusted_proxy_source(
         request.client.host if request.client else None,
         service_name="CivicCode",
@@ -528,7 +542,7 @@ def _require_staff(
         allowed_roles={"staff"},
         provider_name=config.provider_name,
     )
-    return principal.subject or actor
+    return principal.subject or ""
 
 
 def _staff_trusted_header_config() -> TrustedHeaderAuthConfig:

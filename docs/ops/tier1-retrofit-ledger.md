@@ -17,7 +17,7 @@ Structured source of truth:
   `release-attestation.json.bundle` public release assets.
 - Neither release may be promoted as an attested provenance baseline.
 - The active CivicCore platform dependency now points to the first attested
-  CivicCore baseline, `v0.22.1`.
+  CivicCore v1 baseline, `v1.0.0`.
 
 ## Entries
 

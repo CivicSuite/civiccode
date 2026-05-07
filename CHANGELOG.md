@@ -33,6 +33,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Staff headers are now validated through CivicCore trusted-header helpers and
   must arrive from loopback for local mock runs or
   `CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS` in shared environments.
+- Configured staff principal/role header names now flow through CivicCore's
+  trusted-header validator instead of being blocked by default header prechecks.
+- Browser QA now covers authenticated mobile empty and populated staff states,
+  and the verify workflow runs on `sprint/**` branch pushes as well as `main`
+  and pull requests.
+- Release provenance workflows now install helper code and fixtures from the
+  CivicCore `v1.0` tag instead of mutable `main`.
+- Source distribution builds now exclude `.tmp-*`, cache, and generated
+  interpreter artifact directories.
 - Public section lookup warning payloads now expose resident-safe CivicClerk
   stale-code guidance without staff-only event IDs or failure details.
 - Staff actionable-fix copy now renders as readable block callouts on mobile

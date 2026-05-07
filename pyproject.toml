@@ -57,6 +57,16 @@ include = [
   "LICENSE-CODE",
   "LICENSE-DOCS",
 ]
+exclude = [
+  ".tmp-*",
+  ".tmp-*/*",
+  "**/.tmp-*",
+  "**/.tmp-*/*",
+  ".pytest_cache",
+  ".pytest_cache/*",
+  "**/__pycache__",
+  "**/__pycache__/*",
+]
 
 [tool.ruff]
 target-version = "py311"

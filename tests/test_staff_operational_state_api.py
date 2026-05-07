@@ -170,6 +170,34 @@ async def test_staff_headers_must_come_from_trusted_proxy(app_module) -> None:
     assert "CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS" in response.json()["detail"]["fix"]
 
 
+@pytest.mark.asyncio
+async def test_staff_headers_honor_configured_trusted_header_names(
+    app_module,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CIVICCODE_STAFF_PRINCIPAL_HEADER", "X-Staff-Email")
+    monkeypatch.setenv("CIVICCODE_STAFF_ROLES_HEADER", "X-Staff-Roles")
+
+    response = await client_response_for_custom_headers(app_module)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "missing_state"
+
+
+async def client_response_for_custom_headers(app_module):
+    async with AsyncClient(
+        transport=ASGITransport(app=app_module.app),
+        base_url="http://testserver",
+    ) as custom_client:
+        return await custom_client.get(
+            "/api/v1/civiccode/staff/operational-state",
+            headers={
+                "X-Staff-Email": "operator@example.gov",
+                "X-Staff-Roles": "staff",
+            },
+        )
+
+
 def test_operational_state_repository_reloads_sqlite_datetimes_as_utc(tmp_path) -> None:
     db_url = f"sqlite+pysqlite:///{tmp_path / 'operational-state.db'}"
     store = OperationalStateRepository(db_url=db_url)

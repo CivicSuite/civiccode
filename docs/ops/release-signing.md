@@ -54,8 +54,8 @@ auditor-facing justification.
 
 CivicCode consumes the canonical CivicCore release-provenance helper and
 schema-v1 attestation contract. Product runtime tests run against the published,
-Sigstore-attested `civiccore v0.22.1` dependency before the provenance tooling
-phase installs CivicCore main for the latest shared fixture set.
+Sigstore-attested `civiccore v1.0.0` dependency before the provenance tooling
+phase installs the CivicCore `v1.0` tag for the shared fixture set.
 
 The attestation schema is versioned and canonicalized before signing. A valid
 attestation must name:
