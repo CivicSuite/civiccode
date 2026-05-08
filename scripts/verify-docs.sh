@@ -97,6 +97,9 @@ bad_markers=(
   "summaries provide legal advice"
   "pending ordinance language is adopted law"
   "automatic ordinance codification is available"
+  "current product line"
+  "current durable operational-state product release"
+  "current durable operational-state product line"
 )
 
 for file in "${current_files[@]}"; do

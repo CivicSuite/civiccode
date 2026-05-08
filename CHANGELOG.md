@@ -6,14 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Marked the published `v1.0.0` label as provisional during suite-wide release
+  recovery instead of presenting it as freshly product-ready.
+- Updated `scripts/verify-release.sh` to prefer native Unix `python3` before
+  Windows launchers and to run CivicCore release-provenance reinstall checks in
+  an isolated temporary virtualenv.
+
 ## [1.0.0] - 2026-05-07
 
 ### Changed
 
-- Promoted CivicCode to the v1.0.0 product line after the active-module release
-  lock scope read, CivicSuiteUnifiedSpec section 11 gap check, CivicCore v1.0.0
+- Published the CivicCode v1.0.0 label after the active-module release lock
+  scope read, CivicSuiteUnifiedSpec section 11 gap check, CivicCore v1.0.0
   alignment, durable operational-state runtime, staff/public browser QA
-  evidence, and adversarial mock-city codifier validation path.
+  evidence, and adversarial mock-city codifier validation path. The label is
+  provisional during the later suite-wide release-recovery pass.
 - Updated current release/version surfaces, release verification artifact names,
   and security/manual copy for the v1.0.0 gate while preserving v0.1.17 and
   v0.1.18 as historical pre-gate provenance references.

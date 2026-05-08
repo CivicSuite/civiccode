@@ -61,9 +61,12 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The current product line is CivicCode v1.0.0. Release provenance now follows
-the suite-wide Sigstore attestation model: the Git tag is a pointer, and the
-trust artifact is `release-attestation.json` plus
+The published CivicCode v1.0.0 label is under suite-wide release-recovery
+review. It is not a fresh product-ready claim until the recovery gates in
+[docs/release-recovery-status.md](docs/release-recovery-status.md) re-earn
+that status. Release provenance follows the suite-wide Sigstore attestation
+model: the Git tag is a pointer, and the trust artifact is
+`release-attestation.json` plus
 `release-attestation.json.bundle`, verified against the exact
 `CivicSuite/civiccode` release workflow identity. The existing v0.1.17 and
 v0.1.18 releases predate that model and CO-4 records both as historical
