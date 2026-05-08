@@ -151,6 +151,29 @@ def test_ci_runs_pytest_docs_and_placeholder_gates() -> None:
     assert "bash scripts/verify-release.sh" in text
 
 
+def test_release_gate_prefers_native_unix_python_and_isolates_provenance_install() -> None:
+    script = ROOT / "scripts" / "verify-release.sh"
+    text = script.read_text(encoding="utf-8")
+
+    python3_probe = "command -v python3"
+    python_probe = "command -v python)"
+    assert python3_probe in text
+    assert python_probe in text
+    assert text.index(python3_probe) < text.index(python_probe)
+    assert "venv.EnvBuilder(with_pip=True)" in text
+    assert 'tempfile.mkdtemp(prefix="civiccode-release-provenance-")' in text
+    assert "pip install --force-reinstall" not in text
+
+
+def test_documentation_gate_blocks_stale_product_ready_marketing_claims() -> None:
+    script = ROOT / "scripts" / "verify-docs.sh"
+    text = script.read_text(encoding="utf-8")
+
+    assert "current product line" in text
+    assert "current durable operational-state product release" in text
+    assert "current durable operational-state product line" in text
+
+
 def test_placeholder_import_gate_passes_for_runtime_source() -> None:
     result = subprocess.run(
         [sys.executable, "scripts/check-civiccore-placeholder-imports.py"],

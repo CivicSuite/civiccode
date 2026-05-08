@@ -530,7 +530,8 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v1.0.0 is the current durable operational-state product line. The
+CivicCode v1.0.0 is a published durable operational-state label under
+suite-wide release-recovery review. The
 older v0.1.17 and v0.1.18 publications are historical pre-gate releases; check
 `docs/ops/tier1-retrofit-ledger.md` before relying on those older artifacts.
 The product line

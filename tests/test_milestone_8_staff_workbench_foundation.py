@@ -148,12 +148,12 @@ async def test_public_surfaces_never_leak_staff_note_text_or_counts(
     client: AsyncClient,
 ) -> None:
     await seed_staff_fixture(client)
-    secret = "property-line interpretation marker"
+    private_note_marker = "property-line interpretation marker"
     assert (
         await client.post(
             "/api/v1/civiccode/staff/sections/sec_chickens/notes",
             headers=STAFF_HEADERS,
-            json={"note_text": secret, "status": "approved"},
+            json={"note_text": private_note_marker, "status": "approved"},
         )
     ).status_code == 201
 
@@ -173,7 +173,7 @@ async def test_public_surfaces_never_leak_staff_note_text_or_counts(
     serialized = "\n".join(
         [str(public_lookup.json()), str(public_search.json()), str(public_answer.json())]
     )
-    assert secret not in serialized
+    assert private_note_marker not in serialized
     assert "staff_notes" not in serialized
     assert "note_count" not in serialized
 

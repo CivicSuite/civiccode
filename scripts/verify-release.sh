@@ -8,8 +8,8 @@ find_python() {
   if [[ -n "${CIVICCODE_RELEASE_PYTHON:-}" ]]; then
     candidates+=("${CIVICCODE_RELEASE_PYTHON}")
   fi
-  command -v python >/dev/null 2>&1 && candidates+=("$(command -v python)")
   command -v python3 >/dev/null 2>&1 && candidates+=("$(command -v python3)")
+  command -v python >/dev/null 2>&1 && candidates+=("$(command -v python)")
   command -v py >/dev/null 2>&1 && candidates+=("py -3")
   [[ -x "/c/Windows/py.exe" ]] && candidates+=("/c/Windows/py.exe -3")
   [[ -x "/mnt/c/Windows/py.exe" ]] && candidates+=("/mnt/c/Windows/py.exe -3")
@@ -64,8 +64,52 @@ echo "==> Product test suite"
 ${PYTHON_BIN} -m pytest -q --ignore=tests/test_release_provenance_gate.py
 
 echo "==> Release-provenance tooling tests against published CivicCore"
-${PYTHON_BIN} -m pip install --force-reinstall "https://github.com/CivicSuite/civiccore/releases/download/v1.0/civiccore-1.0.0-py3-none-any.whl"
-${PYTHON_BIN} -m pytest -q tests/test_release_provenance_gate.py
+${PYTHON_BIN} - <<'PY'
+from __future__ import annotations
+
+import shutil
+import subprocess
+import tempfile
+import venv
+from pathlib import Path
+
+wheel_url = (
+    "https://github.com/CivicSuite/civiccore/releases/download/v1.0/"
+    "civiccore-1.0.0-py3-none-any.whl"
+)
+temp_dir = Path(tempfile.mkdtemp(prefix="civiccode-release-provenance-"))
+
+try:
+    venv.EnvBuilder(with_pip=True).create(temp_dir)
+    candidates = [
+        temp_dir / "Scripts" / "python.exe",
+        temp_dir / "Scripts" / "python",
+        temp_dir / "bin" / "python",
+    ]
+    venv_python = next((path for path in candidates if path.exists()), None)
+    if venv_python is None:
+        raise RuntimeError("could not locate release-provenance virtualenv python")
+
+    subprocess.run(
+        [
+            str(venv_python),
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "pip",
+            "pytest",
+            wheel_url,
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [str(venv_python), "-m", "pytest", "-q", "tests/test_release_provenance_gate.py"],
+        check=True,
+    )
+finally:
+    shutil.rmtree(temp_dir, ignore_errors=True)
+PY
 
 echo "==> Documentation gate"
 bash scripts/verify-docs.sh

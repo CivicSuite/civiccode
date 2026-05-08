@@ -74,7 +74,11 @@ Milestone 0 is reconciliation only:
 5. Keep docs verification green.
 6. Do not add runtime code.
 
-Milestone 14 is complete. CivicCode v1.0.0 is the current product line; CivicCore v1.0.0 dependency alignment, downstream section resolution, cited resident Q&A, and CivicClerk handoff codification closeout are the current release boundary.
+Milestone 14 implementation has landed. CivicCode v1.0.0 is a published label
+under suite-wide release-recovery review, not a fresh product-ready claim until
+the recovery gates re-earn that status. CivicCore v1.0.0 dependency alignment,
+downstream section resolution, cited resident Q&A, and CivicClerk handoff
+codification closeout are the current release boundary.
 
 ## Prohibitions
 
