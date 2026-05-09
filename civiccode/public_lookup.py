@@ -443,13 +443,20 @@ def _answer_form(query: str, section_number: str) -> str:
 
 
 def _search_result_item(result: dict[str, Any]) -> str:
-    section_number = result["section_number"]
-    href = f"/civiccode/sections/{quote(section_number)}"
+    section_number = result.get("section_number") or result.get("source_section_number")
+    heading = result.get("section_heading") or result.get("label") or "Related material"
+    href = f"/civiccode/sections/{quote(str(section_number))}"
+    result_type = str(result["result_type"]).replace("_", " ")
+    description = result.get("snippet") or (
+        "Open the cited section for authoritative adopted code text and source context."
+        if result.get("result_type") == "code_section"
+        else "This staff-approved related material is a navigation aid, not a legal determination."
+    )
     return f"""
     <li>
-      <h2><a href="{href}">{escape(section_number)} - {escape(result['section_heading'])}</a></h2>
-      <p>{escape(result.get('snippet') or 'Open this section for authoritative adopted code text.')}</p>
-      <p class="result-meta">Citation-ready - {escape(result['result_type'])}</p>
+      <h2><a href="{href}">{escape(str(section_number))} - {escape(str(heading))}</a></h2>
+      <p>{escape(description)}</p>
+      <p class="result-meta">Citation-ready - {escape(result_type)}</p>
     </li>
     """
 

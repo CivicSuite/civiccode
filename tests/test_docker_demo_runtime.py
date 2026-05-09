@@ -73,8 +73,10 @@ def test_docker_product_artifacts_document_seeded_compose_runtime() -> None:
 
     assert "pgvector/pgvector:pg17" in compose
     assert "CIVICCODE_DEMO_SEED" in compose
+    assert "CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS" in compose
     assert "alembic -c civiccode/migrations/alembic.ini upgrade head" in dockerfile
     assert "POSTGRES_PASSWORD=civiccode-local-only" in env_example
+    assert "172.16.0.0/12" in env_example
     assert ".tmp-*" in dockerignore
     assert "docs/*.png" in dockerignore
     assert "DOCKER-DEMO-SMOKE: PASSED" in smoke

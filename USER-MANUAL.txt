@@ -300,6 +300,9 @@ client-supplied staff headers before CivicCode sees the request. Staff Q&A
 context is explicitly marked `staff_only_do_not_publish`. Public lookup, public
 search, and public Q&A responses must not expose staff note text or staff note
 counts.
+The local Docker Compose demo sets the Docker bridge CIDR (`172.16.0.0/12`) for
+the seeded smoke test. Production deployments should replace that with the
+actual trusted proxy CIDR list for their staff shell.
 
 Draft and approve a plain-language summary:
 

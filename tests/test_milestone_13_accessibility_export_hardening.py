@@ -147,6 +147,7 @@ async def test_accessible_html_export_has_semantic_headings_labels_and_focus(
     assert 'aria-label="Section metadata"' in html
     assert 'aria-label="Source provenance"' in html
     assert ":focus-visible" in html
+    assert "overflow-wrap: anywhere" in html
     assert "@media print" in html
     assert "not legal advice" in html
 
