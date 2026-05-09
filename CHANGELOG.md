@@ -19,8 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Marked the published `v1.0.0` label as provisional during suite-wide release
-  recovery instead of presenting it as freshly product-ready.
+- Marked the published `v1.0.0` label as recovered after PR #51 merged to
+  `main` with green GitHub CI and local release-recovery evidence.
 - Updated `scripts/verify-release.sh` to prefer native Unix `python3` before
   Windows launchers and to run CivicCore release-provenance reinstall checks in
   an isolated temporary virtualenv.

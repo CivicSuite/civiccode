@@ -61,10 +61,11 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The published CivicCode v1.0.0 label is under suite-wide release-recovery
-review. It is not a fresh product-ready claim until the recovery gates in
-[docs/release-recovery-status.md](docs/release-recovery-status.md) re-earn
-that status. Release provenance follows the suite-wide Sigstore attestation
+The published CivicCode v1.0.0 label has completed the suite-wide
+release-recovery pass on `main`; see
+[docs/release-recovery-status.md](docs/release-recovery-status.md) for the
+PR, CI, browser QA, Docker, backup/restore, and release-gate evidence. Release
+provenance follows the suite-wide Sigstore attestation
 model: the Git tag is a pointer, and the trust artifact is
 `release-attestation.json` plus
 `release-attestation.json.bundle`, verified against the exact
