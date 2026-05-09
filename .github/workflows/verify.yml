@@ -31,9 +31,10 @@ jobs:
       - name: Check CivicCore placeholder imports
         run: python scripts/check-civiccore-placeholder-imports.py
       - name: Install Playwright browser dependency
+        timeout-minutes: 10
         run: |
           npm install --no-save playwright@1.57.0
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
       - name: Run staff browser QA
         run: node scripts/browser-staff-surfaces-qa.cjs
       - name: Verify release gate
