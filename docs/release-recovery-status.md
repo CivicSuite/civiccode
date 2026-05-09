@@ -5,24 +5,25 @@ Repo: `CivicSuite/civiccode`
 
 ## Current Verdict
 
-`v1.0.0` exists as a published package/release label, but it remains
-provisional until the current recovery branch is reviewed, merged, and CI is
-green after merge. Local runtime, browser, Docker, documentation, and release
-verification gates have been rerun in the recovery workspace.
+`v1.0.0` exists as a published package/release label. The release-recovery
+branch was reviewed through PR #51, merged to `main`, and confirmed with green
+GitHub CI after merge. Local runtime, browser, Docker, documentation, and
+release verification gates have also been rerun in the recovery workspace.
 
 ## Recovery Gates
 
 | Gate | Current status | Evidence |
 | --- | --- | --- |
-| Public product-ready claim freeze | Passing in branch | README, text README, user manual, docs landing page, AGENTS, changelog, and docs checks now describe `v1.0.0` as provisional. |
-| Runtime install proof | Passing in branch | `scripts/verify-release.sh` builds artifacts and runs CivicCore release-provenance reinstall checks in an isolated temporary virtualenv. |
-| Native WSL/Linux proof | Passing in branch | WSL run selected `.venv-wsl/bin/python3`, reported platform `linux`, and completed `VERIFY-RELEASE: PASSED`. |
-| Security scan | Passing in branch | Tracked-file secret scan returned no matches after the staff-note test marker rename. |
-| Docs-source enforcement | Passing in branch | `scripts/verify-docs.sh` now blocks stale current-product-line claims; regression tests cover the gate. |
-| Mock-vs-production labeling | Passing in branch | Existing docs distinguish local mocks, codifier sync foundation, no live LLM, no legal advice, and no automatic codification. |
-| Browser/user-flow QA | Passing in branch | Fresh browser QA checked 10 public resident scenarios and 16 staff scenarios with no console errors, page errors, or horizontal overflow; see `docs/qa/civiccode-current-public-staff-browser-qa.md`. |
-| Docker demo runtime | Passing in branch | Clean Compose project `civiccode_recovery_verify` built the image, started PostgreSQL, served the seeded app, and passed `scripts/docker-demo-smoke.sh`. |
-| Docker/PostgreSQL backup-restore | Passing in branch | Clean Compose project `civiccode_recovery_verify` passed `pg_dump`, temporary restore database creation, `pg_restore`, restored application table verification, and cleanup. |
+| Public product-ready claim recovery | Passing on main | PR #51 merged to `main`; GitHub `verify-docs` passed after merge, and current docs point to this recovery status. |
+| Runtime install proof | Passing on main | `scripts/verify-release.sh` builds artifacts and runs CivicCore release-provenance reinstall checks in an isolated temporary virtualenv. |
+| Native WSL/Linux proof | Passing on main | WSL run selected `.venv-wsl/bin/python3`, reported platform `linux`, and completed `VERIFY-RELEASE: PASSED`. |
+| Security scan | Passing on main | Tracked-file secret scan returned no matches after the staff-note test marker rename. |
+| Docs-source enforcement | Passing on main | `scripts/verify-docs.sh` blocks stale current-product-line claims; regression tests cover the gate. |
+| Mock-vs-production labeling | Passing on main | Existing docs distinguish local mocks, codifier sync foundation, no live LLM, no legal advice, and no automatic codification. |
+| Browser/user-flow QA | Passing on main | Fresh browser QA checked 10 public resident scenarios and 16 staff scenarios with no console errors, page errors, or horizontal overflow; see `docs/qa/civiccode-current-public-staff-browser-qa.md`. |
+| Docker demo runtime | Passing on main | Clean Compose project `civiccode_recovery_verify` built the image, started PostgreSQL, served the seeded app, and passed `scripts/docker-demo-smoke.sh`. |
+| Docker/PostgreSQL backup-restore | Passing on main | Clean Compose project `civiccode_recovery_verify` passed `pg_dump`, temporary restore database creation, `pg_restore`, restored application table verification, and cleanup. |
+| GitHub CI | Passing on main | PR #51 `verify-docs` check passed before merge; merge commit `aead64d4e704bf2d061f1d88f544752b06ac62f9` is on `main`. |
 
 ## Current Evidence
 
@@ -38,7 +39,8 @@ verification gates have been rerun in the recovery workspace.
 
 ## Sign-Off Boundary
 
-This recovery status does not erase the existing `1.0.0` package version. It
-changes the public posture: existing v1 labels are provisional until this
-recovery branch is reviewed, merged, and CI evidence confirms the same gates on
-the shared branch.
+This recovery status does not rewrite the existing `1.0.0` package version or
+pretend the original tag was created after these recovery checks. It changes
+the public posture: the recovered CivicCode `v1.0.0` code path is verified on
+`main` through PR #51, local release gates, browser QA, Docker smoke, and
+backup/restore rehearsal.
