@@ -97,6 +97,7 @@ def render_records_ready_export_page(export: dict[str, Any]) -> str:
       --focus: #005fcc;
     }}
     * {{ box-sizing: border-box; }}
+    html {{ overflow-wrap: anywhere; }}
     body {{
       margin: 0;
       color: var(--ink);
@@ -104,6 +105,7 @@ def render_records_ready_export_page(export: dict[str, Any]) -> str:
       font-family: Georgia, "Times New Roman", serif;
       line-height: 1.6;
     }}
+    p, dd, a {{ overflow-wrap: anywhere; }}
     a {{ color: #0b4f82; text-underline-offset: .18em; }}
     a:focus-visible {{
       outline: 4px solid var(--focus);

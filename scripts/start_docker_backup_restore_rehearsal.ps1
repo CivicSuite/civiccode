@@ -1,6 +1,7 @@
 param(
     [string]$RehearsalRoot = ".docker-backup-restore-rehearsal",
     [string]$RunId = "",
+    [string]$ComposeProjectName = "",
     [switch]$Strict,
     [switch]$PrintOnly,
     [switch]$KeepRestoreDatabase
@@ -16,6 +17,9 @@ if (-not $RunId) {
 }
 
 $ArgsList = @($PythonScript, "--rehearsal-root", $RehearsalRoot, "--run-id", $RunId)
+if ($ComposeProjectName) {
+    $ArgsList += @("--compose-project-name", $ComposeProjectName)
+}
 if ($Strict) {
     $ArgsList += "--strict"
 }
@@ -29,6 +33,9 @@ if ($KeepRestoreDatabase) {
 Write-Host "CivicCode Docker/PostgreSQL backup/restore rehearsal profile"
 Write-Host "Rehearsal root: $RehearsalRoot"
 Write-Host "Run id: $RunId"
+if ($ComposeProjectName) {
+    Write-Host "Compose project: $ComposeProjectName"
+}
 Write-Host "Python verifier: python scripts/check_docker_backup_restore_rehearsal.py"
 Write-Host "Backup dump: backup\civiccode-postgres.dump"
 Write-Host "Backup manifest: backup\civiccode-docker-backup-manifest.json"

@@ -189,6 +189,7 @@
         <li>Mock-city report reuses CivicCore municipal IdP and backup-retention contracts and writes a secret-free JSON report.</li>
         <li>Records-ready export API and accessible HTML export page for adopted sections.</li>
         <li>Docker Compose product path with PostgreSQL 17 plus pgvector, migration startup, and City of Brookfield seeded demo data enabled by <code>CIVICCODE_DEMO_SEED=1</code>.</li>
+        <li>Local Docker staff smoke checks trust loopback plus the Docker bridge CIDR for the demo; production deployments should set <code>CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS</code> to their actual staff-shell proxy CIDR list.</li>
         <li>Docker/PostgreSQL backup-restore rehearsal with <code>pg_dump</code>, <code>pg_restore</code>, restored-table verification, <code>civiccode-docker-backup-manifest.json</code>, and Windows/Bash launchers.</li>
         <li>Semantic headings, labels, focus styling, and print-friendly export output.</li>
         <li>CivicAccess integration notes without a shipped CivicAccess runtime dependency.</li>
@@ -199,7 +200,7 @@
     </section>
     <section>
       <h2>Release status</h2>
-      <p>CivicCode v1.0.0 is a published durable operational-state label under suite-wide release-recovery review with CivicCore v1.0.0 source-list health projection reuse. It is not promoted as a fresh product-ready claim until recovery gates re-earn that status. Release provenance follows the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and CO-4 records both as historical pre-gate/no-attestation releases; review <code>docs/ops/tier1-retrofit-ledger.md</code> before relying on those older artifacts.</p>
+      <p>CivicCode v1.0.0 is a published durable operational-state label under suite-wide release-recovery review with CivicCore v1.0.0 source-list health projection reuse. Local runtime, browser, Docker, documentation, and release verification gates have been rerun in the recovery workspace, but the label is not promoted as a fresh product-ready claim until the recovery branch is reviewed, merged, and CI is green after merge. Release provenance follows the suite-wide Sigstore attestation model: the Git tag is a pointer, while <code>release-attestation.json</code> and <code>release-attestation.json.bundle</code> are the trust artifacts verified against the exact <code>CivicSuite/civiccode</code> release workflow identity. Existing v0.1.17 and v0.1.18 releases predate that model and CO-4 records both as historical pre-gate/no-attestation releases; review <code>docs/ops/tier1-retrofit-ledger.md</code> before relying on those older artifacts.</p>
       <p>The service is intentionally honest: code-answer behavior is limited to <code>code_answer_behavior</code> <code>citation_grounded</code>; refusals keep <code>not_available</code>.</p>
     </section>
   </div>

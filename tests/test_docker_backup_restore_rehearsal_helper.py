@@ -21,6 +21,8 @@ def test_docker_backup_restore_rehearsal_prints_non_destructive_plan(tmp_path: P
             str(tmp_path),
             "--run-id",
             "print-plan",
+            "--compose-project-name",
+            "civiccode_print_plan",
             "--print-only",
             "--strict",
         ],
@@ -36,6 +38,8 @@ def test_docker_backup_restore_rehearsal_prints_non_destructive_plan(tmp_path: P
         "pg_dump",
         "pg_restore",
         "civiccode_restore_print_plan",
+        "Compose project: civiccode_print_plan",
+        "-p civiccode_print_plan",
         "civiccode-postgres.dump",
         "civiccode-docker-backup-manifest.json",
         "Drop the temporary restore database",
@@ -52,6 +56,8 @@ def test_docker_backup_restore_rehearsal_helper_has_safe_restore_contract() -> N
 
     assert "pg_dump" in script
     assert "pg_restore" in script
+    assert "compose_project_name" in script
+    assert "--compose-project-name" in script
     assert "DROP DATABASE IF EXISTS" in script
     assert "createdb" in script
     assert "table_schema NOT IN ('pg_catalog', 'information_schema')" in script
@@ -75,6 +81,8 @@ def test_docker_backup_restore_rehearsal_powershell_wrapper_prints_expected_plan
             "-PrintOnly",
             "-RunId",
             "print-plan",
+            "-ComposeProjectName",
+            "civiccode-print-plan",
         ],
         cwd=ROOT,
         check=False,
@@ -86,6 +94,7 @@ def test_docker_backup_restore_rehearsal_powershell_wrapper_prints_expected_plan
     for expected in [
         "CivicCode Docker/PostgreSQL backup/restore rehearsal profile",
         "Run id: print-plan",
+        "Compose project: civiccode-print-plan",
         "Python verifier: python scripts/check_docker_backup_restore_rehearsal.py",
         "Backup dump: backup\\civiccode-postgres.dump",
         "Safety: the source civiccode database is not dropped or overwritten.",
@@ -106,6 +115,8 @@ def test_docker_backup_restore_rehearsal_bash_wrapper_prints_expected_plan() -> 
             "--print-only",
             "--run-id",
             "print-plan",
+            "--compose-project-name",
+            "civiccode-print-plan",
         ],
         cwd=ROOT,
         check=False,
@@ -117,6 +128,7 @@ def test_docker_backup_restore_rehearsal_bash_wrapper_prints_expected_plan() -> 
     for expected in [
         "CivicCode Docker/PostgreSQL backup/restore rehearsal profile",
         "Run id: print-plan",
+        "Compose project: civiccode-print-plan",
         "Python verifier: python scripts/check_docker_backup_restore_rehearsal.py",
         "Backup dump: backup/civiccode-postgres.dump",
         "Safety: the source civiccode database is not dropped or overwritten.",

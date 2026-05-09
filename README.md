@@ -421,6 +421,10 @@ proxy CIDR list and strip client-supplied staff headers before CivicCode sees
 the request. Staff interpretation notes are returned only to staff endpoints,
 staff Q&A adds `staff_context` with `staff_only_do_not_publish`, and public
 lookup, search, and Q&A never expose staff notes or staff note counts.
+The local Docker Compose demo also trusts the Docker bridge CIDR
+(`172.16.0.0/12`) so `scripts/docker-demo-smoke.sh` can verify the seeded staff
+workspace without weakening the production instruction to set an explicit
+trusted reverse-proxy CIDR.
 
 Plain-language summary smoke:
 

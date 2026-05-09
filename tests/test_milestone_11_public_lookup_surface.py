@@ -82,6 +82,7 @@ async def seed_public_lookup_fixture(client: AsyncClient) -> None:
                 "chapter_id": "chapter_6_12",
                 "section_number": "6.12.040",
                 "section_heading": "Backyard chickens",
+                "policy_refs": ["policy-chicken-permits"],
             },
         )
     ).status_code == 201
@@ -133,6 +134,21 @@ async def test_public_search_success_links_to_section_and_citation(
     assert "/civiccode/sections/6.12.040" in html
     assert "Citation-ready" in html
     assert "authoritative code text" in html
+
+
+@pytest.mark.asyncio
+async def test_public_search_related_material_result_links_to_source_section(
+    client: AsyncClient,
+) -> None:
+    await seed_public_lookup_fixture(client)
+
+    response = await client.get("/civiccode/search", params={"q": "policy chicken"})
+
+    assert response.status_code == 200
+    html = response.text
+    assert "policy-chicken-permits" in html
+    assert "/civiccode/sections/6.12.040" in html
+    assert "navigation aid, not a legal determination" in html
 
 
 @pytest.mark.asyncio

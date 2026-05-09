@@ -23,6 +23,7 @@ class RehearsalConfig:
     run_id: str
     compose_file: Path
     project_directory: Path
+    compose_project_name: str | None
     postgres_service: str
     postgres_user: str
     postgres_db: str
@@ -62,6 +63,7 @@ def main() -> int:
     parser.add_argument("--run-id", default=f"run-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}")
     parser.add_argument("--compose-file", default="docker-compose.yml")
     parser.add_argument("--project-directory", default=".")
+    parser.add_argument("--compose-project-name", default=None)
     parser.add_argument("--postgres-service", default="postgres")
     parser.add_argument("--postgres-user", default=None)
     parser.add_argument("--postgres-db", default=None)
@@ -76,6 +78,7 @@ def main() -> int:
         run_id=args.run_id,
         compose_file=Path(args.compose_file),
         project_directory=Path(args.project_directory),
+        compose_project_name=args.compose_project_name or os.environ.get("COMPOSE_PROJECT_NAME"),
         postgres_service=args.postgres_service,
         postgres_user=args.postgres_user
         or os.environ.get("POSTGRES_USER")
@@ -108,6 +111,8 @@ def print_plan(config: RehearsalConfig) -> None:
     print(f"Run id: {config.run_id}")
     print(f"Rehearsal root: {_display_path(config.run_root)}")
     print(f"PostgreSQL service: {config.postgres_service}")
+    if config.compose_project_name:
+        print(f"Compose project: {config.compose_project_name}")
     print(f"Source database: {config.postgres_db}")
     print(f"Restore database: {config.restore_db}")
     print(f"Backup dump: {_display_path(config.dump_path)}")
@@ -312,7 +317,7 @@ def _write_manifest(*, config: RehearsalConfig, restored_tables: list[str]) -> N
 
 
 def _compose_base(config: RehearsalConfig) -> list[str]:
-    return [
+    command = [
         "docker",
         "compose",
         "-f",
@@ -320,6 +325,9 @@ def _compose_base(config: RehearsalConfig) -> list[str]:
         "--project-directory",
         str(config.project_directory),
     ]
+    if config.compose_project_name:
+        command.extend(["-p", config.compose_project_name])
+    return command
 
 
 def _run(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:

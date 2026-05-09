@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed public search rendering for staff-approved related-material results so
+  resident searches return cited navigation aids instead of a server error when
+  the result points back to a source code section.
+- Fixed records-ready export mobile wrapping for long citation/source metadata.
+- Fixed the Docker demo staff smoke path by documenting and wiring the local
+  Docker bridge CIDR into the trusted-header configuration.
+- Fixed Docker/PostgreSQL backup-restore rehearsal targeting by adding
+  `--compose-project-name` support to the verifier and wrapper scripts.
+
 ### Changed
 
 - Marked the published `v1.0.0` label as provisional during suite-wide release
@@ -13,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated `scripts/verify-release.sh` to prefer native Unix `python3` before
   Windows launchers and to run CivicCore release-provenance reinstall checks in
   an isolated temporary virtualenv.
+- Added current public/staff browser QA and clean Docker/PostgreSQL
+  backup-restore proof under `docs/qa/` for the recovery pass.
 
 ## [1.0.0] - 2026-05-07
 

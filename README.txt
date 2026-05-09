@@ -157,6 +157,12 @@ checksum, and drops the temporary database by default. If it fails, confirm
 Docker Desktop is running, inspect docker compose logs postgres api, and rerun
 with a fresh run id.
 
+The local Docker Compose demo sets CIVICCODE_STAFF_TRUSTED_PROXY_CIDRS to
+127.0.0.1/32, ::1/128, and the Docker bridge range 172.16.0.0/12 so
+scripts/docker-demo-smoke.sh can verify the seeded staff workspace. Production
+deployments should replace that value with the actual trusted reverse-proxy
+CIDR list for their staff shell.
+
 Migration smoke
 ---------------
 
