@@ -74,8 +74,8 @@ import venv
 from pathlib import Path
 
 wheel_url = (
-    "https://github.com/CivicSuite/civiccore/releases/download/v1.0/"
-    "civiccore-1.0.0-py3-none-any.whl"
+    "https://github.com/CivicSuite/civiccore/releases/download/v1.0.1/"
+    "civiccore-1.0.1-py3-none-any.whl"
 )
 temp_dir = Path(tempfile.mkdtemp(prefix="civiccode-release-provenance-"))
 

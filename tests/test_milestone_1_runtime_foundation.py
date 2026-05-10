@@ -44,7 +44,7 @@ def test_pyproject_consumes_published_civiccore_v100_wheel() -> None:
 
     assert (
         "civiccore @ https://github.com/CivicSuite/civiccore/releases/download/"
-        "v1.0/civiccore-1.0.0-py3-none-any.whl#sha256=92d3d9984e3b3651586a342503f0789464b7618a2a030fce91d736e199d696e0"
+        "v1.0.1/civiccore-1.0.1-py3-none-any.whl#sha256=561d7a8f73260d50de79351d330876d2cb3488c0e046a2888e82fe09d1e03969"
     ) in dependencies
     assert not any("civiccore>=" in dep or "civiccore~=" in dep for dep in dependencies)
 
@@ -137,7 +137,7 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
         "status": "ok",
         "service": "civiccode",
         "version": "0.5.0",
-        "civiccore": "1.0.0",
+        "civiccore": "1.0.1",
     }
 
 
@@ -206,4 +206,3 @@ def test_current_facing_docs_describe_runtime_foundation_honestly() -> None:
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "runtime foundation" in changelog.lower()
-
