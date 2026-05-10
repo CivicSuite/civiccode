@@ -1,4 +1,4 @@
-﻿# CivicCode User Manual
+# CivicCode User Manual
 
 CivicCode currently ships a popular-questions and related-sections discovery
 runtime built on the
@@ -533,7 +533,7 @@ civiccode municipal-code module
 future consumers: civiczone, civiclegal, civicaccess, civiccomms
 ```
 
-CivicCode v1.0.0 is a published durable operational-state label under
+CivicCode v0.5.0 is a published durable operational-state label under
 suite-wide release-recovery review. The
 older v0.1.17 and v0.1.18 publications are historical pre-gate releases; check
 `docs/ops/tier1-retrofit-ledger.md` before relying on those older artifacts.

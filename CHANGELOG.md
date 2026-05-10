@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0] - 2026-05-10
+
+- Demoted the false v1.0.0 release label after the external CivicSuite audit found this module is a recovery/foundation module, not a canonical spec-complete v1 product.
+- Preserved the useful recovery work while resetting the public package version to 0.5.0.
+- Kept the CivicCore v1.0.0 wheel dependency and pinned it with SHA256 for release integrity.
+- Supersedes the prior public v1.0.0 posture; do not treat v1.0.0 as production-ready or spec-complete.
+
 All notable changes to CivicCode are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
@@ -31,7 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Published the CivicCode v1.0.0 label after the active-module release lock
+- Published the CivicCode v0.5.0 label after the active-module release lock
   scope read, CivicSuiteUnifiedSpec section 11 gap check, CivicCore v1.0.0
   alignment, durable operational-state runtime, staff/public browser QA
   evidence, and adversarial mock-city codifier validation path. The label is

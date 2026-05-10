@@ -1,4 +1,4 @@
-# CivicCode v1.0.0 Public Answer And Resolution Browser QA
+# CivicCode v0.5.0 Public Answer And Resolution Browser QA
 
 Date: 2026-05-07
 
