@@ -1,4 +1,4 @@
-﻿# CivicCode
+# CivicCode
 
 **Municipal code and ordinance access for the CivicSuite product family.**
 
@@ -61,7 +61,7 @@ Staff interpretation notes are staff-only and must not be published to public
 endpoints. CivicClerk handoff events warn about pending codification but do not
 replace adopted code text.
 
-The published CivicCode v1.0.0 label has completed the suite-wide
+The published CivicCode v0.5.0 label has completed the suite-wide
 release-recovery pass on `main`; see
 [docs/release-recovery-status.md](docs/release-recovery-status.md) for the
 PR, CI, browser QA, Docker, backup/restore, and release-gate evidence. Release
@@ -207,7 +207,7 @@ baselines:
 - reuse the shared CivicCore source-list health projection for codifier sync
   list responses, and
 - keep docs, browser QA, adversarial mock validation, and CI gates green for
-  the v1.0.0 product release.
+  the v0.5.0 recovery release.
 
 ## Why CivicCode before CivicZone
 

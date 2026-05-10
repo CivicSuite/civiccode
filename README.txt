@@ -1,4 +1,4 @@
-﻿CivicCode
+CivicCode
 =========
 
 Municipal code and ordinance access for the CivicSuite product family.
@@ -173,7 +173,7 @@ Migration smoke
 Release
 -------
 
-CivicCode v1.0.0 is a published durable operational-state label under
+CivicCode v0.5.0 is a published durable operational-state label under
 suite-wide release-recovery review. It
 persists source registry records, title/chapter/section/version records,
 staff-approved popular questions, staff notes, plain-language summaries,
