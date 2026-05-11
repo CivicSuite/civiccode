@@ -44,7 +44,7 @@ def test_pyproject_consumes_published_civiccore_v100_wheel() -> None:
 
     assert (
         "civiccore @ https://github.com/CivicSuite/civiccore/releases/download/"
-        "v1.0.1/civiccore-1.0.1-py3-none-any.whl#sha256=561d7a8f73260d50de79351d330876d2cb3488c0e046a2888e82fe09d1e03969"
+        "v1.1.0/civiccore-1.1.0-py3-none-any.whl#sha256=3ab146f4fea2ae99640d5b1b013be1a9676de5f91b783eaeaa913043a2ae2b87"
     ) in dependencies
     assert not any("civiccore>=" in dep or "civiccore~=" in dep for dep in dependencies)
 
@@ -137,7 +137,7 @@ async def test_health_endpoint_is_actionable_for_it_staff() -> None:
         "status": "ok",
         "service": "civiccode",
         "version": "0.5.0",
-        "civiccore": "1.0.1",
+        "civiccore": "1.1.0",
     }
 
 

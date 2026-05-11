@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.0] - 2026-05-11
+
+### Changed
+
+- feat(deps): bump civiccore pin to v1.1.0 for the shared staff auth helper release.
+
 ## [0.5.0] - 2026-05-10
 
 - Demoted the false v1.0.0 release label after the external CivicSuite audit found this module is a recovery/foundation module, not a canonical spec-complete v1 product.
